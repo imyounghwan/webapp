@@ -908,24 +908,77 @@ function displayAnalysisResult(result) {
             'N10_2_documentation': 'N10.2 문서화'
         };
         
+        // 각 항목에 대한 상세 설명
+        const descriptions = {
+            'N1_1_current_location': '사용자가 웹사이트 내에서 현재 어디에 있는지 명확하게 알 수 있도록 하는 요소 (Breadcrumb, 페이지 제목 등)',
+            'N1_2_loading_status': '페이지 로딩, 데이터 처리 등 시스템이 작업 중일 때 사용자에게 진행 상황을 알려주는 시각적 피드백',
+            'N1_3_action_feedback': '사용자의 행동(클릭, 입력 등)에 대해 시스템이 즉각적으로 반응하여 행동이 성공했는지 알려주는 기능',
+            
+            'N2_1_familiar_terms': '사용자가 이해하기 쉬운 일상적인 언어와 용어를 사용하여 전문 용어나 기술 용어를 최소화',
+            'N2_2_natural_flow': '사용자의 작업 흐름이 현실 세계의 논리적 순서와 일치하도록 설계',
+            'N2_3_real_world_metaphor': '실제 세계의 사물이나 개념(폴더, 휴지통 등)을 디지털 인터페이스에 적용하여 직관성 향상',
+            
+            'N3_1_undo_redo': '사용자가 실수로 수행한 작업을 쉽게 되돌리거나 다시 실행할 수 있는 기능',
+            'N3_2_exit_escape': '원치 않는 상황이나 화면에서 명확하게 빠져나올 수 있는 방법 제공 (취소 버튼, X 버튼 등)',
+            'N3_3_flexible_navigation': '사용자가 원하는 위치로 자유롭게 이동할 수 있는 다양한 네비게이션 수단 제공',
+            
+            'N4_1_visual_consistency': '버튼, 색상, 레이아웃 등 시각적 요소가 사이트 전체에서 일관되게 사용됨',
+            'N4_2_terminology_consistency': '동일한 개념에 대해 동일한 용어를 일관되게 사용 (예: "삭제"와 "제거"를 혼용하지 않음)',
+            'N4_3_standard_compliance': '웹 접근성 표준(WCAG), HTML5 표준 등 업계 표준 및 가이드라인 준수',
+            
+            'N5_1_input_validation': '사용자가 잘못된 형식의 데이터를 입력하기 전에 미리 검증하여 오류 발생 예방',
+            'N5_2_confirmation_dialog': '삭제, 제출 등 중요한 작업 수행 전에 확인 메시지를 표시하여 실수 방지',
+            'N5_3_constraints': '입력 필드에 허용되는 값의 범위나 형식을 명확히 표시하여 오류 가능성 감소',
+            
+            'N6_1_visible_options': '사용자가 기억에 의존하지 않고 화면에서 직접 선택할 수 있도록 옵션을 명확히 표시',
+            'N6_2_recognition_cues': '아이콘, 색상, 레이블 등 시각적 단서를 제공하여 사용자가 쉽게 인식할 수 있도록 지원',
+            'N6_3_memory_load': '사용자가 많은 정보를 기억할 필요 없이 인터페이스만으로 작업을 완료할 수 있도록 설계',
+            
+            'N7_1_shortcuts': '숙련된 사용자를 위한 키보드 단축키, 빠른 링크 등 효율적인 작업 수단 제공',
+            'N7_2_customization': '사용자가 인터페이스를 개인의 선호에 맞게 조정할 수 있는 기능 (글꼴 크기, 테마 등)',
+            
+            'N8_1_essential_info': '꼭 필요한 정보만 표시하고 불필요한 요소는 제거하여 인지 부담 감소',
+            'N8_2_clean_interface': '깔끔하고 정돈된 레이아웃으로 시각적 혼잡함 최소화',
+            'N8_3_visual_hierarchy': '중요한 정보를 강조하고 덜 중요한 정보는 부각하지 않는 명확한 시각적 계층 구조',
+            
+            'N9_1_error_messages': '오류 발생 시 문제가 무엇인지, 어떻게 해결할 수 있는지 명확하고 이해하기 쉬운 메시지 제공',
+            'N9_2_recovery_support': '오류 발생 후 사용자가 쉽게 복구할 수 있도록 구체적인 해결 방법 제시',
+            'N9_3_error_prevention_info': '오류가 발생하기 전에 미리 정보를 제공하여 예방 (예: 입력 형식 안내)',
+            
+            'N10_1_help_access': '사용자가 필요할 때 쉽게 도움말이나 FAQ에 접근할 수 있는 명확한 경로 제공',
+            'N10_2_documentation': '사용 방법, 기능 설명 등이 체계적으로 문서화되어 있어 사용자가 스스로 학습 가능'
+        };
+        
         const percentage = (score / 5) * 100;
         const color = score >= 4.5 ? '#10b981' :
                       score >= 4.0 ? '#06b6d4' :
                       score >= 3.5 ? '#f59e0b' : '#ef4444';
         
         const diagnosis = nielsenDiagnoses[key] || '';
+        const description = descriptions[key] || '';
         
         scoresHTML += `
-            <div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 10px; border-left: 4px solid ${color};">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-weight: 600; color: #1e293b;">${labels[key] || key}</span>
-                    <span style="font-weight: bold; color: ${color};">${score.toFixed(2)}</span>
+            <div style="margin-bottom: 20px; padding: 20px; background: white; border-radius: 10px; border-left: 4px solid ${color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-weight: 700; color: #1e293b; font-size: 1.05rem;">${labels[key] || key}</span>
+                    <span style="font-weight: bold; color: ${color}; font-size: 1.5rem;">${score.toFixed(2)}</span>
                 </div>
-                <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 8px; margin-bottom: 8px;">
-                    <div style="width: ${percentage}%; background: ${color}; height: 8px; border-radius: 10px; transition: width 0.5s;"></div>
+                
+                <!-- 측정 항목 설명 -->
+                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid ${color};">
+                    <div style="font-size: 0.85rem; color: #475569; line-height: 1.6;">
+                        <strong>📋 측정 항목:</strong> ${description}
+                    </div>
                 </div>
-                <div style="font-size: 0.9rem; color: #64748b; margin-top: 8px;">
-                    ${diagnosis}
+                
+                <!-- 진행 바 -->
+                <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 10px; margin-bottom: 12px;">
+                    <div style="width: ${percentage}%; background: ${color}; height: 10px; border-radius: 10px; transition: width 0.5s;"></div>
+                </div>
+                
+                <!-- 평가 근거 -->
+                <div style="font-size: 0.9rem; color: #64748b; line-height: 1.6;">
+                    <strong>🔍 평가 근거:</strong> ${diagnosis}
                 </div>
             </div>
         `;

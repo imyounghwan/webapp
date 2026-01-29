@@ -76,10 +76,16 @@ export interface NielsenScores {
 
 /**
  * 49개 기관 데이터와 유사도 계산
+ * Nielsen 10원칙 패턴 기반 유사도 비교
  */
 export function findSimilarSites(structure: HTMLStructure, referenceData: any[]): SimilarSite[] {
+  // 먼저 새 사이트의 Nielsen 점수 계산
+  const newSiteNielsen = calculateNielsenFromStructure(structure)
+  
   const similarities = referenceData.map(site => {
-    const similarity = calculateSimilarity(structure, site)
+    // Nielsen 패턴 유사도 계산
+    const similarity = calculateNielsenSimilarity(newSiteNielsen, site.nielsen_10_principles)
+    
     return {
       name: site.site_name || site.name,
       similarity,
@@ -93,6 +99,63 @@ export function findSimilarSites(structure: HTMLStructure, referenceData: any[])
   return similarities
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, 5)
+}
+
+/**
+ * HTML 구조에서 Nielsen 10원칙 점수 추정
+ */
+function calculateNielsenFromStructure(structure: HTMLStructure): any {
+  const { navigation, accessibility, content, forms, visuals } = structure
+  
+  // 기본 점수 2.5 (중간값)
+  const base = 2.5
+  
+  return {
+    N1_visibility: base + (navigation.breadcrumbExists ? 1.0 : -0.5) + (navigation.searchExists ? 0.5 : 0),
+    N2_match: base + (accessibility.langAttribute ? 0.5 : 0) + (content.headingCount > 5 ? 0.8 : -0.3),
+    N3_control: base + (navigation.breadcrumbExists ? 0.7 : -0.3) + (navigation.linkCount > 20 ? 0.5 : 0),
+    N4_consistency: base + (content.headingCount > 0 ? 0.8 : -0.5) + (accessibility.langAttribute ? 0.4 : 0),
+    N5_error_prevention: base + (forms.validationExists ? 1.2 : -0.8) + (forms.labelRatio > 0.8 ? 0.5 : -0.3),
+    N6_recognition: base + (navigation.searchExists ? 1.0 : -0.5) + (visuals.iconCount > 3 ? 0.5 : 0),
+    N7_flexibility: base + (navigation.searchExists ? 1.0 : -0.6),
+    N8_minimalism: base + (content.paragraphCount < 50 ? 0.8 : -0.5) + (visuals.imageCount < 30 ? 0.4 : -0.2),
+    N9_error_recovery: base + (forms.validationExists ? 0.8 : -0.4),
+    N10_help: base + (content.listCount > 3 ? 0.6 : -0.2) + (navigation.searchExists ? 0.4 : 0)
+  }
+}
+
+/**
+ * Nielsen 10원칙 패턴 유사도 계산
+ * 각 원칙의 점수 차이를 기반으로 유사도 측정
+ */
+function calculateNielsenSimilarity(newNielsen: any, refNielsen: any): number {
+  if (!refNielsen) return 0
+  
+  const principles = ['N1_visibility', 'N2_match', 'N3_control', 'N4_consistency', 
+                     'N5_error_prevention', 'N6_recognition', 'N7_flexibility', 
+                     'N8_minimalism', 'N9_error_recovery', 'N10_help']
+  
+  let totalDiff = 0
+  let count = 0
+  
+  principles.forEach(key => {
+    const newScore = newNielsen[key] || 0
+    const refScore = refNielsen[key] || 0
+    
+    // 점수 차이 (0~5 범위에서)
+    const diff = Math.abs(newScore - refScore)
+    totalDiff += diff
+    count++
+  })
+  
+  // 평균 차이 계산 (0~5)
+  const avgDiff = totalDiff / count
+  
+  // 유사도로 변환 (차이가 작을수록 유사도 높음)
+  // 차이 0 = 100점, 차이 5 = 0점
+  const similarity = Math.max(0, 100 - (avgDiff * 20))
+  
+  return Math.round(similarity)
 }
 
 /**
