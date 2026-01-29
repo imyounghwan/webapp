@@ -73,7 +73,17 @@ export function analyzeHTML(html: string, url: string): HTMLStructure {
 function analyzeNavigation(html: string): NavigationStructure {
   const navMatches = html.match(/<nav[^>]*>/gi) || []
   const linkMatches = html.match(/<a\s+[^>]*href/gi) || []
-  const breadcrumbExists = /breadcrumb/i.test(html)
+  
+  // Breadcrumb 감지 (다양한 패턴 지원)
+  const breadcrumbExists = 
+    /breadcrumb/i.test(html) ||                    // breadcrumb
+    /location[_-]?wrap/i.test(html) ||             // location_wrap, location-wrap
+    /현재[\s]*위치/i.test(html) ||                  // 현재위치, 현재 위치
+    /navi[_-]?home/i.test(html) ||                 // navi_home, navi-home
+    /(class|id)\s*=\s*["'][^"']*path[^"']*["']/i.test(html) ||  // path 클래스/ID
+    /(class|id)\s*=\s*["'][^"']*location[^"']*["']/i.test(html) || // location 클래스/ID
+    />\s*Home\s*<.*?>\s*[>›▶]\s*</i.test(html)    // Home > 메뉴 형태
+  
   const searchExists = /type\s*=\s*["']search["']/i.test(html) || /role\s*=\s*["']search["']/i.test(html)
   
   // 메뉴 깊이 추정 (ul > li > ul 구조 카운트)
