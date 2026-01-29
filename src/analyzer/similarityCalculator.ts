@@ -16,6 +16,12 @@ export interface PredictedScore {
   overall: number
   convenience: number
   design: number
+  convenience_items: {  // 편의성 항목 (13개)
+    [key: string]: { score: number; category: string; diagnosis: string }
+  }
+  design_items: {  // 디자인 항목 (12개)
+    [key: string]: { score: number; category: string; diagnosis: string }
+  }
   nielsen_scores: NielsenScores
   nielsen_diagnoses: NielsenDiagnoses  // 각 항목별 진단 근거
 }
@@ -293,10 +299,45 @@ export function calculatePredictedScore(similarSites: SimilarSite[], structure: 
   // Nielsen 진단 근거 생성 (URL 포함)
   const nielsenDiagnoses = generateDiagnoses(structure, nielsenScores, url)
 
+  // 편의성 항목 상세 정보
+  const convenienceItemsDetail = {
+    'N1.1_현재_위치': { score: nielsenScores.N1_1_current_location, category: 'N1_시스템_상태_가시성', diagnosis: nielsenDiagnoses.N1_1_current_location },
+    'N1.2_로딩_상태': { score: nielsenScores.N1_2_loading_status, category: 'N1_시스템_상태_가시성', diagnosis: nielsenDiagnoses.N1_2_loading_status },
+    'N1.3_행동_피드백': { score: nielsenScores.N1_3_action_feedback, category: 'N1_시스템_상태_가시성', diagnosis: nielsenDiagnoses.N1_3_action_feedback },
+    'N3.1_실행_취소': { score: nielsenScores.N3_1_undo_redo, category: 'N3_사용자_제어와_자유', diagnosis: nielsenDiagnoses.N3_1_undo_redo },
+    'N3.2_나가기': { score: nielsenScores.N3_2_exit_escape, category: 'N3_사용자_제어와_자유', diagnosis: nielsenDiagnoses.N3_2_exit_escape },
+    'N3.3_유연한_네비게이션': { score: nielsenScores.N3_3_flexible_navigation, category: 'N3_사용자_제어와_자유', diagnosis: nielsenDiagnoses.N3_3_flexible_navigation },
+    'N5.1_입력_검증': { score: nielsenScores.N5_1_input_validation, category: 'N5_오류_예방', diagnosis: nielsenDiagnoses.N5_1_input_validation },
+    'N5.3_제약_조건': { score: nielsenScores.N5_3_constraints, category: 'N5_오류_예방', diagnosis: nielsenDiagnoses.N5_3_constraints },
+    'N6.1_보이는_옵션': { score: nielsenScores.N6_1_visible_options, category: 'N6_인식보다_기억_최소화', diagnosis: nielsenDiagnoses.N6_1_visible_options },
+    'N6.2_인식_단서': { score: nielsenScores.N6_2_recognition_cues, category: 'N6_인식보다_기억_최소화', diagnosis: nielsenDiagnoses.N6_2_recognition_cues },
+    'N6.3_기억_부담': { score: nielsenScores.N6_3_memory_load, category: 'N6_인식보다_기억_최소화', diagnosis: nielsenDiagnoses.N6_3_memory_load },
+    'N7.1_단축키': { score: nielsenScores.N7_1_shortcuts, category: 'N7_유연성과_효율성', diagnosis: nielsenDiagnoses.N7_1_shortcuts },
+    'N10.1_도움말_접근성': { score: nielsenScores.N10_1_help_access, category: 'N10_도움말과_문서', diagnosis: nielsenDiagnoses.N10_1_help_access }
+  }
+
+  // 디자인 항목 상세 정보
+  const designItemsDetail = {
+    'N2.1_친숙한_용어': { score: nielsenScores.N2_1_familiar_terms, category: 'N2_현실_세계와의_일치', diagnosis: nielsenDiagnoses.N2_1_familiar_terms },
+    'N2.2_자연스러운_흐름': { score: nielsenScores.N2_2_natural_flow, category: 'N2_현실_세계와의_일치', diagnosis: nielsenDiagnoses.N2_2_natural_flow },
+    'N2.3_현실_세계_은유': { score: nielsenScores.N2_3_real_world_metaphor, category: 'N2_현실_세계와의_일치', diagnosis: nielsenDiagnoses.N2_3_real_world_metaphor },
+    'N4.1_시각적_일관성': { score: nielsenScores.N4_1_visual_consistency, category: 'N4_일관성과_표준', diagnosis: nielsenDiagnoses.N4_1_visual_consistency },
+    'N4.2_용어_일관성': { score: nielsenScores.N4_2_terminology_consistency, category: 'N4_일관성과_표준', diagnosis: nielsenDiagnoses.N4_2_terminology_consistency },
+    'N4.3_표준_준수': { score: nielsenScores.N4_3_standard_compliance, category: 'N4_일관성과_표준', diagnosis: nielsenDiagnoses.N4_3_standard_compliance },
+    'N8.1_핵심_정보': { score: nielsenScores.N8_1_essential_info, category: 'N8_미니멀_디자인', diagnosis: nielsenDiagnoses.N8_1_essential_info },
+    'N8.2_깔끔한_인터페이스': { score: nielsenScores.N8_2_clean_interface, category: 'N8_미니멀_디자인', diagnosis: nielsenDiagnoses.N8_2_clean_interface },
+    'N8.3_시각적_계층': { score: nielsenScores.N8_3_visual_hierarchy, category: 'N8_미니멀_디자인', diagnosis: nielsenDiagnoses.N8_3_visual_hierarchy },
+    'N9.1_오류_메시지': { score: nielsenScores.N9_1_error_messages, category: 'N9_오류_인식과_복구', diagnosis: nielsenDiagnoses.N9_1_error_messages },
+    'N9.3_오류_예방': { score: nielsenScores.N9_3_error_prevention_info, category: 'N9_오류_인식과_복구', diagnosis: nielsenDiagnoses.N9_3_error_prevention_info },
+    'N10.2_문서화': { score: nielsenScores.N10_2_documentation, category: 'N10_도움말과_문서', diagnosis: nielsenDiagnoses.N10_2_documentation }
+  }
+
   return {
     overall: Math.round(overall * 100) / 100,      // 소수점 2자리
     convenience: Math.round(convenience * 100) / 100,
     design: Math.round(design * 100) / 100,
+    convenience_items: convenienceItemsDetail,      // 편의성 13개 항목
+    design_items: designItemsDetail,                // 디자인 12개 항목
     nielsen_scores: nielsenScores,
     nielsen_diagnoses: nielsenDiagnoses
   }
