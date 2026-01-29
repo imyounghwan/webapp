@@ -241,108 +241,62 @@ function scoreVisuals(visuals: any): number {
 }
 
 /**
- * HTML 구조 기반 편의성 점수 (0~5점)
- */
-function calculateConvenienceScore(structure: HTMLStructure): number {
-  let score = 0
-  const { navigation, accessibility, forms } = structure
-  
-  // 네비게이션 (0~1.5점)
-  if (navigation.breadcrumbExists) score += 0.5
-  if (navigation.searchExists) score += 0.5
-  score += Math.min(navigation.linkCount / 50, 0.5) // 링크 수 (최대 50개 기준)
-  
-  // 접근성 (0~2.0점)
-  score += accessibility.altTextRatio * 0.5 // 대체 텍스트 비율
-  if (accessibility.langAttribute) score += 0.3
-  if (accessibility.skipLinkExists) score += 0.2
-  if (accessibility.headingStructure) score += 0.5
-  score += Math.min(accessibility.ariaLabelCount / 10, 0.5) // ARIA 레이블
-  
-  // 폼 편의성 (0~1.5점)
-  if (forms.formCount > 0) {
-    if (forms.validationExists) score += 0.5
-    score += forms.labelRatio * 1.0 // 라벨 연결 비율
-  } else {
-    score += 0.75 // 폼이 없어도 중간 점수
-  }
-  
-  return Math.min(score, 5.0)
-}
-
-/**
- * HTML 구조 기반 디자인 점수 (0~5점)
- */
-function calculateDesignScore(structure: HTMLStructure): number {
-  let score = 0
-  const { content, visuals, accessibility } = structure
-  
-  // 콘텐츠 구조 (0~2.0점)
-  const headingScore = Math.min(content.headingCount / 10, 1.0) // 제목 개수 (최대 10개 기준)
-  score += headingScore
-  
-  const paragraphScore = content.paragraphCount >= 10 && content.paragraphCount <= 50 
-    ? 0.5 
-    : content.paragraphCount < 10 
-    ? content.paragraphCount * 0.05 
-    : 0.3 // 10~50개가 적정
-  score += paragraphScore
-  
-  if (content.listCount > 0) score += Math.min(content.listCount / 10, 0.5)
-  
-  // 시각적 요소 (0~2.0점)
-  const imageScore = visuals.imageCount > 0 && visuals.imageCount <= 30
-    ? Math.min(visuals.imageCount / 15, 1.0) // 적정 이미지 수
-    : visuals.imageCount > 30
-    ? 0.3 // 과다
-    : 0.5 // 없어도 중간
-  score += imageScore
-  
-  const iconScore = Math.min(visuals.iconCount / 10, 0.5) // 아이콘
-  score += iconScore
-  
-  if (visuals.videoCount > 0 && visuals.videoCount <= 3) score += 0.5
-  
-  // 일관성 (0~1.0점)
-  if (accessibility.headingStructure) score += 0.5 // 제목 계층 구조
-  if (accessibility.langAttribute) score += 0.5 // 언어 속성
-  
-  return Math.min(score, 5.0)
-}
-
-/**
- * 기본 구조 점수 (사용 안함 - 호환성 유지)
- */
-function calculateStructureScore(structure: HTMLStructure): number {
-  return (calculateConvenienceScore(structure) + calculateDesignScore(structure)) / 2
-}
-
-/**
- * 예측 점수 산출
+ * 예측 점수 산출 (Nielsen 25개 항목 기반)
  */
 export function calculatePredictedScore(similarSites: SimilarSite[], structure: HTMLStructure, url: string): PredictedScore {
-  // HTML 구조 기반 점수 계산 (결정적, 재현 가능)
-  const baseScore = calculateStructureScore(structure)
+  // Nielsen 25개 항목 점수 계산
+  const nielsenScores = mapToNielsen(structure, 0)
   
-  // 편의성: 접근성 + 네비게이션 중심
-  const convenience = calculateConvenienceScore(structure)
+  // 편의성 항목 (13개): N1, N3, N5, N6, N7, N10.1
+  const convenienceItems = [
+    nielsenScores.N1_1_current_location,    // N1.1 현재 위치
+    nielsenScores.N1_2_loading_status,      // N1.2 로딩 상태
+    nielsenScores.N1_3_action_feedback,     // N1.3 행동 피드백
+    nielsenScores.N3_1_undo_redo,           // N3.1 실행 취소
+    nielsenScores.N3_2_exit_escape,         // N3.2 나가기
+    nielsenScores.N3_3_flexible_navigation, // N3.3 유연한 네비
+    nielsenScores.N5_1_input_validation,    // N5.1 입력 검증
+    nielsenScores.N5_3_constraints,         // N5.3 제약 조건
+    nielsenScores.N6_1_visible_options,     // N6.1 보이는 옵션
+    nielsenScores.N6_2_recognition_cues,    // N6.2 인식 단서
+    nielsenScores.N6_3_memory_load,         // N6.3 기억 부담
+    nielsenScores.N7_1_shortcuts,           // N7.1 단축키
+    nielsenScores.N10_1_help_access         // N10.1 도움말 접근성
+  ]
   
-  // 디자인: 시각적 요소 + 콘텐츠 구조 중심
-  const design = calculateDesignScore(structure)
+  // 디자인 항목 (12개): N2, N4, N8, N9, N10.2
+  const designItems = [
+    nielsenScores.N2_1_familiar_terms,       // N2.1 친숙한 용어
+    nielsenScores.N2_2_natural_flow,         // N2.2 자연스러운 흐름
+    nielsenScores.N2_3_real_world_metaphor,  // N2.3 현실 세계 은유
+    nielsenScores.N4_1_visual_consistency,   // N4.1 시각적 일관성
+    nielsenScores.N4_2_terminology_consistency, // N4.2 용어 일관성
+    nielsenScores.N4_3_standard_compliance,  // N4.3 표준 준수
+    nielsenScores.N8_1_essential_info,       // N8.1 핵심 정보
+    nielsenScores.N8_2_clean_interface,      // N8.2 깔끔한 인터페이스
+    nielsenScores.N8_3_visual_hierarchy,     // N8.3 시각적 계층
+    nielsenScores.N9_1_error_messages,       // N9.1 오류 메시지
+    nielsenScores.N9_3_error_prevention_info,// N9.3 오류 예방
+    nielsenScores.N10_2_documentation        // N10.2 문서화
+  ]
   
-  // 종합 점수 = (편의성 + 디자인) / 2
-  const overall = (convenience + design) / 2
-
-  // Nielsen 점수 매핑
-  const nielsenScores = mapToNielsen(structure, overall)
+  // 편의성 = 편의성 항목들의 평균
+  const convenience = convenienceItems.reduce((sum, score) => sum + score, 0) / convenienceItems.length
+  
+  // 디자인 = 디자인 항목들의 평균
+  const design = designItems.reduce((sum, score) => sum + score, 0) / designItems.length
+  
+  // 종합 = Nielsen 25개 항목 전체 평균 (편의성 13개 + 디자인 12개)
+  const allItems = [...convenienceItems, ...designItems]
+  const overall = allItems.reduce((sum, score) => sum + score, 0) / allItems.length
   
   // Nielsen 진단 근거 생성 (URL 포함)
   const nielsenDiagnoses = generateDiagnoses(structure, nielsenScores, url)
 
   return {
-    overall: Math.min(overall, 5.0),
-    convenience: Math.min(convenience, 5.0),
-    design: Math.min(design, 5.0),
+    overall: Math.round(overall * 100) / 100,      // 소수점 2자리
+    convenience: Math.round(convenience * 100) / 100,
+    design: Math.round(design * 100) / 100,
     nielsen_scores: nielsenScores,
     nielsen_diagnoses: nielsenDiagnoses
   }
