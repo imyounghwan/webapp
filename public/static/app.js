@@ -47,7 +47,9 @@ function displayResults(data) {
             return `
                 <div class="border-l-4 ${color.border} bg-white rounded-lg p-4 mb-3 shadow-sm">
                     <div class="flex justify-between items-start mb-2">
-                        <div class="font-semibold text-gray-800">${key.replace(/_/g, ' ')}</div>
+                        <div class="font-semibold text-gray-800">
+                            ${key.replace(/_/g, ' ')} <span class="text-green-600 font-bold">(편의성 항목)</span>
+                        </div>
                         <div class="text-2xl font-bold ${color.text}">${item.score.toFixed(2)}</div>
                     </div>
                     <div class="text-xs text-gray-500 mb-2">
@@ -73,7 +75,9 @@ function displayResults(data) {
             return `
                 <div class="border-l-4 ${color.border} bg-white rounded-lg p-4 mb-3 shadow-sm">
                     <div class="flex justify-between items-start mb-2">
-                        <div class="font-semibold text-gray-800">${key.replace(/_/g, ' ')}</div>
+                        <div class="font-semibold text-gray-800">
+                            ${key.replace(/_/g, ' ')} <span class="text-purple-600 font-bold">(디자인 항목)</span>
+                        </div>
                         <div class="text-2xl font-bold ${color.text}">${item.score.toFixed(2)}</div>
                     </div>
                     <div class="text-xs text-gray-500 mb-2">
