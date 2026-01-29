@@ -1,19 +1,11 @@
-console.log('🚀 AutoAnalyzer v2.1 - Fixed Version');
-console.log('Element IDs: analyzeBtn, analyzeUrl, analyzeResult');
+console.log('🚀 AutoAnalyzer v2.2 - Simple Styles');
 
-// DOM이 완전히 로드된 후에 실행
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ DOM loaded - Setting up event listener');
+    console.log('✅ DOM loaded');
     
     const analyzeBtn = document.getElementById('analyzeBtn');
     const analyzeUrl = document.getElementById('analyzeUrl');
     const analyzeResult = document.getElementById('analyzeResult');
-    
-    console.log('Elements found:', {
-        analyzeBtn: !!analyzeBtn,
-        analyzeUrl: !!analyzeUrl,
-        analyzeResult: !!analyzeResult
-    });
     
     if (!analyzeBtn || !analyzeUrl || !analyzeResult) {
         console.error('❌ Required elements not found!');
@@ -28,8 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        console.log('🔍 Starting analysis for:', url);
-        analyzeResult.innerHTML = '<div style="text-align: center; padding: 20px;"><div style="color: #666;">🔍 URL 분석 중...</div></div>';
+        console.log('🔍 Analyzing:', url);
+        analyzeResult.innerHTML = '<div style="text-align:center;padding:30px;color:#666;">🔍 분석 중...</div>';
         analyzeResult.style.display = 'block';
         
         try {
@@ -39,18 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ url })
             });
             
-            if (!response.ok) {
-                throw new Error('분석 실패');
-            }
+            if (!response.ok) throw new Error('분석 실패');
             
             const data = await response.json();
             displayResults(data, analyzeResult);
         } catch (error) {
-            console.error('❌ Analysis error:', error);
+            console.error('❌ Error:', error);
             analyzeResult.innerHTML = `
-                <div style="background: #fee; border: 1px solid #fcc; border-radius: 8px; padding: 16px;">
-                    <div style="color: #c00; font-weight: bold;">❌ 분석 실패</div>
-                    <div style="color: #666; margin-top: 8px; font-size: 14px;">${error.message}</div>
+                <div style="background:#fee;border:1px solid #fcc;border-radius:8px;padding:20px;margin:20px 0;">
+                    <div style="color:#c00;font-weight:bold;font-size:18px;">❌ 분석 실패</div>
+                    <div style="color:#666;margin-top:10px;">${error.message}</div>
                 </div>
             `;
         }
@@ -58,148 +48,97 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function displayResults(data, resultElement) {
-    const { url, predicted_score } = data;
+    const { predicted_score } = data;
     
-    // 편의성 항목 HTML 생성
-    const convenienceItemsHTML = Object.entries(predicted_score.convenience_items)
-        .map(([key, item]) => {
-            const color = getScoreColor(item.score);
-            const icon = getScoreIcon(item.score);
-            const itemName = key.replace(/_/g, ' ');
-            return `
-                <div class="border-l-4 ${color.border} bg-white rounded-lg p-4 mb-3 shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="font-semibold text-gray-800">
-                            ${itemName} <span class="text-green-600 font-bold text-sm">(편의성 항목)</span>
-                        </div>
-                        <div class="text-2xl font-bold ${color.text}">${item.score.toFixed(2)}</div>
+    // 편의성 항목
+    let convenienceHTML = '';
+    for (const [key, item] of Object.entries(predicted_score.convenience_items)) {
+        const itemName = key.replace(/_/g, ' ');
+        const scoreColor = item.score >= 4.5 ? '#059669' : item.score >= 3.5 ? '#3b82f6' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
+        convenienceHTML += `
+            <div style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:15px;margin-bottom:15px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
+                    <div style="font-weight:600;color:#1f2937;">
+                        ${itemName} <span style="color:#059669;font-weight:bold;font-size:13px;">(편의성 항목)</span>
                     </div>
-                    <div class="text-xs text-gray-500 mb-2">
-                        📋 ${item.category.replace(/_/g, ' ')}
-                    </div>
-                    <div class="text-sm ${color.bg} p-2 rounded">
-                        ${icon} ${item.diagnosis}
-                    </div>
-                    <div class="mt-2">
-                        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div class="${color.progress}" style="width: ${(item.score / 5) * 100}%"></div>
-                        </div>
-                    </div>
+                    <div style="font-size:24px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(2)}</div>
                 </div>
-            `;
-        }).join('');
+                <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">📋 ${item.category.replace(/_/g, ' ')}</div>
+                <div style="background:#f9fafb;padding:10px;border-radius:6px;font-size:14px;color:#374151;">
+                    ${item.diagnosis}
+                </div>
+                <div style="margin-top:10px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;background:${scoreColor};width:${(item.score/5)*100}%;"></div>
+                </div>
+            </div>
+        `;
+    }
     
-    // 디자인 항목 HTML 생성
-    const designItemsHTML = Object.entries(predicted_score.design_items)
-        .map(([key, item]) => {
-            const color = getScoreColor(item.score);
-            const icon = getScoreIcon(item.score);
-            const itemName = key.replace(/_/g, ' ');
-            return `
-                <div class="border-l-4 ${color.border} bg-white rounded-lg p-4 mb-3 shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="font-semibold text-gray-800">
-                            ${itemName} <span class="text-purple-600 font-bold text-sm">(디자인 항목)</span>
-                        </div>
-                        <div class="text-2xl font-bold ${color.text}">${item.score.toFixed(2)}</div>
+    // 디자인 항목
+    let designHTML = '';
+    for (const [key, item] of Object.entries(predicted_score.design_items)) {
+        const itemName = key.replace(/_/g, ' ');
+        const scoreColor = item.score >= 4.5 ? '#059669' : item.score >= 3.5 ? '#3b82f6' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
+        designHTML += `
+            <div style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:15px;margin-bottom:15px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
+                    <div style="font-weight:600;color:#1f2937;">
+                        ${itemName} <span style="color:#9333ea;font-weight:bold;font-size:13px;">(디자인 항목)</span>
                     </div>
-                    <div class="text-xs text-gray-500 mb-2">
-                        📋 ${item.category.replace(/_/g, ' ')}
-                    </div>
-                    <div class="text-sm ${color.bg} p-2 rounded">
-                        ${icon} ${item.diagnosis}
-                    </div>
-                    <div class="mt-2">
-                        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div class="${color.progress}" style="width: ${(item.score / 5) * 100}%"></div>
-                        </div>
-                    </div>
+                    <div style="font-size:24px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(2)}</div>
                 </div>
-            `;
-        }).join('');
+                <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">📋 ${item.category.replace(/_/g, ' ')}</div>
+                <div style="background:#f9fafb;padding:10px;border-radius:6px;font-size:14px;color:#374151;">
+                    ${item.diagnosis}
+                </div>
+                <div style="margin-top:10px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;background:${scoreColor};width:${(item.score/5)*100}%;"></div>
+                </div>
+            </div>
+        `;
+    }
     
     resultElement.innerHTML = `
-        <div class="space-y-6">
+        <div style="margin-top:30px;">
             <!-- 종합 점수 -->
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-                <div class="text-center mb-4">
-                    <div class="text-4xl font-bold text-blue-600">${predicted_score.overall.toFixed(2)}</div>
-                    <div class="text-gray-600 mt-1">종합 점수 (5점 만점)</div>
+            <div style="background:linear-gradient(to right, #eff6ff, #eef2ff);border:1px solid #bfdbfe;border-radius:12px;padding:30px;margin-bottom:30px;">
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div style="font-size:48px;font-weight:bold;color:#2563eb;">${predicted_score.overall.toFixed(2)}</div>
+                    <div style="color:#6b7280;margin-top:5px;">종합 점수 (5점 만점)</div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div class="bg-white rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-green-600">${predicted_score.convenience.toFixed(2)}</div>
-                        <div class="text-sm text-gray-600">편의성 (13개 항목)</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">
+                    <div style="background:white;border-radius:10px;padding:20px;text-align:center;">
+                        <div style="font-size:28px;font-weight:bold;color:#059669;">${predicted_score.convenience.toFixed(2)}</div>
+                        <div style="font-size:14px;color:#6b7280;">편의성 (13개 항목)</div>
                     </div>
-                    <div class="bg-white rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-purple-600">${predicted_score.design.toFixed(2)}</div>
-                        <div class="text-sm text-gray-600">디자인 (12개 항목)</div>
+                    <div style="background:white;border-radius:10px;padding:20px;text-align:center;">
+                        <div style="font-size:28px;font-weight:bold;color:#9333ea;">${predicted_score.design.toFixed(2)}</div>
+                        <div style="font-size:14px;color:#6b7280;">디자인 (12개 항목)</div>
                     </div>
                 </div>
             </div>
             
             <!-- 편의성 항목 -->
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-lg p-6 border-2 border-green-200">
-                <div class="bg-green-600 text-white text-2xl font-bold mb-4 p-4 rounded-lg flex items-center shadow-md">
-                    <i class="fas fa-hand-pointer mr-3"></i>
+            <div style="background:linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);border-radius:12px;padding:30px;margin-bottom:30px;border:2px solid #86efac;">
+                <div style="background:#059669;color:white;font-size:24px;font-weight:bold;padding:20px;border-radius:10px;margin-bottom:20px;">
                     📊 편의성 항목 (13개)
                 </div>
-                <div class="text-sm text-gray-700 font-semibold mb-4 bg-white p-3 rounded-lg">
+                <div style="background:white;padding:15px;border-radius:8px;margin-bottom:20px;font-weight:600;color:#374151;">
                     💡 사용자가 기능을 얼마나 쉽게 사용할 수 있는가?
                 </div>
-                ${convenienceItemsHTML}
+                ${convenienceHTML}
             </div>
             
             <!-- 디자인 항목 -->
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-lg p-6 border-2 border-purple-200">
-                <div class="bg-purple-600 text-white text-2xl font-bold mb-4 p-4 rounded-lg flex items-center shadow-md">
-                    <i class="fas fa-palette mr-3"></i>
+            <div style="background:linear-gradient(135deg, #fae8ff 0%, #f3e8ff 100%);border-radius:12px;padding:30px;border:2px solid #d8b4fe;">
+                <div style="background:#9333ea;color:white;font-size:24px;font-weight:bold;padding:20px;border-radius:10px;margin-bottom:20px;">
                     🎨 디자인 항목 (12개)
                 </div>
-                <div class="text-sm text-gray-700 font-semibold mb-4 bg-white p-3 rounded-lg">
+                <div style="background:white;padding:15px;border-radius:8px;margin-bottom:20px;font-weight:600;color:#374151;">
                     💡 시각적 디자인과 정보 구조가 얼마나 좋은가?
                 </div>
-                ${designItemsHTML}
+                ${designHTML}
             </div>
         </div>
     `;
-}
-
-function getScoreColor(score) {
-    if (score >= 4.5) {
-        return {
-            border: 'border-green-500',
-            text: 'text-green-600',
-            bg: 'bg-green-50',
-            progress: 'h-full bg-green-500'
-        };
-    } else if (score >= 3.5) {
-        return {
-            border: 'border-blue-500',
-            text: 'text-blue-600',
-            bg: 'bg-blue-50',
-            progress: 'h-full bg-blue-500'
-        };
-    } else if (score >= 2.5) {
-        return {
-            border: 'border-orange-500',
-            text: 'text-orange-600',
-            bg: 'bg-orange-50',
-            progress: 'h-full bg-orange-500'
-        };
-    } else {
-        return {
-            border: 'border-red-500',
-            text: 'text-red-600',
-            bg: 'bg-red-50',
-            progress: 'h-full bg-red-500'
-        };
-    }
-}
-
-function getScoreIcon(score) {
-    if (score >= 4.5) return '✅';
-    if (score >= 3.5) return '🔵';
-    if (score >= 2.5) return '⚠️';
-    return '❌';
 }
