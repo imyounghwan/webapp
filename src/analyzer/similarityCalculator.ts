@@ -20,16 +20,53 @@ export interface PredictedScore {
 }
 
 export interface NielsenScores {
-  N1_visibility: number
-  N2_match: number
-  N3_control: number
-  N4_consistency: number
-  N5_error_prevention: number
-  N6_recognition: number
-  N7_flexibility: number
-  N8_minimalism: number
-  N9_error_recovery: number
-  N10_help: number
+  // N1: 시스템 상태 가시성 (3개 항목)
+  N1_1_current_location: number      // 현재 페이지 위치 표시
+  N1_2_loading_status: number        // 로딩 상태 표시
+  N1_3_action_feedback: number       // 사용자 행동 피드백
+  
+  // N2: 현실 세계 일치 (3개 항목)
+  N2_1_familiar_terms: number        // 친숙한 용어 사용
+  N2_2_natural_flow: number          // 자연스러운 흐름
+  N2_3_real_world_metaphor: number   // 현실 세계 은유
+  
+  // N3: 사용자 제어와 자유 (3개 항목)
+  N3_1_undo_redo: number             // 실행 취소/재실행
+  N3_2_exit_escape: number           // 나가기/취소
+  N3_3_flexible_navigation: number   // 유연한 네비게이션
+  
+  // N4: 일관성과 표준 (3개 항목)
+  N4_1_visual_consistency: number    // 시각적 일관성
+  N4_2_terminology_consistency: number // 용어 일관성
+  N4_3_standard_compliance: number   // 표준 준수
+  
+  // N5: 오류 예방 (3개 항목)
+  N5_1_input_validation: number      // 입력 검증
+  N5_2_confirmation_dialog: number   // 확인 대화상자
+  N5_3_constraints: number           // 제약 조건
+  
+  // N6: 인식보다 회상 (3개 항목)
+  N6_1_visible_options: number       // 보이는 옵션
+  N6_2_recognition_cues: number      // 인식 단서
+  N6_3_memory_load: number           // 기억 부담 최소화
+  
+  // N7: 유연성과 효율성 (2개 항목)
+  N7_1_shortcuts: number             // 단축키/빠른 접근
+  N7_2_customization: number         // 맞춤 설정
+  
+  // N8: 미니멀 디자인 (3개 항목)
+  N8_1_essential_info: number        // 핵심 정보만
+  N8_2_clean_interface: number       // 깔끔한 인터페이스
+  N8_3_visual_hierarchy: number      // 시각적 계층
+  
+  // N9: 오류 인식과 복구 (3개 항목)
+  N9_1_error_messages: number        // 명확한 오류 메시지
+  N9_2_recovery_support: number      // 복구 지원
+  N9_3_error_prevention_info: number // 오류 예방 정보
+  
+  // N10: 도움말과 문서 (2개 항목)
+  N10_1_help_access: number          // 도움말 접근성
+  N10_2_documentation: number        // 문서화
 }
 
 /**
@@ -205,107 +242,65 @@ export function calculatePredictedScore(similarSites: SimilarSite[], structure: 
 }
 
 /**
- * Nielsen 10원칙 매핑
+ * Nielsen 25개 세부 항목 매핑
  */
 function mapToNielsen(structure: HTMLStructure, baseScore: number): NielsenScores {
-  const { navigation, accessibility, content, forms } = structure
+  const { navigation, accessibility, content, forms, visuals } = structure
 
   return {
-    // N1: 시스템 상태 가시성
-    N1_visibility: calculateN1(navigation, baseScore),
+    // N1: 시스템 상태 가시성 (3개)
+    N1_1_current_location: calculateScore(baseScore, navigation.breadcrumbExists ? 0.4 : -0.3),
+    N1_2_loading_status: calculateScore(baseScore, 0), // HTML 분석 한계
+    N1_3_action_feedback: calculateScore(baseScore, forms.validationExists ? 0.3 : -0.2),
     
-    // N2: 현실 세계 일치
-    N2_match: calculateN2(content, baseScore),
+    // N2: 현실 세계 일치 (3개)
+    N2_1_familiar_terms: calculateScore(baseScore, accessibility.langAttribute ? 0.2 : -0.1),
+    N2_2_natural_flow: calculateScore(baseScore, content.headingCount > 5 ? 0.3 : -0.2),
+    N2_3_real_world_metaphor: calculateScore(baseScore, visuals.iconCount > 5 ? 0.2 : 0),
     
-    // N3: 사용자 제어와 자유
-    N3_control: calculateN3(navigation, baseScore),
+    // N3: 사용자 제어와 자유 (3개)
+    N3_1_undo_redo: calculateScore(baseScore, 0), // HTML 분석 한계
+    N3_2_exit_escape: calculateScore(baseScore, navigation.breadcrumbExists ? 0.3 : -0.2),
+    N3_3_flexible_navigation: calculateScore(baseScore, navigation.linkCount > 20 ? 0.3 : -0.1),
     
-    // N4: 일관성과 표준
-    N4_consistency: calculateN4(content, baseScore),
+    // N4: 일관성과 표준 (3개)
+    N4_1_visual_consistency: calculateScore(baseScore, content.headingCount > 0 ? 0.3 : -0.2),
+    N4_2_terminology_consistency: calculateScore(baseScore, 0.1),
+    N4_3_standard_compliance: calculateScore(baseScore, accessibility.langAttribute ? 0.3 : -0.2),
     
-    // N5: 오류 예방
-    N5_error_prevention: calculateN5(forms, baseScore),
+    // N5: 오류 예방 (3개)
+    N5_1_input_validation: calculateScore(baseScore, forms.validationExists ? 0.5 : -0.3),
+    N5_2_confirmation_dialog: calculateScore(baseScore, 0), // HTML 분석 한계
+    N5_3_constraints: calculateScore(baseScore, forms.labelRatio > 0.8 ? 0.3 : -0.2),
     
-    // N6: 인식보다 회상
-    N6_recognition: calculateN6(navigation, baseScore),
+    // N6: 인식보다 회상 (3개)
+    N6_1_visible_options: calculateScore(baseScore, navigation.searchExists ? 0.4 : -0.2),
+    N6_2_recognition_cues: calculateScore(baseScore, visuals.iconCount > 3 ? 0.3 : 0),
+    N6_3_memory_load: calculateScore(baseScore, navigation.breadcrumbExists ? 0.3 : -0.1),
     
-    // N7: 유연성과 효율성
-    N7_flexibility: calculateN7(navigation, baseScore),
+    // N7: 유연성과 효율성 (2개)
+    N7_1_shortcuts: calculateScore(baseScore, navigation.searchExists ? 0.4 : -0.3),
+    N7_2_customization: calculateScore(baseScore, 0), // HTML 분석 한계
     
-    // N8: 미니멀 디자인
-    N8_minimalism: calculateN8(content, baseScore),
+    // N8: 미니멀 디자인 (3개)
+    N8_1_essential_info: calculateScore(baseScore, content.paragraphCount < 50 ? 0.3 : -0.3),
+    N8_2_clean_interface: calculateScore(baseScore, visuals.imageCount < 30 ? 0.2 : -0.2),
+    N8_3_visual_hierarchy: calculateScore(baseScore, content.headingCount > 3 ? 0.3 : -0.2),
     
-    // N9: 오류 인식과 복구
-    N9_error_recovery: calculateN9(forms, baseScore),
+    // N9: 오류 인식과 복구 (3개)
+    N9_1_error_messages: calculateScore(baseScore, forms.validationExists ? 0.4 : -0.2),
+    N9_2_recovery_support: calculateScore(baseScore, 0), // HTML 분석 한계
+    N9_3_error_prevention_info: calculateScore(baseScore, forms.labelRatio > 0.8 ? 0.2 : -0.1),
     
-    // N10: 도움말과 문서
-    N10_help: calculateN10(content, baseScore)
+    // N10: 도움말과 문서 (2개)
+    N10_1_help_access: calculateScore(baseScore, navigation.searchExists ? 0.2 : -0.2),
+    N10_2_documentation: calculateScore(baseScore, content.listCount > 3 ? 0.2 : 0)
   }
 }
 
-function calculateN1(nav: any, base: number): number {
-  let score = base
-  if (nav.breadcrumbExists) score += 0.3
-  if (nav.searchExists) score += 0.2
-  return Math.min(score, 5.0)
-}
-
-function calculateN2(content: any, base: number): number {
-  let score = base
-  if (content.headingCount > 5) score += 0.2
-  if (content.listCount > 3) score += 0.2
-  return Math.min(score, 5.0)
-}
-
-function calculateN3(nav: any, base: number): number {
-  let score = base
-  if (nav.breadcrumbExists) score += 0.2
-  if (nav.linkCount > 20) score += 0.2
-  return Math.min(score, 5.0)
-}
-
-function calculateN4(content: any, base: number): number {
-  let score = base
-  if (content.headingCount > 0) score += 0.3
-  return Math.min(score, 5.0)
-}
-
-function calculateN5(forms: any, base: number): number {
-  let score = base
-  if (forms.validationExists) score += 0.4
-  if (forms.labelRatio > 0.8) score += 0.2
-  return Math.min(score, 5.0)
-}
-
-function calculateN6(nav: any, base: number): number {
-  let score = base
-  if (nav.searchExists) score += 0.3
-  if (nav.breadcrumbExists) score += 0.2
-  return Math.min(score, 5.0)
-}
-
-function calculateN7(nav: any, base: number): number {
-  let score = base
-  if (nav.searchExists) score += 0.4
-  return Math.min(score, 5.0)
-}
-
-function calculateN8(content: any, base: number): number {
-  let score = base
-  // 콘텐츠가 너무 많으면 감점
-  if (content.paragraphCount > 50) score -= 0.3
-  else if (content.paragraphCount > 20) score += 0.2
-  return Math.min(score, 5.0)
-}
-
-function calculateN9(forms: any, base: number): number {
-  let score = base
-  if (forms.validationExists) score += 0.3
-  return Math.min(score, 5.0)
-}
-
-function calculateN10(content: any, base: number): number {
-  let score = base
-  // FAQ, 도움말 키워드 존재 여부는 HTML 파싱에서 처리
-  return Math.min(score, 5.0)
+/**
+ * 기본 점수에서 조정값을 더해 최종 점수 계산 (0~5점 범위)
+ */
+function calculateScore(baseScore: number, adjustment: number): number {
+  return Math.max(0, Math.min(5.0, baseScore + adjustment))
 }

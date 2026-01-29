@@ -858,16 +858,53 @@ function displayAnalysisResult(result) {
     let scoresHTML = '';
     Object.entries(nielsenScores).forEach(([key, score]) => {
         const labels = {
-            'N1': '시스템 상태 가시성',
-            'N2': '현실 세계 일치',
-            'N3': '사용자 제어',
-            'N4': '일관성',
-            'N5': '오류 예방',
-            'N6': '인식 용이성',
-            'N7': '유연성',
-            'N8': '미니멀 디자인',
-            'N9': '오류 복구',
-            'N10': '도움말'
+            // N1: 시스템 상태 가시성 (3개)
+            'N1_1_current_location': 'N1.1 현재 위치 표시',
+            'N1_2_loading_status': 'N1.2 로딩 상태 표시',
+            'N1_3_action_feedback': 'N1.3 행동 피드백',
+            
+            // N2: 현실 세계 일치 (3개)
+            'N2_1_familiar_terms': 'N2.1 친숙한 용어',
+            'N2_2_natural_flow': 'N2.2 자연스러운 흐름',
+            'N2_3_real_world_metaphor': 'N2.3 현실 세계 은유',
+            
+            // N3: 사용자 제어와 자유 (3개)
+            'N3_1_undo_redo': 'N3.1 실행 취소/재실행',
+            'N3_2_exit_escape': 'N3.2 나가기/취소',
+            'N3_3_flexible_navigation': 'N3.3 유연한 네비게이션',
+            
+            // N4: 일관성과 표준 (3개)
+            'N4_1_visual_consistency': 'N4.1 시각적 일관성',
+            'N4_2_terminology_consistency': 'N4.2 용어 일관성',
+            'N4_3_standard_compliance': 'N4.3 표준 준수',
+            
+            // N5: 오류 예방 (3개)
+            'N5_1_input_validation': 'N5.1 입력 검증',
+            'N5_2_confirmation_dialog': 'N5.2 확인 대화상자',
+            'N5_3_constraints': 'N5.3 제약 조건',
+            
+            // N6: 인식보다 회상 (3개)
+            'N6_1_visible_options': 'N6.1 보이는 옵션',
+            'N6_2_recognition_cues': 'N6.2 인식 단서',
+            'N6_3_memory_load': 'N6.3 기억 부담 최소화',
+            
+            // N7: 유연성과 효율성 (2개)
+            'N7_1_shortcuts': 'N7.1 단축키/빠른 접근',
+            'N7_2_customization': 'N7.2 맞춤 설정',
+            
+            // N8: 미니멀 디자인 (3개)
+            'N8_1_essential_info': 'N8.1 핵심 정보만',
+            'N8_2_clean_interface': 'N8.2 깔끔한 인터페이스',
+            'N8_3_visual_hierarchy': 'N8.3 시각적 계층',
+            
+            // N9: 오류 인식과 복구 (3개)
+            'N9_1_error_messages': 'N9.1 명확한 오류 메시지',
+            'N9_2_recovery_support': 'N9.2 복구 지원',
+            'N9_3_error_prevention_info': 'N9.3 오류 예방 정보',
+            
+            // N10: 도움말과 문서 (2개)
+            'N10_1_help_access': 'N10.1 도움말 접근성',
+            'N10_2_documentation': 'N10.2 문서화'
         };
         
         const percentage = (score / 5) * 100;
@@ -920,7 +957,10 @@ function displayAnalysisResult(result) {
             </div>
         </div>
         
-        <h4 style="margin-bottom: 15px;">Nielsen 10원칙 점수</h4>
+        <h4 style="margin-bottom: 15px;">
+            <i class="fas fa-list-check"></i>
+            Nielsen 25개 세부 항목 점수
+        </h4>
         ${scoresHTML}
         
         ${result.recommendations && result.recommendations.length > 0 ? `
