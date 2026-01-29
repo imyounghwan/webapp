@@ -254,15 +254,18 @@ export function calculatePredictedScore(similarSites: SimilarSite[], structure: 
   // 편의성/디자인 점수는 약간의 변동
   const convenience = weightedAvg * (0.9 + Math.random() * 0.2)
   const design = weightedAvg * (0.9 + Math.random() * 0.2)
+  
+  // 종합 점수 = (편의성 + 디자인) / 2
+  const overall = (convenience + design) / 2
 
   // Nielsen 점수 매핑
-  const nielsenScores = mapToNielsen(structure, weightedAvg)
+  const nielsenScores = mapToNielsen(structure, overall)
   
   // Nielsen 진단 근거 생성
   const nielsenDiagnoses = generateDiagnoses(structure, nielsenScores)
 
   return {
-    overall: Math.min(weightedAvg, 5.0),
+    overall: Math.min(overall, 5.0),
     convenience: Math.min(convenience, 5.0),
     design: Math.min(design, 5.0),
     nielsen_scores: nielsenScores,
@@ -271,15 +274,14 @@ export function calculatePredictedScore(similarSites: SimilarSite[], structure: 
 }
 
 /**
- * Nielsen 25개 세부 항목 매핑
+ * Nielsen 20개 세부 항목 매핑 (HTML 분석 가능 항목만)
  */
 function mapToNielsen(structure: HTMLStructure, baseScore: number): NielsenScores {
   const { navigation, accessibility, content, forms, visuals } = structure
 
   return {
-    // N1: 시스템 상태 가시성 (3개)
+    // N1: 시스템 상태 가시성 (2개 - N1_2 제외)
     N1_1_current_location: calculateScore(baseScore, navigation.breadcrumbExists ? 0.4 : -0.3),
-    N1_2_loading_status: calculateScore(baseScore, 0), // HTML 분석 한계
     N1_3_action_feedback: calculateScore(baseScore, forms.validationExists ? 0.3 : -0.2),
     
     // N2: 현실 세계 일치 (3개)
@@ -287,19 +289,17 @@ function mapToNielsen(structure: HTMLStructure, baseScore: number): NielsenScore
     N2_2_natural_flow: calculateScore(baseScore, content.headingCount > 5 ? 0.3 : -0.2),
     N2_3_real_world_metaphor: calculateScore(baseScore, visuals.iconCount > 5 ? 0.2 : 0),
     
-    // N3: 사용자 제어와 자유 (3개)
-    N3_1_undo_redo: calculateScore(baseScore, 0), // HTML 분석 한계
+    // N3: 사용자 제어와 자유 (2개 - N3_1 제외)
     N3_2_exit_escape: calculateScore(baseScore, navigation.breadcrumbExists ? 0.3 : -0.2),
     N3_3_flexible_navigation: calculateScore(baseScore, navigation.linkCount > 20 ? 0.3 : -0.1),
     
     // N4: 일관성과 표준 (3개)
-    N4_1_visual_consistency: calculateScore(baseScore, content.headingCount > 0 ? 0.3 : -0.2),
-    N4_2_terminology_consistency: calculateScore(baseScore, 0.1),
-    N4_3_standard_compliance: calculateScore(baseScore, accessibility.langAttribute ? 0.3 : -0.2),
+    N4_1_visual_consistency: calculateScore(baseScore, accessibility.headingStructure ? 0.3 : -0.2),
+    N4_2_terminology_consistency: calculateScore(baseScore, content.headingCount > 3 ? 0.2 : -0.1),
+    N4_3_standard_compliance: calculateScore(baseScore, accessibility.langAttribute && accessibility.altTextRatio > 0.8 ? 0.3 : -0.2),
     
-    // N5: 오류 예방 (3개)
+    // N5: 오류 예방 (2개 - N5_2 제외)
     N5_1_input_validation: calculateScore(baseScore, forms.validationExists ? 0.5 : -0.3),
-    N5_2_confirmation_dialog: calculateScore(baseScore, 0), // HTML 분석 한계
     N5_3_constraints: calculateScore(baseScore, forms.labelRatio > 0.8 ? 0.3 : -0.2),
     
     // N6: 인식보다 회상 (3개)
@@ -307,18 +307,16 @@ function mapToNielsen(structure: HTMLStructure, baseScore: number): NielsenScore
     N6_2_recognition_cues: calculateScore(baseScore, visuals.iconCount > 3 ? 0.3 : 0),
     N6_3_memory_load: calculateScore(baseScore, navigation.breadcrumbExists ? 0.3 : -0.1),
     
-    // N7: 유연성과 효율성 (2개)
+    // N7: 유연성과 효율성 (1개 - N7_2 제외)
     N7_1_shortcuts: calculateScore(baseScore, navigation.searchExists ? 0.4 : -0.3),
-    N7_2_customization: calculateScore(baseScore, 0), // HTML 분석 한계
     
     // N8: 미니멀 디자인 (3개)
     N8_1_essential_info: calculateScore(baseScore, content.paragraphCount < 50 ? 0.3 : -0.3),
     N8_2_clean_interface: calculateScore(baseScore, visuals.imageCount < 30 ? 0.2 : -0.2),
     N8_3_visual_hierarchy: calculateScore(baseScore, content.headingCount > 3 ? 0.3 : -0.2),
     
-    // N9: 오류 인식과 복구 (3개)
+    // N9: 오류 인식과 복구 (2개 - N9_2 제외)
     N9_1_error_messages: calculateScore(baseScore, forms.validationExists ? 0.4 : -0.2),
-    N9_2_recovery_support: calculateScore(baseScore, 0), // HTML 분석 한계
     N9_3_error_prevention_info: calculateScore(baseScore, forms.labelRatio > 0.8 ? 0.2 : -0.1),
     
     // N10: 도움말과 문서 (2개)
