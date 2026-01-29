@@ -44,7 +44,7 @@ app.post('/api/analyze', async (c) => {
     const similarSites = findSimilarSites(structure, referenceData.agencies)
 
     // 4. 예측 점수 산출
-    const predictedScore = calculatePredictedScore(similarSites, structure)
+    const predictedScore = calculatePredictedScore(similarSites, structure, url)
 
     // 5. 개선 제안 생성
     const recommendations = generateRecommendations(structure, predictedScore)
