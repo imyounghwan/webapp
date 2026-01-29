@@ -1,4 +1,4 @@
-console.log('AutoAnalyzer loaded');
+console.log('AutoAnalyzer v2.0 - Item Labels');
 
 document.getElementById('analyze')?.addEventListener('click', async () => {
     const url = document.getElementById('url').value;
@@ -44,11 +44,12 @@ function displayResults(data) {
         .map(([key, item]) => {
             const color = getScoreColor(item.score);
             const icon = getScoreIcon(item.score);
+            const itemName = key.replace(/_/g, ' ');
             return `
                 <div class="border-l-4 ${color.border} bg-white rounded-lg p-4 mb-3 shadow-sm">
                     <div class="flex justify-between items-start mb-2">
                         <div class="font-semibold text-gray-800">
-                            ${key.replace(/_/g, ' ')} <span class="text-green-600 font-bold">(편의성 항목)</span>
+                            ${itemName} <span class="text-green-600 font-bold text-sm">(편의성 항목)</span>
                         </div>
                         <div class="text-2xl font-bold ${color.text}">${item.score.toFixed(2)}</div>
                     </div>
@@ -72,11 +73,12 @@ function displayResults(data) {
         .map(([key, item]) => {
             const color = getScoreColor(item.score);
             const icon = getScoreIcon(item.score);
+            const itemName = key.replace(/_/g, ' ');
             return `
                 <div class="border-l-4 ${color.border} bg-white rounded-lg p-4 mb-3 shadow-sm">
                     <div class="flex justify-between items-start mb-2">
                         <div class="font-semibold text-gray-800">
-                            ${key.replace(/_/g, ' ')} <span class="text-purple-600 font-bold">(디자인 항목)</span>
+                            ${itemName} <span class="text-purple-600 font-bold text-sm">(디자인 항목)</span>
                         </div>
                         <div class="text-2xl font-bold ${color.text}">${item.score.toFixed(2)}</div>
                     </div>
