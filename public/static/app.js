@@ -112,25 +112,25 @@ function displayResults(data) {
             </div>
             
             <!-- 편의성 항목 -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="text-2xl font-bold text-green-600 mb-4 flex items-center">
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-lg p-6 border-2 border-green-200">
+                <div class="bg-green-600 text-white text-2xl font-bold mb-4 p-4 rounded-lg flex items-center shadow-md">
                     <i class="fas fa-hand-pointer mr-3"></i>
                     📊 편의성 항목 (13개)
                 </div>
-                <div class="text-sm text-gray-600 mb-4">
-                    사용자가 기능을 얼마나 쉽게 사용할 수 있는가?
+                <div class="text-sm text-gray-700 font-semibold mb-4 bg-white p-3 rounded-lg">
+                    💡 사용자가 기능을 얼마나 쉽게 사용할 수 있는가?
                 </div>
                 ${convenienceItemsHTML}
             </div>
             
             <!-- 디자인 항목 -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="text-2xl font-bold text-purple-600 mb-4 flex items-center">
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-lg p-6 border-2 border-purple-200">
+                <div class="bg-purple-600 text-white text-2xl font-bold mb-4 p-4 rounded-lg flex items-center shadow-md">
                     <i class="fas fa-palette mr-3"></i>
                     🎨 디자인 항목 (12개)
                 </div>
-                <div class="text-sm text-gray-600 mb-4">
-                    시각적 디자인과 정보 구조가 얼마나 좋은가?
+                <div class="text-sm text-gray-700 font-semibold mb-4 bg-white p-3 rounded-lg">
+                    💡 시각적 디자인과 정보 구조가 얼마나 좋은가?
                 </div>
                 ${designItemsHTML}
             </div>
