@@ -49,6 +49,7 @@ app.post('/api/analyze', async (c) => {
     // 5. 개선 제안 생성
     const recommendations = generateRecommendations(structure, predictedScore)
 
+    // 응답 (49개 기관 유사도는 내부적으로만 사용, 외부 노출 안함)
     return c.json({
       url,
       analysis_date: new Date().toISOString(),
@@ -59,7 +60,7 @@ app.post('/api/analyze', async (c) => {
         forms: structure.forms,
         visuals: structure.visuals
       },
-      similar_sites: similarSites,
+      // similar_sites: similarSites,  // 🔒 49개 기관 정보 숨김
       predicted_score: predictedScore,
       recommendations
     })
