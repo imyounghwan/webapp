@@ -1,0 +1,103 @@
+{
+  "analysis_date": "2026-01-29",
+  "total_images_extracted": 787,
+  "analyzed_samples": 3,
+  "findings": [
+    {
+      "image_number": 1,
+      "agency": "공정거래위원회 - 대표누리집",
+      "krds_score": 87.9,
+      "classification": "good_practice",
+      "ui_ux_findings": {
+        "strengths": [
+          "명확한 정보 구조: 좌측 네비게이션이 잘 정리되어 있음",
+          "멀티미디어 활용: YouTube 동영상 임베드로 정보 전달력 향상",
+          "Breadcrumb 네비게이션: 현재 위치를 명확히 표시",
+          "일관된 디자인: 정부 표준 디자인 가이드 준수"
+        ],
+        "weaknesses": []
+      },
+      "nielsen_principles": [1, 4, 6],
+      "nielsen_details": {
+        "1": "시스템 상태 가시성 - Breadcrumb으로 현재 위치 표시",
+        "4": "일관성과 표준 - 정부 웹사이트 표준 디자인",
+        "6": "인식 > 기억 - 명확한 아이콘과 레이블"
+      },
+      "severity": "low",
+      "recommendation": "현 상태 유지"
+    },
+    {
+      "image_number": 2,
+      "agency": "산림청 - 실시간 산불정보",
+      "krds_score": 25.0,
+      "classification": "bad_practice",
+      "ui_ux_findings": {
+        "strengths": [
+          "탭 구조: 과거 데이터와 현재 데이터 구분",
+          "CSV 다운로드: 데이터 활용성 제공"
+        ],
+        "weaknesses": [
+          "데이터 시각화 부족: 차트가 비어있음 (Empty State 처리 미흡)",
+          "정보 밀도 낮음: 표에 모든 값이 0으로 의미 없는 정보",
+          "색상 대비 부족: 그래프 범례가 흐릿함",
+          "Empty State 메시지 없음: 데이터가 없을 때 사용자 안내 부족"
+        ]
+      },
+      "nielsen_principles": [1, 8, 10],
+      "nielsen_details": {
+        "1": "시스템 상태 가시성 - Empty State 메시지 필요",
+        "8": "미학적 디자인 - 의미 없는 빈 데이터 제거 필요",
+        "10": "도움말 - 데이터 부재 시 안내 추가 필요"
+      },
+      "severity": "high",
+      "recommendation": "Empty State 디자인 추가, '현재 산불 발생이 없습니다' 등의 명확한 메시지 표시"
+    },
+    {
+      "image_number": 3,
+      "agency": "해양수산부 - 연안포털",
+      "krds_score": 97.5,
+      "classification": "good_practice",
+      "ui_ux_findings": {
+        "strengths": [
+          "반응형 디자인: 모바일 최적화가 잘 되어 있음",
+          "직관적 지도 인터페이스: 전국 연안 지도로 정보 시각화",
+          "터치 최적화: 모바일 햄버거 메뉴, 검색 아이콘",
+          "지도 메타포 활용: 사용자가 쉽게 이해할 수 있는 인터페이스"
+        ],
+        "weaknesses": []
+      },
+      "nielsen_principles": [2, 6, 8],
+      "nielsen_details": {
+        "2": "시스템-현실 연결 - 지도 메타포 활용",
+        "6": "인식 > 기억 - 시각적 지도로 인식 용이",
+        "8": "미학적 디자인 - 깔끔한 인터페이스"
+      },
+      "severity": "low",
+      "recommendation": "현 상태 유지"
+    }
+  ],
+  "summary": {
+    "best_agency": {
+      "name": "해양수산부 - 연안포털",
+      "krds_score": 97.5,
+      "key_strengths": ["모바일 최적화", "지도 기반 UI", "직관적 인터페이스"]
+    },
+    "worst_agency": {
+      "name": "산림청 - 실시간 산불정보",
+      "krds_score": 25.0,
+      "key_weaknesses": ["Empty State 처리 미흡", "의미 없는 데이터 표시", "안내 메시지 부족"]
+    }
+  },
+  "nielsen_10_principles": {
+    "1": "Visibility of system status (시스템 상태 가시성)",
+    "2": "Match between system and real world (시스템-현실 연결성)",
+    "3": "User control and freedom (사용자 통제 및 자유)",
+    "4": "Consistency and standards (일관성과 표준)",
+    "5": "Error prevention (오류 방지)",
+    "6": "Recognition rather than recall (인식 > 기억)",
+    "7": "Flexibility and efficiency (유연성과 효율성)",
+    "8": "Aesthetic and minimalist design (미학적 미니멀 디자인)",
+    "9": "Help users recognize, diagnose, recover from errors (오류 인식/복구)",
+    "10": "Help and documentation (도움말과 문서)"
+  }
+}

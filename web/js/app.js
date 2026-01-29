@@ -6,6 +6,7 @@ let ageGroupSummary = {};
 let rankings = {};
 let nielsenReports = []; // Nielsen 상세 분석 데이터
 let integratedNielsen = []; // 통합 Nielsen 점수 (국민평가 + KRDS)
+let krdsImageAnalysis = []; // KRDS 이미지 분석 결과
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -66,7 +67,11 @@ async function loadData() {
         const integratedResponse = await fetch('data/integrated_nielsen_scores.json');
         integratedNielsen = await integratedResponse.json();
         
-        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료 (Nielsen 상세 분석 + 통합 점수 포함)`);
+        // Load KRDS image analysis
+        const krdsImageResponse = await fetch('data/nielsen_mapped_results.json');
+        krdsImageAnalysis = await krdsImageResponse.json();
+        
+        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료 (Nielsen 상세 분석 + 통합 점수 + KRDS 이미지 분석 포함)`);
     } catch (error) {
         console.error('데이터 로드 실패:', error);
         throw error;
@@ -341,6 +346,10 @@ function showSiteDetail(siteName) {
     // 통합 Nielsen 점수 찾기
     const nielsenData = integratedNielsen.find(n => n.site_name === siteName);
     
+    // KRDS 이미지 분석 찾기
+    const imageAnalysis = krdsImageAnalysis.agencies ? 
+        krdsImageAnalysis.agencies.find(a => a.agency === siteName) : null;
+    
     const modal = document.getElementById('siteModal');
     const modalBody = document.getElementById('modalBody');
     
@@ -470,6 +479,72 @@ function showSiteDetail(siteName) {
                     </div>
                 </div>
             ` : ''}
+        ` : ''}
+        
+        ${imageAnalysis ? `
+            <div style="background: ${imageAnalysis.classification === 'good_practice' ? 'linear-gradient(135deg, #d1fae5, #a7f3d0)' : 'linear-gradient(135deg, #fee2e2, #fecaca)'}; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                <h3 style="margin: 0 0 15px 0; color: ${imageAnalysis.classification === 'good_practice' ? '#065f46' : '#991b1b'};">
+                    <i class="fas fa-${imageAnalysis.classification === 'good_practice' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    KRDS 이미지 기반 UI/UX 진단
+                    <span style="background: ${imageAnalysis.classification === 'good_practice' ? '#10b981' : '#ef4444'}; color: white; padding: 3px 10px; border-radius: 5px; font-size: 0.8rem; margin-left: 10px;">
+                        ${imageAnalysis.classification === 'good_practice' ? '✓ 우수' : '⚠ 개선 필요'}
+                    </span>
+                </h3>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #1f2937;">
+                        <i class="fas fa-thumbs-up"></i> 
+                        잘한 점
+                    </h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                        ${imageAnalysis.ui_ux_findings.strengths.map(s => `<li style="margin-bottom: 5px;">${s}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                ${imageAnalysis.ui_ux_findings.weaknesses.length > 0 ? `
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 10px 0; color: #1f2937;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            개선 필요 사항
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #374151;">
+                            ${imageAnalysis.ui_ux_findings.weaknesses.map(w => `<li style="margin-bottom: 5px;">${w}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                <div style="background: white; padding: 15px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px 0; color: #1f2937;">
+                        <i class="fas fa-microscope"></i>
+                        Nielsen 원칙 매핑
+                    </h4>
+                    ${imageAnalysis.nielsen_principles_affected.map(np => `
+                        <div style="margin-bottom: 10px; padding: 10px; background: #f3f4f6; border-left: 3px solid #4f46e5; border-radius: 5px;">
+                            <div style="font-weight: bold; color: #4f46e5; margin-bottom: 5px;">
+                                ${np.principle}
+                            </div>
+                            <ul style="margin: 5px 0 0 0; padding-left: 20px; font-size: 0.9rem; color: #6b7280;">
+                                ${np.items.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                            <div style="margin-top: 8px; font-size: 0.85rem;">
+                                <span style="background: ${np.impact === 'high' ? '#ef4444' : np.impact === 'medium' ? '#f59e0b' : '#10b981'}; color: white; padding: 2px 8px; border-radius: 3px;">
+                                    영향도: ${np.impact === 'high' ? '높음' : np.impact === 'medium' ? '보통' : '낮음'}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${imageAnalysis.recommendation ? `
+                    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #f59e0b;">
+                        <h4 style="margin: 0 0 8px 0; color: #92400e;">
+                            <i class="fas fa-lightbulb"></i>
+                            개선 권장사항
+                        </h4>
+                        <p style="margin: 0; color: #78350f;">${imageAnalysis.recommendation}</p>
+                    </div>
+                ` : ''}
+            </div>
         ` : ''}
         
         <h3 style="margin-bottom: 15px;">

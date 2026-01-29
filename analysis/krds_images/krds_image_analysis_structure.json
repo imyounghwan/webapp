@@ -1,0 +1,315 @@
+{
+  "total_analyzed": 50,
+  "agencies": [
+    {
+      "agency": "공정거래위원회 - 대표누리집",
+      "total_images": 72,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "공정거래위원회 - 대표누리집_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "공정거래위원회 - 대표누리집_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "공정거래위원회 - 대표누리집_03.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "공정거래위원회 - 대표누리집_04.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "공정거래위원회 - 대표누리집_05.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "농림축산식품부 - 농업ON",
+      "total_images": 107,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "농림축산식품부 - 농업ON_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "농림축산식품부 - 농업ON_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "농림축산식품부 - 농업ON_03.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "농림축산식품부 - 농업ON_04.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "농림축산식품부 - 농업ON_05.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "법무부 - 대표누리집",
+      "total_images": 63,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "법무부 - 대표누리집_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "법무부 - 대표누리집_02.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "법무부 - 대표누리집_03.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "법무부 - 대표누리집_04.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "법무부 - 대표누리집_05.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "산림청 - 실시간 산불정보",
+      "total_images": 49,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "산림청 - 실시간 산불정보_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "산림청 - 실시간 산불정보_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "산림청 - 실시간 산불정보_03.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "산림청 - 실시간 산불정보_04.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "산림청 - 실시간 산불정보_05.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "성평등가족부 - 대표누리집",
+      "total_images": 75,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "성평등가족부 - 대표누리집_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "성평등가족부 - 대표누리집_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "성평등가족부 - 대표누리집_03.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "성평등가족부 - 대표누리집_04.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "성평등가족부 - 대표누리집_05.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "소방청 - 중앙소방학교",
+      "total_images": 75,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "소방청 - 중앙소방학교_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "소방청 - 중앙소방학교_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "소방청 - 중앙소방학교_03.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "소방청 - 중앙소방학교_04.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "소방청 - 중앙소방학교_05.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "지식재산처 - 지식재산처 도서관",
+      "total_images": 94,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "지식재산처 - 지식재산처 도서관_01.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "지식재산처 - 지식재산처 도서관_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "지식재산처 - 지식재산처 도서관_03.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "지식재산처 - 지식재산처 도서관_04.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "지식재산처 - 지식재산처 도서관_05.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "해양경찰청 - 대표누리집",
+      "total_images": 94,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "해양경찰청 - 대표누리집_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양경찰청 - 대표누리집_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양경찰청 - 대표누리집_03.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양경찰청 - 대표누리집_04.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양경찰청 - 대표누리집_05.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "해양수산부 - 연안포털",
+      "total_images": 60,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "해양수산부 - 연안포털_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양수산부 - 연안포털_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양수산부 - 연안포털_03.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양수산부 - 연안포털_04.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "해양수산부 - 연안포털_05.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    },
+    {
+      "agency": "행정중심복합도시건설청 - 대표누리집",
+      "total_images": 98,
+      "analyzed_count": 5,
+      "findings": {
+        "good_points": [
+          {
+            "image": "행정중심복합도시건설청 - 대표누리집_01.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "행정중심복합도시건설청 - 대표누리집_02.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "행정중심복합도시건설청 - 대표누리집_03.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "행정중심복합도시건설청 - 대표누리집_04.png",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          },
+          {
+            "image": "행정중심복합도시건설청 - 대표누리집_05.jpg",
+            "description": "분석 대기 중 (understand_images 도구 필요)"
+          }
+        ],
+        "bad_points": [],
+        "nielsen_mapping": {}
+      }
+    }
+  ]
+}
