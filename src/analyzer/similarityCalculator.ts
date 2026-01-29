@@ -349,54 +349,54 @@ export function calculatePredictedScore(similarSites: SimilarSite[], structure: 
 }
 
 /**
- * Nielsen 20개 세부 항목 매핑 (HTML 분석 가능 항목만)
+ * Nielsen 20개 세부 항목 매핑 (절대 점수 방식, 0~5점)
  */
 function mapToNielsen(structure: HTMLStructure, baseScore: number): NielsenScores {
   const { navigation, accessibility, content, forms, visuals } = structure
 
   return {
     // N1: 시스템 상태 가시성 (2개 - N1_2 제외)
-    N1_1_current_location: calculateScore(baseScore, navigation.breadcrumbExists ? 0.4 : -0.3),
-    N1_3_action_feedback: calculateScore(baseScore, forms.validationExists ? 0.3 : -0.2),
+    N1_1_current_location: navigation.breadcrumbExists ? 5.0 : 2.0,
+    N1_3_action_feedback: forms.validationExists ? 4.5 : 2.5,
     
     // N2: 현실 세계 일치 (3개)
-    N2_1_familiar_terms: calculateScore(baseScore, accessibility.langAttribute ? 0.2 : -0.1),
-    N2_2_natural_flow: calculateScore(baseScore, content.headingCount > 5 ? 0.3 : -0.2),
-    N2_3_real_world_metaphor: calculateScore(baseScore, visuals.iconCount > 5 ? 0.2 : 0),
+    N2_1_familiar_terms: accessibility.langAttribute ? 4.5 : 2.0,
+    N2_2_natural_flow: content.headingCount > 5 ? 4.5 : content.headingCount > 0 ? 3.0 : 2.0,
+    N2_3_real_world_metaphor: visuals.iconCount > 5 ? 4.5 : visuals.iconCount > 0 ? 3.0 : 2.5,
     
     // N3: 사용자 제어와 자유 (2개 - N3_1 제외)
-    N3_2_exit_escape: calculateScore(baseScore, navigation.breadcrumbExists ? 0.3 : -0.2),
-    N3_3_flexible_navigation: calculateScore(baseScore, navigation.linkCount > 20 ? 0.3 : -0.1),
+    N3_2_exit_escape: navigation.breadcrumbExists ? 5.0 : 2.5,
+    N3_3_flexible_navigation: navigation.linkCount > 50 ? 5.0 : navigation.linkCount > 20 ? 4.0 : 3.0,
     
     // N4: 일관성과 표준 (3개)
-    N4_1_visual_consistency: calculateScore(baseScore, accessibility.headingStructure ? 0.3 : -0.2),
-    N4_2_terminology_consistency: calculateScore(baseScore, content.headingCount > 3 ? 0.2 : -0.1),
-    N4_3_standard_compliance: calculateScore(baseScore, accessibility.langAttribute && accessibility.altTextRatio > 0.8 ? 0.3 : -0.2),
+    N4_1_visual_consistency: accessibility.headingStructure ? 4.5 : 2.5,
+    N4_2_terminology_consistency: content.headingCount > 3 ? 4.0 : 3.0,
+    N4_3_standard_compliance: (accessibility.langAttribute && accessibility.altTextRatio > 0.8) ? 5.0 : accessibility.langAttribute ? 3.5 : 2.0,
     
     // N5: 오류 예방 (2개 - N5_2 제외)
-    N5_1_input_validation: calculateScore(baseScore, forms.validationExists ? 0.5 : -0.3),
-    N5_3_constraints: calculateScore(baseScore, forms.labelRatio > 0.8 ? 0.3 : -0.2),
+    N5_1_input_validation: forms.validationExists ? 5.0 : 2.0,
+    N5_3_constraints: forms.labelRatio > 0.8 ? 5.0 : forms.labelRatio > 0.5 ? 3.5 : 2.0,
     
     // N6: 인식보다 회상 (3개)
-    N6_1_visible_options: calculateScore(baseScore, navigation.searchExists ? 0.4 : -0.2),
-    N6_2_recognition_cues: calculateScore(baseScore, visuals.iconCount > 3 ? 0.3 : 0),
-    N6_3_memory_load: calculateScore(baseScore, navigation.breadcrumbExists ? 0.3 : -0.1),
+    N6_1_visible_options: navigation.searchExists ? 4.5 : 2.5,
+    N6_2_recognition_cues: visuals.iconCount > 3 ? 4.5 : 2.5,
+    N6_3_memory_load: (navigation.breadcrumbExists && navigation.searchExists) ? 5.0 : navigation.breadcrumbExists ? 4.0 : 2.5,
     
     // N7: 유연성과 효율성 (1개 - N7_2 제외)
-    N7_1_shortcuts: calculateScore(baseScore, navigation.searchExists ? 0.4 : -0.3),
+    N7_1_shortcuts: navigation.searchExists ? 4.5 : 2.5,
     
     // N8: 미니멀 디자인 (3개)
-    N8_1_essential_info: calculateScore(baseScore, content.paragraphCount < 50 ? 0.3 : -0.3),
-    N8_2_clean_interface: calculateScore(baseScore, visuals.imageCount < 30 ? 0.2 : -0.2),
-    N8_3_visual_hierarchy: calculateScore(baseScore, content.headingCount > 3 ? 0.3 : -0.2),
+    N8_1_essential_info: content.paragraphCount < 30 ? 5.0 : content.paragraphCount < 50 ? 4.0 : 3.0,
+    N8_2_clean_interface: visuals.imageCount < 20 ? 5.0 : visuals.imageCount < 30 ? 4.0 : 3.0,
+    N8_3_visual_hierarchy: content.headingCount > 5 ? 5.0 : content.headingCount > 3 ? 4.0 : 3.0,
     
     // N9: 오류 인식과 복구 (2개 - N9_2 제외)
-    N9_1_error_messages: calculateScore(baseScore, forms.validationExists ? 0.4 : -0.2),
-    N9_3_error_prevention_info: calculateScore(baseScore, forms.labelRatio > 0.8 ? 0.2 : -0.1),
+    N9_1_error_messages: forms.validationExists ? 4.5 : 2.5,
+    N9_3_error_prevention_info: forms.labelRatio > 0.8 ? 5.0 : forms.labelRatio > 0.5 ? 3.5 : 2.0,
     
     // N10: 도움말과 문서 (2개)
-    N10_1_help_access: calculateScore(baseScore, navigation.searchExists ? 0.2 : -0.2),
-    N10_2_documentation: calculateScore(baseScore, content.listCount > 3 ? 0.2 : 0)
+    N10_1_help_access: navigation.searchExists ? 4.5 : 2.5,
+    N10_2_documentation: content.listCount > 5 ? 5.0 : content.listCount > 3 ? 4.0 : 3.0
   }
 }
 
