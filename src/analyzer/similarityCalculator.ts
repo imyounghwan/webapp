@@ -17,6 +17,11 @@ export interface PredictedScore {
   convenience: number
   design: number
   nielsen_scores: NielsenScores
+  nielsen_diagnoses: NielsenDiagnoses  // 각 항목별 진단 근거
+}
+
+export interface NielsenDiagnoses {
+  [key: string]: string  // 각 항목의 진단 근거
 }
 
 export interface NielsenScores {
@@ -91,27 +96,39 @@ export function findSimilarSites(structure: HTMLStructure, referenceData: any[])
 }
 
 /**
- * 유사도 계산 알고리즘
+ * 유사도 계산 알고리즘 (개선)
  */
 function calculateSimilarity(newSite: HTMLStructure, referenceSite: any): number {
-  let score = 0
+  let totalScore = 0
+  let weights = 0
 
-  // 1. 네비게이션 구조 유사도 (20%)
-  score += compareNavigation(newSite.navigation, referenceSite) * 0.2
+  // 1. 네비게이션 구조 유사도 (가중치: 20)
+  const navScore = compareNavigation(newSite.navigation, referenceSite)
+  totalScore += navScore * 20
+  weights += 20
 
-  // 2. 접근성 점수 (30%) - 가장 중요
-  score += compareAccessibility(newSite.accessibility, referenceSite) * 0.3
+  // 2. 접근성 점수 (가중치: 30) - 가장 중요
+  const a11yScore = compareAccessibility(newSite.accessibility, referenceSite)
+  totalScore += a11yScore * 30
+  weights += 30
 
-  // 3. 콘텐츠 구조 유사도 (20%)
-  score += compareContent(newSite.content, referenceSite) * 0.2
+  // 3. 콘텐츠 구조 유사도 (가중치: 20)
+  const contentScore = compareContent(newSite.content, referenceSite)
+  totalScore += contentScore * 20
+  weights += 20
 
-  // 4. 폼 구조 유사도 (15%)
-  score += compareForms(newSite.forms, referenceSite) * 0.15
+  // 4. 폼 구조 유사도 (가중치: 15)
+  const formScore = compareForms(newSite.forms, referenceSite)
+  totalScore += formScore * 15
+  weights += 15
 
-  // 5. 시각적 요소 (15%)
-  score += compareVisuals(newSite.visuals, referenceSite) * 0.15
+  // 5. 시각적 요소 (가중치: 15)
+  const visualScore = compareVisuals(newSite.visuals, referenceSite)
+  totalScore += visualScore * 15
+  weights += 15
 
-  return Math.min(score * 100, 100)
+  // 가중 평균 계산 (0~100)
+  return Math.round((totalScore / weights) * 100)
 }
 
 function compareNavigation(nav: any, ref: any): number {
@@ -232,12 +249,16 @@ export function calculatePredictedScore(similarSites: SimilarSite[], structure: 
 
   // Nielsen 점수 매핑
   const nielsenScores = mapToNielsen(structure, weightedAvg)
+  
+  // Nielsen 진단 근거 생성
+  const nielsenDiagnoses = generateDiagnoses(structure, nielsenScores)
 
   return {
     overall: Math.min(weightedAvg, 5.0),
     convenience: Math.min(convenience, 5.0),
     design: Math.min(design, 5.0),
-    nielsen_scores: nielsenScores
+    nielsen_scores: nielsenScores,
+    nielsen_diagnoses: nielsenDiagnoses
   }
 }
 
@@ -303,4 +324,113 @@ function mapToNielsen(structure: HTMLStructure, baseScore: number): NielsenScore
  */
 function calculateScore(baseScore: number, adjustment: number): number {
   return Math.max(0, Math.min(5.0, baseScore + adjustment))
+}
+
+/**
+ * Nielsen 항목별 진단 근거 생성
+ */
+function generateDiagnoses(structure: HTMLStructure, scores: NielsenScores): NielsenDiagnoses {
+  const { navigation, accessibility, content, forms, visuals } = structure
+  
+  return {
+    N1_1_current_location: navigation.breadcrumbExists 
+      ? '✅ Breadcrumb 네비게이션이 제공되어 현재 위치를 명확히 알 수 있습니다.'
+      : '⚠️ Breadcrumb이 없어 사용자가 현재 위치를 파악하기 어렵습니다.',
+    
+    N1_2_loading_status: '⚠️ HTML 분석으로는 로딩 상태 표시를 확인할 수 없습니다.',
+    
+    N1_3_action_feedback: forms.validationExists
+      ? '✅ 폼 입력 검증이 있어 사용자 행동에 대한 피드백을 제공합니다.'
+      : '⚠️ 폼 검증이 없어 입력 오류 시 피드백이 부족할 수 있습니다.',
+    
+    N2_1_familiar_terms: accessibility.langAttribute
+      ? '✅ 적절한 언어 속성이 설정되어 있습니다.'
+      : '⚠️ HTML lang 속성이 없어 언어 인식에 문제가 있을 수 있습니다.',
+    
+    N2_2_natural_flow: content.headingCount > 5
+      ? `✅ ${content.headingCount}개의 헤딩으로 정보가 체계적으로 구조화되어 있습니다.`
+      : `⚠️ 헤딩이 ${content.headingCount}개로 부족하여 정보 구조가 불명확합니다.`,
+    
+    N2_3_real_world_metaphor: visuals.iconCount > 5
+      ? `✅ ${visuals.iconCount}개의 아이콘을 활용하여 직관적 이해를 돕습니다.`
+      : `⚠️ 아이콘이 ${visuals.iconCount}개로 부족하여 시각적 단서가 부족합니다.`,
+    
+    N3_1_undo_redo: '⚠️ HTML 분석으로는 실행 취소/재실행 기능을 확인할 수 없습니다.',
+    
+    N3_2_exit_escape: navigation.breadcrumbExists
+      ? '✅ Breadcrumb을 통해 상위 페이지로 쉽게 이동할 수 있습니다.'
+      : '⚠️ 명확한 나가기/뒤로가기 경로가 부족합니다.',
+    
+    N3_3_flexible_navigation: navigation.linkCount > 20
+      ? `✅ ${navigation.linkCount}개의 링크로 다양한 경로를 제공합니다.`
+      : `⚠️ 링크가 ${navigation.linkCount}개로 제한적이어서 탐색이 제한적입니다.`,
+    
+    N4_1_visual_consistency: content.headingCount > 0
+      ? `✅ ${content.headingCount}개의 헤딩이 일관된 계층 구조를 형성합니다.`
+      : '⚠️ 헤딩이 없어 시각적 일관성을 확인할 수 없습니다.',
+    
+    N4_2_terminology_consistency: '✓ 기본 수준의 용어 일관성이 예상됩니다.',
+    
+    N4_3_standard_compliance: accessibility.langAttribute
+      ? '✅ HTML 표준(lang 속성 등)을 준수합니다.'
+      : '⚠️ 기본 HTML 표준 속성이 누락되어 있습니다.',
+    
+    N5_1_input_validation: forms.validationExists
+      ? `✅ ${forms.inputCount}개 입력 필드에 검증 기능이 있어 오류를 예방합니다.`
+      : `⚠️ ${forms.inputCount}개 입력 필드에 검증이 없어 잘못된 입력이 가능합니다.`,
+    
+    N5_2_confirmation_dialog: '⚠️ HTML 분석으로는 확인 대화상자를 확인할 수 없습니다.',
+    
+    N5_3_constraints: forms.labelRatio > 0.8
+      ? `✅ ${Math.round(forms.labelRatio * 100)}%의 입력 필드에 label이 연결되어 있습니다.`
+      : `⚠️ ${Math.round(forms.labelRatio * 100)}%만 label이 있어 입력 제약이 불명확합니다.`,
+    
+    N6_1_visible_options: navigation.searchExists
+      ? '✅ 검색 기능이 있어 옵션을 쉽게 찾을 수 있습니다.'
+      : '⚠️ 검색 기능이 없어 원하는 기능을 찾기 어렵습니다.',
+    
+    N6_2_recognition_cues: visuals.iconCount > 3
+      ? `✅ ${visuals.iconCount}개 아이콘이 인식 단서를 제공합니다.`
+      : `⚠️ 아이콘이 ${visuals.iconCount}개로 인식 단서가 부족합니다.`,
+    
+    N6_3_memory_load: navigation.breadcrumbExists
+      ? '✅ Breadcrumb이 현재 위치를 표시하여 기억 부담을 줄입니다.'
+      : '⚠️ 위치 정보가 부족하여 사용자가 기억해야 할 것이 많습니다.',
+    
+    N7_1_shortcuts: navigation.searchExists
+      ? '✅ 검색 기능으로 빠른 접근이 가능합니다.'
+      : '⚠️ 빠른 접근 수단이 부족합니다.',
+    
+    N7_2_customization: '⚠️ HTML 분석으로는 맞춤 설정 기능을 확인할 수 없습니다.',
+    
+    N8_1_essential_info: content.paragraphCount < 50
+      ? `✅ ${content.paragraphCount}개 문단으로 핵심 정보에 집중합니다.`
+      : `⚠️ ${content.paragraphCount}개 문단으로 정보가 과다합니다.`,
+    
+    N8_2_clean_interface: visuals.imageCount < 30
+      ? `✅ ${visuals.imageCount}개 이미지로 깔끔한 인터페이스를 유지합니다.`
+      : `⚠️ ${visuals.imageCount}개 이미지로 시각적 과부하가 있습니다.`,
+    
+    N8_3_visual_hierarchy: content.headingCount > 3
+      ? `✅ ${content.headingCount}개 헤딩으로 명확한 시각적 계층을 형성합니다.`
+      : `⚠️ 헤딩이 ${content.headingCount}개로 시각적 계층이 부족합니다.`,
+    
+    N9_1_error_messages: forms.validationExists
+      ? '✅ 입력 검증으로 오류 메시지를 제공합니다.'
+      : '⚠️ 검증이 없어 오류 메시지가 부족할 수 있습니다.',
+    
+    N9_2_recovery_support: '⚠️ HTML 분석으로는 복구 지원을 확인할 수 없습니다.',
+    
+    N9_3_error_prevention_info: forms.labelRatio > 0.8
+      ? `✅ ${Math.round(forms.labelRatio * 100)}%의 필드에 label이 있어 오류를 예방합니다.`
+      : `⚠️ label이 ${Math.round(forms.labelRatio * 100)}%만 있어 오류 예방 정보가 부족합니다.`,
+    
+    N10_1_help_access: navigation.searchExists
+      ? '✅ 검색 기능으로 도움말에 쉽게 접근할 수 있습니다.'
+      : '⚠️ 도움말 접근 수단이 명확하지 않습니다.',
+    
+    N10_2_documentation: content.listCount > 3
+      ? `✅ ${content.listCount}개 리스트로 정보가 체계적으로 문서화되어 있습니다.`
+      : `⚠️ 리스트가 ${content.listCount}개로 문서화가 부족합니다.`
+  }
 }

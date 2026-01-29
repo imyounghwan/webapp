@@ -851,6 +851,7 @@ function displayAnalysisResult(result) {
     const analyzeResult = document.getElementById('analyzeResult');
     
     const nielsenScores = result.predicted_score?.nielsen_scores || {};
+    const nielsenDiagnoses = result.predicted_score?.nielsen_diagnoses || {};
     const overallScore = result.predicted_score?.overall || 0;
     const convenience = result.predicted_score?.convenience || 0;
     const design = result.predicted_score?.design || 0;
@@ -912,14 +913,19 @@ function displayAnalysisResult(result) {
                       score >= 4.0 ? '#06b6d4' :
                       score >= 3.5 ? '#f59e0b' : '#ef4444';
         
+        const diagnosis = nielsenDiagnoses[key] || '';
+        
         scoresHTML += `
-            <div style="margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span style="font-weight: 500;">${labels[key] || key}</span>
-                    <span style="font-weight: bold;">${score.toFixed(2)}</span>
+            <div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 10px; border-left: 4px solid ${color};">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-weight: 600; color: #1e293b;">${labels[key] || key}</span>
+                    <span style="font-weight: bold; color: ${color};">${score.toFixed(2)}</span>
                 </div>
-                <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 10px;">
-                    <div style="width: ${percentage}%; background: ${color}; height: 10px; border-radius: 10px; transition: width 0.5s;"></div>
+                <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 8px; margin-bottom: 8px;">
+                    <div style="width: ${percentage}%; background: ${color}; height: 8px; border-radius: 10px; transition: width 0.5s;"></div>
+                </div>
+                <div style="font-size: 0.9rem; color: #64748b; margin-top: 8px;">
+                    ${diagnosis}
                 </div>
             </div>
         `;
@@ -943,17 +949,6 @@ function displayAnalysisResult(result) {
             <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 10px;">
                 <div style="font-size: 2.5rem; font-weight: bold;">${design.toFixed(2)}</div>
                 <div>디자인</div>
-            </div>
-        </div>
-        
-        <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <h4 style="margin: 0 0 10px 0;">🔍 유사 사이트 (상위 5개)</h4>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                ${result.similar_sites.map(site => `
-                    <span style="background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem;">
-                        ${site.name} (${site.total_score.toFixed(2)}점)
-                    </span>
-                `).join('')}
             </div>
         </div>
         
