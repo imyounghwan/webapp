@@ -1,0 +1,943 @@
+{
+  "total_agencies": 49,
+  "agencies": [
+    {
+      "agency": "대도시권광역교통위원회",
+      "url": "https://www.molit.go.kr/mtc/intro.do",
+      "heuristic_average": 3.71,
+      "nielsen_scores": {
+        "N1": 2.17,
+        "N2": 2.41,
+        "N3": 3.52,
+        "N4": 3.26,
+        "N5": 3.8,
+        "N6": 3.24,
+        "N7": 3.86,
+        "N8": 2.31,
+        "N9": 3.8,
+        "N10": 4.2
+      },
+      "nielsen_overall": 3.26,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "인허가등록시스템",
+      "url": "https://www.fcsc.kr/를",
+      "heuristic_average": 3.73,
+      "nielsen_scores": {
+        "N1": 2.38,
+        "N2": 2.54,
+        "N3": 3.36,
+        "N4": 2.93,
+        "N5": 3.8,
+        "N6": 3.02,
+        "N7": 3.78,
+        "N8": 2.75,
+        "N9": 3.8,
+        "N10": 4.2
+      },
+      "nielsen_overall": 3.26,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "국고보조금 통합관리",
+      "url": "https://www.bojo.go.kr/를",
+      "heuristic_average": 3.94,
+      "nielsen_scores": {
+        "N1": 2.8,
+        "N2": 2.92,
+        "N3": 3.2,
+        "N4": 3.32,
+        "N5": 3.8,
+        "N6": 3.21,
+        "N7": 3.5,
+        "N8": 2.94,
+        "N9": 3.8,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.41,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "농식품ON",
+      "url": "https://www.agrion.kr/를",
+      "heuristic_average": 4.21,
+      "nielsen_scores": {
+        "N1": 2.87,
+        "N2": 2.99,
+        "N3": 3.2,
+        "N4": 3.47,
+        "N5": 3.8,
+        "N6": 3.48,
+        "N7": 4.1,
+        "N8": 3.14,
+        "N9": 3.8,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.55,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "문화체육관광부",
+      "url": "https://www.mcst.go.kr/를",
+      "heuristic_average": 4.2,
+      "nielsen_scores": {
+        "N1": 2.8,
+        "N2": 3.0,
+        "N3": 3.2,
+        "N4": 3.54,
+        "N5": 5.0,
+        "N6": 3.3,
+        "N7": 4.1,
+        "N8": 3.03,
+        "N9": 5.0,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.7,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "방송통신위원회",
+      "url": "https://www.kcc.go.kr/를",
+      "heuristic_average": 3.79,
+      "nielsen_scores": {
+        "N1": 2.52,
+        "N2": 2.85,
+        "N3": 2.88,
+        "N4": 3.26,
+        "N5": 3.8,
+        "N6": 3.16,
+        "N7": 3.24,
+        "N8": 2.67,
+        "N9": 3.8,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.22,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "법무부",
+      "url": "https://www.moj.go.kr/를",
+      "heuristic_average": 4.04,
+      "nielsen_scores": {
+        "N1": 2.59,
+        "N2": 3.0,
+        "N3": 4.0,
+        "N4": 3.23,
+        "N5": 5.0,
+        "N6": 3.62,
+        "N7": 4.5,
+        "N8": 2.72,
+        "N9": 5.0,
+        "N10": 3.2
+      },
+      "nielsen_overall": 3.69,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "복지로",
+      "url": "https://www.bokjiro.go.kr/를",
+      "heuristic_average": 4.29,
+      "nielsen_scores": {
+        "N1": 2.8,
+        "N2": 3.16,
+        "N3": 4.0,
+        "N4": 3.55,
+        "N5": 5.0,
+        "N6": 3.5,
+        "N7": 4.5,
+        "N8": 2.9,
+        "N9": 5.0,
+        "N10": 4.4
+      },
+      "nielsen_overall": 3.88,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "산업통상자원부",
+      "url": "https://motie.go.kr/를",
+      "heuristic_average": 4.04,
+      "nielsen_scores": {
+        "N1": 2.52,
+        "N2": 2.92,
+        "N3": 3.2,
+        "N4": 3.3,
+        "N5": 5.0,
+        "N6": 3.25,
+        "N7": 3.4,
+        "N8": 2.87,
+        "N9": 5.0,
+        "N10": 5.0
+      },
+      "nielsen_overall": 3.65,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "성평등가족부",
+      "url": "https://www.mogef.go.kr/를",
+      "heuristic_average": 3.97,
+      "nielsen_scores": {
+        "N1": 2.87,
+        "N2": 3.15,
+        "N3": 3.04,
+        "N4": 3.39,
+        "N5": 4.0,
+        "N6": 3.26,
+        "N7": 3.42,
+        "N8": 2.93,
+        "N9": 4.0,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.41,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "개인정보포털",
+      "url": "https://www.privacy.go.kr/를",
+      "heuristic_average": 3.87,
+      "nielsen_scores": {
+        "N1": 2.73,
+        "N2": 3.08,
+        "N3": 3.68,
+        "N4": 3.21,
+        "N5": 3.4,
+        "N6": 3.16,
+        "N7": 4.24,
+        "N8": 2.77,
+        "N9": 3.4,
+        "N10": 3.8
+      },
+      "nielsen_overall": 3.35,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "외교부",
+      "url": "https://www.mofa.go.kr/를",
+      "heuristic_average": 3.94,
+      "nielsen_scores": {
+        "N1": 2.59,
+        "N2": 2.78,
+        "N3": 3.04,
+        "N4": 3.32,
+        "N5": 5.0,
+        "N6": 3.13,
+        "N7": 3.42,
+        "N8": 2.87,
+        "N9": 5.0,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.58,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "중소벤처기업부",
+      "url": "https://www.mss.go.kr/를",
+      "heuristic_average": 3.93,
+      "nielsen_scores": {
+        "N1": 2.45,
+        "N2": 2.94,
+        "N3": 3.36,
+        "N4": 3.46,
+        "N5": 3.8,
+        "N6": 3.15,
+        "N7": 3.58,
+        "N8": 2.72,
+        "N9": 3.8,
+        "N10": 5.0
+      },
+      "nielsen_overall": 3.43,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "통일부",
+      "url": "https://www.unikorea.go.kr/를",
+      "heuristic_average": 3.8,
+      "nielsen_scores": {
+        "N1": 2.31,
+        "N2": 2.94,
+        "N3": 3.2,
+        "N4": 3.71,
+        "N5": 3.8,
+        "N6": 3.12,
+        "N7": 3.6,
+        "N8": 2.5,
+        "N9": 3.8,
+        "N10": 3.0
+      },
+      "nielsen_overall": 3.2,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "연안포털",
+      "url": "https://coast.mof.go.kr/를",
+      "heuristic_average": 4.16,
+      "nielsen_scores": {
+        "N1": 2.8,
+        "N2": 3.23,
+        "N3": 3.52,
+        "N4": 3.66,
+        "N5": 4.0,
+        "N6": 3.39,
+        "N7": 3.86,
+        "N8": 3.08,
+        "N9": 4.0,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.55,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "행정안전부_대한민국전자관보",
+      "url": "https://gwanbo.go.kr/를",
+      "heuristic_average": 3.97,
+      "nielsen_scores": {
+        "N1": 2.8,
+        "N2": 2.99,
+        "N3": 3.04,
+        "N4": 3.24,
+        "N5": 4.4,
+        "N6": 3.18,
+        "N7": 3.42,
+        "N8": 3.0,
+        "N9": 4.4,
+        "N10": 4.2
+      },
+      "nielsen_overall": 3.47,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "환경부",
+      "url": "https://me.go.kr/를",
+      "heuristic_average": 3.77,
+      "nielsen_scores": {
+        "N1": 2.38,
+        "N2": 2.7,
+        "N3": 3.04,
+        "N4": 3.36,
+        "N5": 3.6,
+        "N6": 2.94,
+        "N7": 3.42,
+        "N8": 2.71,
+        "N9": 3.6,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.17,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "범죄경력회보서발급시스템",
+      "url": "https://crims.police.go.kr",
+      "heuristic_average": 3.39,
+      "nielsen_scores": {
+        "N1": 2.8,
+        "N2": 2.36,
+        "N3": 2.88,
+        "N4": 2.57,
+        "N5": 3.0,
+        "N6": 2.91,
+        "N7": 2.94,
+        "N8": 2.78,
+        "N9": 3.0,
+        "N10": 3.4
+      },
+      "nielsen_overall": 2.86,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "수출입무역통계",
+      "url": "https://tradedata.go.kr/를",
+      "heuristic_average": 3.71,
+      "nielsen_scores": {
+        "N1": 2.45,
+        "N2": 2.63,
+        "N3": 2.56,
+        "N4": 3.29,
+        "N5": 4.0,
+        "N6": 2.98,
+        "N7": 3.18,
+        "N8": 2.63,
+        "N9": 4.0,
+        "N10": 3.8
+      },
+      "nielsen_overall": 3.15,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "국가유산청",
+      "url": "https://www.khs.go.kr/를",
+      "heuristic_average": 3.86,
+      "nielsen_scores": {
+        "N1": 2.94,
+        "N2": 2.83,
+        "N3": 2.88,
+        "N4": 3.13,
+        "N5": 3.8,
+        "N6": 3.08,
+        "N7": 3.24,
+        "N8": 3.08,
+        "N9": 3.8,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.28,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "국세청대표누리집",
+      "url": "https://www.nts.go.kr/를",
+      "heuristic_average": 3.6,
+      "nielsen_scores": {
+        "N1": 2.31,
+        "N2": 2.63,
+        "N3": 3.2,
+        "N4": 3.11,
+        "N5": 3.8,
+        "N6": 2.98,
+        "N7": 3.5,
+        "N8": 2.55,
+        "N9": 3.8,
+        "N10": 3.8
+      },
+      "nielsen_overall": 3.17,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "고용노동부",
+      "url": "https://moel.go.kr/를",
+      "heuristic_average": 4.03,
+      "nielsen_scores": {
+        "N1": 2.38,
+        "N2": 3.1,
+        "N3": 3.52,
+        "N4": 3.56,
+        "N5": 3.6,
+        "N6": 3.33,
+        "N7": 3.76,
+        "N8": 2.76,
+        "N9": 3.6,
+        "N10": 5.0
+      },
+      "nielsen_overall": 3.46,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "기상청",
+      "url": "https://www.kma.go.kr/를",
+      "heuristic_average": 3.67,
+      "nielsen_scores": {
+        "N1": 2.45,
+        "N2": 2.79,
+        "N3": 2.88,
+        "N4": 3.2,
+        "N5": 3.4,
+        "N6": 3.06,
+        "N7": 3.24,
+        "N8": 2.46,
+        "N9": 3.4,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.15,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "농촌진흥청",
+      "url": "https://www.rda.go.kr/를",
+      "heuristic_average": 3.81,
+      "nielsen_scores": {
+        "N1": 2.31,
+        "N2": 2.8,
+        "N3": 3.52,
+        "N4": 3.52,
+        "N5": 3.8,
+        "N6": 3.1,
+        "N7": 3.86,
+        "N8": 2.37,
+        "N9": 3.8,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.37,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "대검찰청",
+      "url": "https://spo.go.kr/를",
+      "heuristic_average": 3.59,
+      "nielsen_scores": {
+        "N1": 2.31,
+        "N2": 2.79,
+        "N3": 2.88,
+        "N4": 3.17,
+        "N5": 3.8,
+        "N6": 2.85,
+        "N7": 3.24,
+        "N8": 2.46,
+        "N9": 3.8,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.13,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "방위사업청",
+      "url": "https://www.dapa.go.kr/를",
+      "heuristic_average": 3.79,
+      "nielsen_scores": {
+        "N1": 2.52,
+        "N2": 2.79,
+        "N3": 3.36,
+        "N4": 3.32,
+        "N5": 3.8,
+        "N6": 3.17,
+        "N7": 3.48,
+        "N8": 2.63,
+        "N9": 3.8,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.29,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "정부입법지원센터",
+      "url": "https://www.lawmaking.go.kr/를",
+      "heuristic_average": 2.77,
+      "nielsen_scores": {
+        "N1": 1.4,
+        "N2": 1.5,
+        "N3": 2.88,
+        "N4": 2.23,
+        "N5": 3.0,
+        "N6": 2.6,
+        "N7": 2.94,
+        "N8": 1.69,
+        "N9": 3.0,
+        "N10": 3.4
+      },
+      "nielsen_overall": 2.46,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "병무청대표누리집",
+      "url": "https://www.mma.go.kr/를",
+      "heuristic_average": 3.03,
+      "nielsen_scores": {
+        "N1": 1.75,
+        "N2": 1.96,
+        "N3": 3.04,
+        "N4": 2.39,
+        "N5": 3.4,
+        "N6": 2.61,
+        "N7": 3.42,
+        "N8": 2.03,
+        "N9": 3.4,
+        "N10": 3.4
+      },
+      "nielsen_overall": 2.74,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "실시간산불정보",
+      "url": "https://fd.forest.go.kr/",
+      "heuristic_average": 3.56,
+      "nielsen_scores": {
+        "N1": 1.89,
+        "N2": 1.8,
+        "N3": 3.84,
+        "N4": 2.48,
+        "N5": 5.0,
+        "N6": 3.24,
+        "N7": 4.42,
+        "N8": 1.97,
+        "N9": 5.0,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.42,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "새만금개발청",
+      "url": "https://www.saemangeum.go.kr/를",
+      "heuristic_average": 3.57,
+      "nielsen_scores": {
+        "N1": 2.17,
+        "N2": 2.57,
+        "N3": 3.36,
+        "N4": 3.01,
+        "N5": 3.8,
+        "N6": 3.2,
+        "N7": 3.78,
+        "N8": 2.22,
+        "N9": 3.8,
+        "N10": 3.6
+      },
+      "nielsen_overall": 3.15,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "중앙소방학교누리집",
+      "url": "https://www.nfsa.go.kr/nfsa/를",
+      "heuristic_average": 3.56,
+      "nielsen_scores": {
+        "N1": 2.45,
+        "N2": 2.47,
+        "N3": 3.04,
+        "N4": 2.85,
+        "N5": 3.8,
+        "N6": 3.01,
+        "N7": 3.42,
+        "N8": 2.55,
+        "N9": 3.8,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.14,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "식품안전나라",
+      "url": "https://www.foodsafetykorea.go.kr/를",
+      "heuristic_average": 3.26,
+      "nielsen_scores": {
+        "N1": 1.96,
+        "N2": 2.09,
+        "N3": 3.2,
+        "N4": 2.41,
+        "N5": 3.8,
+        "N6": 2.79,
+        "N7": 3.7,
+        "N8": 1.97,
+        "N9": 3.8,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.03,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "공정거래위원회",
+      "url": "https://www.ftc.go.kr/를",
+      "heuristic_average": 4.23,
+      "nielsen_scores": {
+        "N1": 3.01,
+        "N2": 3.38,
+        "N3": 3.04,
+        "N4": 3.81,
+        "N5": 3.8,
+        "N6": 3.48,
+        "N7": 3.42,
+        "N8": 3.06,
+        "N9": 3.8,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.54,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "우주항공청",
+      "url": "https://www.kasa.go.kr/를",
+      "heuristic_average": 4.33,
+      "nielsen_scores": {
+        "N1": 3.15,
+        "N2": 3.3,
+        "N3": 2.88,
+        "N4": 3.77,
+        "N5": 3.8,
+        "N6": 3.55,
+        "N7": 3.24,
+        "N8": 3.28,
+        "N9": 3.8,
+        "N10": 5.0
+      },
+      "nielsen_overall": 3.58,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "원자력안전위원회",
+      "url": "https://www.nssc.go.kr/를",
+      "heuristic_average": 3.71,
+      "nielsen_scores": {
+        "N1": 2.24,
+        "N2": 2.72,
+        "N3": 3.36,
+        "N4": 2.95,
+        "N5": 3.4,
+        "N6": 3.29,
+        "N7": 3.78,
+        "N8": 2.58,
+        "N9": 3.4,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.23,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "인재개발원누리집",
+      "url": "https://www.nhi.go.kr/",
+      "heuristic_average": 3.46,
+      "nielsen_scores": {
+        "N1": 2.45,
+        "N2": 2.62,
+        "N3": 2.72,
+        "N4": 2.74,
+        "N5": 3.8,
+        "N6": 2.9,
+        "N7": 3.26,
+        "N8": 2.56,
+        "N9": 3.8,
+        "N10": 3.6
+      },
+      "nielsen_overall": 3.04,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "재외동포청",
+      "url": "https://www.oka.go.kr/를",
+      "heuristic_average": 3.81,
+      "nielsen_scores": {
+        "N1": 2.45,
+        "N2": 2.7,
+        "N3": 3.52,
+        "N4": 3.13,
+        "N5": 3.6,
+        "N6": 3.23,
+        "N7": 3.76,
+        "N8": 2.61,
+        "N9": 3.6,
+        "N10": 5.0
+      },
+      "nielsen_overall": 3.36,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "나라장터종합쇼핑몰",
+      "url": "https://shop.g2b.go.kr/를",
+      "heuristic_average": 3.47,
+      "nielsen_scores": {
+        "N1": 2.24,
+        "N2": 2.56,
+        "N3": 3.52,
+        "N4": 2.77,
+        "N5": 4.6,
+        "N6": 2.93,
+        "N7": 3.86,
+        "N8": 2.35,
+        "N9": 4.6,
+        "N10": 3.0
+      },
+      "nielsen_overall": 3.24,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "국립보건연구원",
+      "url": "https://nih.go.kr/를",
+      "heuristic_average": 3.76,
+      "nielsen_scores": {
+        "N1": 2.38,
+        "N2": 2.86,
+        "N3": 3.36,
+        "N4": 3.22,
+        "N5": 3.8,
+        "N6": 3.16,
+        "N7": 3.78,
+        "N8": 2.59,
+        "N9": 3.8,
+        "N10": 3.6
+      },
+      "nielsen_overall": 3.25,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "국가통계포털",
+      "url": "https://kosis.kr/를",
+      "heuristic_average": 3.96,
+      "nielsen_scores": {
+        "N1": 2.87,
+        "N2": 3.0,
+        "N3": 2.56,
+        "N4": 2.97,
+        "N5": 5.0,
+        "N6": 2.91,
+        "N7": 3.48,
+        "N8": 3.04,
+        "N9": 5.0,
+        "N10": 4.6
+      },
+      "nielsen_overall": 3.54,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "특허전자도서관",
+      "url": "http://library.kipo.go.kr/를",
+      "heuristic_average": 3.73,
+      "nielsen_scores": {
+        "N1": 2.38,
+        "N2": 2.86,
+        "N3": 3.04,
+        "N4": 3.32,
+        "N5": 3.8,
+        "N6": 3.08,
+        "N7": 3.42,
+        "N8": 2.59,
+        "N9": 3.8,
+        "N10": 3.6
+      },
+      "nielsen_overall": 3.19,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "해양경찰청",
+      "url": "https://kcg.go.kr/를",
+      "heuristic_average": 3.47,
+      "nielsen_scores": {
+        "N1": 2.17,
+        "N2": 2.33,
+        "N3": 2.88,
+        "N4": 2.82,
+        "N5": 3.8,
+        "N6": 3.12,
+        "N7": 3.24,
+        "N8": 2.39,
+        "N9": 3.8,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.06,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "행정중심복합도시건설청",
+      "url": "https://naacc.go.kr/를",
+      "heuristic_average": 3.57,
+      "nielsen_scores": {
+        "N1": 2.24,
+        "N2": 2.57,
+        "N3": 3.2,
+        "N4": 3.06,
+        "N5": 3.4,
+        "N6": 3.19,
+        "N7": 3.6,
+        "N8": 2.38,
+        "N9": 3.4,
+        "N10": 3.4
+      },
+      "nielsen_overall": 3.04,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "인터넷우체국",
+      "url": "https://www.epost.go.kr/를",
+      "heuristic_average": 3.46,
+      "nielsen_scores": {
+        "N1": 2.17,
+        "N2": 2.01,
+        "N3": 3.2,
+        "N4": 2.25,
+        "N5": 5.0,
+        "N6": 3.25,
+        "N7": 3.6,
+        "N8": 2.15,
+        "N9": 5.0,
+        "N10": 5.0
+      },
+      "nielsen_overall": 3.36,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "교육부",
+      "url": "https://www.moe.go.kr/를",
+      "heuristic_average": 3.79,
+      "nielsen_scores": {
+        "N1": 2.38,
+        "N2": 2.77,
+        "N3": 3.04,
+        "N4": 3.28,
+        "N5": 3.8,
+        "N6": 2.91,
+        "N7": 3.22,
+        "N8": 2.77,
+        "N9": 3.8,
+        "N10": 4.2
+      },
+      "nielsen_overall": 3.22,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "공훈전자사료관",
+      "url": "https://e-gonghun.mpva.go.kr/를",
+      "heuristic_average": 3.8,
+      "nielsen_scores": {
+        "N1": 2.66,
+        "N2": 2.54,
+        "N3": 3.04,
+        "N4": 2.91,
+        "N5": 3.8,
+        "N6": 3.4,
+        "N7": 3.42,
+        "N8": 2.88,
+        "N9": 3.8,
+        "N10": 4.0
+      },
+      "nielsen_overall": 3.25,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "규제정보포털",
+      "url": "https://www.better.go.kr/를",
+      "heuristic_average": 4.0,
+      "nielsen_scores": {
+        "N1": 2.52,
+        "N2": 3.09,
+        "N3": 3.36,
+        "N4": 3.43,
+        "N5": 3.8,
+        "N6": 3.33,
+        "N7": 3.78,
+        "N8": 2.67,
+        "N9": 3.8,
+        "N10": 5.0
+      },
+      "nielsen_overall": 3.48,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "국민신문고",
+      "url": "https://www.epeople.go.kr/index.jsp를",
+      "heuristic_average": 3.57,
+      "nielsen_scores": {
+        "N1": 2.66,
+        "N2": 2.77,
+        "N3": 3.04,
+        "N4": 3.08,
+        "N5": 3.4,
+        "N6": 3.04,
+        "N7": 3.42,
+        "N8": 2.64,
+        "N9": 3.4,
+        "N10": 3.0
+      },
+      "nielsen_overall": 3.04,
+      "data_source": "heuristic_evaluation"
+    },
+    {
+      "agency": "국방부",
+      "url": "https://www.mnd.go.kr/를",
+      "heuristic_average": 3.81,
+      "nielsen_scores": {
+        "N1": 2.24,
+        "N2": 2.64,
+        "N3": 3.68,
+        "N4": 3.23,
+        "N5": 3.8,
+        "N6": 3.23,
+        "N7": 4.14,
+        "N8": 2.5,
+        "N9": 3.8,
+        "N10": 4.2
+      },
+      "nielsen_overall": 3.35,
+      "data_source": "heuristic_evaluation"
+    }
+  ],
+  "statistics": {
+    "average": 3.29,
+    "highest": 3.88,
+    "lowest": 2.46,
+    "highest_agency": "복지로",
+    "lowest_agency": "정부입법지원센터"
+  }
+}
