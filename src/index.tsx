@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { serveStatic } from 'hono/cloudflare-workers'
 import { analyzeHTML } from './analyzer/htmlAnalyzer'
 import { findSimilarSites, calculatePredictedScore } from './analyzer/similarityCalculator'
 
@@ -131,13 +130,14 @@ function generateRecommendations(structure: any, score: any): string[] {
   return recommendations.slice(0, 5) // 최대 5개만 반환
 }
 
-// Static files - serve from public directory
-app.use('/css/*', serveStatic({ root: './public' }))
-app.use('/js/*', serveStatic({ root: './public' }))
-app.use('/data/*', serveStatic({ root: './public' }))
-app.use('/static/*', serveStatic({ root: './public' }))
+// Catch-all route - wrangler will serve static files from dist/
+// This is just a fallback
+app.get('/', (c) => {
+  return c.text('API is running. Use /api/analyze endpoint.', 200)
+})
 
-// Serve web dashboard HTML (main page from public/index.html)
-app.get('/', serveStatic({ path: './public/index.html' }))
+app.notFound((c) => {
+  return c.text('Not Found', 404)
+})
 
 export default app
