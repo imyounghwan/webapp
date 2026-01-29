@@ -1,49 +1,63 @@
 console.log('🚀 AutoAnalyzer v2.1 - Fixed Version');
 console.log('Element IDs: analyzeBtn, analyzeUrl, analyzeResult');
 
-document.getElementById('analyzeBtn')?.addEventListener('click', async () => {
-    const url = document.getElementById('analyzeUrl').value;
-    const result = document.getElementById('analyzeResult');
+// DOM이 완전히 로드된 후에 실행
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ DOM loaded - Setting up event listener');
     
-    if (!result) {
-        console.error('analyzeResult element not found!');
-        alert('오류: 결과 표시 영역을 찾을 수 없습니다.');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const analyzeUrl = document.getElementById('analyzeUrl');
+    const analyzeResult = document.getElementById('analyzeResult');
+    
+    console.log('Elements found:', {
+        analyzeBtn: !!analyzeBtn,
+        analyzeUrl: !!analyzeUrl,
+        analyzeResult: !!analyzeResult
+    });
+    
+    if (!analyzeBtn || !analyzeUrl || !analyzeResult) {
+        console.error('❌ Required elements not found!');
         return;
     }
     
-    if (!url) {
-        alert('URL을 입력하세요');
-        return;
-    }
-    
-    result.innerHTML = '<div style="text-align: center; padding: 20px;"><div style="color: #666;">🔍 URL 분석 중...</div></div>';
-    result.style.display = 'block';
-    
-    try {
-        const response = await fetch('/api/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-        });
+    analyzeBtn.addEventListener('click', async () => {
+        const url = analyzeUrl.value;
         
-        if (!response.ok) {
-            throw new Error('분석 실패');
+        if (!url) {
+            alert('URL을 입력하세요');
+            return;
         }
         
-        const data = await response.json();
-        displayResults(data);
-    } catch (error) {
-        result.innerHTML = `
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div class="text-red-600 font-bold">❌ 분석 실패</div>
-                <div class="text-sm text-gray-600 mt-2">${error.message}</div>
-            </div>
-        `;
-    }
+        console.log('🔍 Starting analysis for:', url);
+        analyzeResult.innerHTML = '<div style="text-align: center; padding: 20px;"><div style="color: #666;">🔍 URL 분석 중...</div></div>';
+        analyzeResult.style.display = 'block';
+        
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            
+            if (!response.ok) {
+                throw new Error('분석 실패');
+            }
+            
+            const data = await response.json();
+            displayResults(data, analyzeResult);
+        } catch (error) {
+            console.error('❌ Analysis error:', error);
+            analyzeResult.innerHTML = `
+                <div style="background: #fee; border: 1px solid #fcc; border-radius: 8px; padding: 16px;">
+                    <div style="color: #c00; font-weight: bold;">❌ 분석 실패</div>
+                    <div style="color: #666; margin-top: 8px; font-size: 14px;">${error.message}</div>
+                </div>
+            `;
+        }
+    });
 });
 
-function displayResults(data) {
-    const result = document.getElementById('result');
+function displayResults(data, resultElement) {
     const { url, predicted_score } = data;
     
     // 편의성 항목 HTML 생성
@@ -104,7 +118,7 @@ function displayResults(data) {
             `;
         }).join('');
     
-    result.innerHTML = `
+    resultElement.innerHTML = `
         <div class="space-y-6">
             <!-- 종합 점수 -->
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
