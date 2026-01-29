@@ -15,6 +15,113 @@ app.get('/api/hello', (c) => {
   return c.json({ message: 'AutoAnalyzer API', status: 'ok' })
 })
 
+/**
+ * 서브 페이지 URL 추출 (메인 페이지에서)
+ */
+async function extractSubPages(mainUrl: string, html: string, limit: number = 3): Promise<string[]> {
+  const baseUrl = new URL(mainUrl).origin
+  const subPages: string[] = []
+  
+  // 내부 링크 찾기 (상대 경로 및 같은 도메인)
+  const linkRegex = /<a\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*>/gi
+  let match
+  
+  while ((match = linkRegex.exec(html)) !== null && subPages.length < limit) {
+    let href = match[1]
+    
+    // 상대 경로를 절대 경로로 변환
+    if (href.startsWith('/')) {
+      href = baseUrl + href
+    } else if (!href.startsWith('http')) {
+      continue
+    }
+    
+    // 같은 도메인만, 메인 페이지 제외
+    if (href.startsWith(baseUrl) && 
+        href !== mainUrl && 
+        href !== mainUrl + '/' &&
+        !href.includes('#') && 
+        !href.includes('javascript:') &&
+        !href.includes('login') &&
+        !href.includes('join') &&
+        (href.includes('.do') || href.includes('/sub') || href.includes('/kor/') || href.includes('/eng/'))) {
+      if (!subPages.includes(href)) {
+        subPages.push(href)
+      }
+    }
+  }
+  
+  return subPages.slice(0, limit)
+}
+
+/**
+ * 여러 페이지를 분석하고 종합 평가
+ */
+async function analyzeMultiplePages(mainUrl: string): Promise<any> {
+  const results = []
+  
+  // 1. 메인 페이지 분석
+  const mainResponse = await fetch(mainUrl, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+  })
+  
+  if (!mainResponse.ok) {
+    throw new Error('Failed to fetch main page')
+  }
+  
+  const mainHtml = await mainResponse.text()
+  const mainStructure = analyzeHTML(mainHtml, mainUrl)
+  results.push({ url: mainUrl, structure: mainStructure, isMainPage: true })
+  
+  // 2. 서브 페이지 추출 및 분석
+  const subPages = await extractSubPages(mainUrl, mainHtml, 3)
+  
+  for (const subUrl of subPages) {
+    try {
+      const subResponse = await fetch(subUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        signal: AbortSignal.timeout(5000) // 5초 타임아웃
+      })
+      
+      if (subResponse.ok) {
+        const subHtml = await subResponse.text()
+        const subStructure = analyzeHTML(subHtml, subUrl)
+        results.push({ url: subUrl, structure: subStructure, isMainPage: false })
+      }
+    } catch (error) {
+      console.log(`Failed to analyze ${subUrl}:`, error)
+    }
+  }
+  
+  return results
+}
+
+/**
+ * 여러 페이지 결과를 종합
+ */
+function aggregateResults(pageResults: any[]): any {
+  // 서브 페이지들만 필터링 (Breadcrumb 평가용)
+  const subPages = pageResults.filter(p => !p.isMainPage)
+  const mainPage = pageResults.find(p => p.isMainPage)
+  
+  if (!mainPage) return null
+  
+  // 메인 구조 기반으로 시작
+  const aggregated = JSON.parse(JSON.stringify(mainPage.structure))
+  
+  // 서브 페이지가 있으면 Breadcrumb 존재 여부 확인
+  if (subPages.length > 0) {
+    const hasBreadcrumbInSub = subPages.some(p => p.structure.navigation.breadcrumbExists)
+    
+    // 서브 페이지에 Breadcrumb이 있으면 전체적으로 있다고 판단
+    if (hasBreadcrumbInSub) {
+      aggregated.navigation.breadcrumbExists = true
+    }
+  }
+  
+  return aggregated
+}
+
 // 실시간 URL 분석 API
 app.post('/api/analyze', async (c) => {
   try {
@@ -24,21 +131,11 @@ app.post('/api/analyze', async (c) => {
       return c.json({ error: 'Invalid URL' }, 400)
     }
 
-    // 1. URL의 HTML 가져오기
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    })
-
-    if (!response.ok) {
-      return c.json({ error: 'Failed to fetch URL' }, 400)
-    }
-
-    const html = await response.text()
-
-    // 2. HTML 구조 분석
-    const structure = analyzeHTML(html, url)
+    // 1. 메인 + 서브 페이지 분석
+    const pageResults = await analyzeMultiplePages(url)
+    
+    // 2. 결과 종합
+    const structure = aggregateResults(pageResults)
 
     // 3. 49개 기관과 유사도 계산
     const similarSites = findSimilarSites(structure, referenceData.agencies)
