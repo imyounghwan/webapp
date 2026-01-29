@@ -5,6 +5,7 @@ let allSites = [];
 let ageGroupSummary = {};
 let rankings = {};
 let nielsenReports = []; // Nielsen 상세 분석 데이터
+let integratedNielsen = []; // 통합 Nielsen 점수 (국민평가 + KRDS)
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -61,7 +62,11 @@ async function loadData() {
         const nielsenResponse = await fetch('data/nielsen_detailed_reports.json');
         nielsenReports = await nielsenResponse.json();
         
-        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료 (Nielsen 상세 분석 포함)`);
+        // Load integrated Nielsen scores (국민평가 + KRDS)
+        const integratedResponse = await fetch('data/integrated_nielsen_scores.json');
+        integratedNielsen = await integratedResponse.json();
+        
+        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료 (Nielsen 상세 분석 + 통합 점수 포함)`);
     } catch (error) {
         console.error('데이터 로드 실패:', error);
         throw error;
@@ -262,6 +267,9 @@ function renderSitesTable(sites = allSites) {
     tbody.innerHTML = '';
     
     sites.forEach((site, index) => {
+        // 통합 Nielsen 점수 찾기
+        const nielsenData = integratedNielsen.find(n => n.site_name === site.name);
+        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
@@ -269,6 +277,12 @@ function renderSitesTable(sites = allSites) {
             <td><strong>${site.total_avg.toFixed(2)}</strong></td>
             <td>${site.convenience_avg.toFixed(2)}</td>
             <td>${site.design_avg.toFixed(2)}</td>
+            <td>
+                ${nielsenData ? `
+                    <strong style="color: #f59e0b;">${nielsenData.nielsen_average.toFixed(2)}</strong>
+                    ${nielsenData.has_krds ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; margin-left: 5px;">+KRDS</span>' : ''}
+                ` : '-'}
+            </td>
             <td>
                 <button class="btn-detail" onclick="showNielsenReport('${site.name}')" style="background: #10b981; margin-right: 5px;" title="Nielsen 25항목 상세">
                     <i class="fas fa-microscope"></i>
@@ -324,6 +338,9 @@ function showSiteDetail(siteName) {
     const site = allSites.find(s => s.name === siteName);
     if (!site) return;
     
+    // 통합 Nielsen 점수 찾기
+    const nielsenData = integratedNielsen.find(n => n.site_name === siteName);
+    
     const modal = document.getElementById('siteModal');
     const modalBody = document.getElementById('modalBody');
     
@@ -372,7 +389,7 @@ function showSiteDetail(siteName) {
             </a>
         </div>
         
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
             <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; border-radius: 10px;">
                 <div style="font-size: 2rem; font-weight: bold;">${site.total_avg.toFixed(2)}</div>
                 <div>종합 점수</div>
@@ -385,6 +402,13 @@ function showSiteDetail(siteName) {
                 <div style="font-size: 2rem; font-weight: bold;">${site.design_avg.toFixed(2)}</div>
                 <div>디자인</div>
             </div>
+            ${nielsenData ? `
+                <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 10px; position: relative;">
+                    <div style="font-size: 2rem; font-weight: bold;">${nielsenData.nielsen_average.toFixed(2)}</div>
+                    <div>Nielsen 통합</div>
+                    ${nielsenData.has_krds ? '<div style="position: absolute; top: 5px; right: 5px; background: white; color: #f59e0b; padding: 2px 6px; border-radius: 5px; font-size: 0.7rem; font-weight: bold;">+KRDS</div>' : ''}
+                </div>
+            ` : ''}
         </div>
         
         <h3 style="margin-bottom: 15px;">
@@ -394,6 +418,59 @@ function showSiteDetail(siteName) {
         <div style="margin-bottom: 30px;">
             ${qScoresBars}
         </div>
+        
+        ${nielsenData ? `
+            <h3 style="margin-bottom: 15px;">
+                <i class="fas fa-microscope"></i>
+                Nielsen 10원칙 분석
+                ${nielsenData.has_krds ? '<span style="background: #f59e0b; color: white; padding: 3px 8px; border-radius: 5px; font-size: 0.8rem; margin-left: 10px;">KRDS 통합</span>' : ''}
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px;">
+                ${Object.entries(nielsenData.nielsen_scores).map(([key, score]) => {
+                    const percentage = (score / 5) * 100;
+                    const color = score >= 4.5 ? '#10b981' :
+                                  score >= 4.0 ? '#06b6d4' :
+                                  score >= 3.5 ? '#f59e0b' : '#ef4444';
+                    const labels = {
+                        'N1_visibility': '시스템 상태 가시성',
+                        'N2_match': '현실 세계 일치',
+                        'N3_control': '사용자 제어',
+                        'N4_consistency': '일관성',
+                        'N5_error_prevention': '오류 예방',
+                        'N6_recognition': '인식 용이성',
+                        'N7_flexibility': '유연성',
+                        'N8_minimalism': '미니멀 디자인',
+                        'N9_error_recovery': '오류 복구',
+                        'N10_help': '도움말'
+                    };
+                    return `
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-weight: 500; font-size: 0.9rem;">${labels[key]}</span>
+                                <span style="font-weight: bold; color: ${color};">${score.toFixed(2)}</span>
+                            </div>
+                            <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 8px;">
+                                <div style="width: ${percentage}%; background: ${color}; height: 8px; border-radius: 10px; transition: width 0.5s;"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            ${nielsenData.krds_score ? `
+                <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h4 style="margin: 0 0 10px 0; color: #92400e;">
+                        <i class="fas fa-award"></i>
+                        KRDS 편의성 평가
+                    </h4>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #92400e;">
+                        ${nielsenData.krds_score.toFixed(2)} / 5.0
+                    </div>
+                    <div style="font-size: 0.9rem; color: #78350f; margin-top: 5px;">
+                        (원점수: ${(nielsenData.krds_score * 20).toFixed(1)} / 100)
+                    </div>
+                </div>
+            ` : ''}
+        ` : ''}
         
         <h3 style="margin-bottom: 15px;">
             <i class="fas fa-users"></i>

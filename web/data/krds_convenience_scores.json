@@ -1,0 +1,72 @@
+[
+  {
+    "department": "공정거래위원회",
+    "site_name": "대표누리집",
+    "full_name": "공정거래위원회 - 대표누리집",
+    "krds_convenience": 87.9,
+    "source_file": "공정거래위원회 - 대표누리집 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "농림축산식품부",
+    "site_name": "농업ON",
+    "full_name": "농림축산식품부 - 농업ON",
+    "krds_convenience": 87.5,
+    "source_file": "농림축산식품부 - 농업ON - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "법무부",
+    "site_name": "대표누리집",
+    "full_name": "법무부 - 대표누리집",
+    "krds_convenience": 90.3,
+    "source_file": "법무부 - 대표누리집 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "산림청",
+    "site_name": "실시간 산불정보",
+    "full_name": "산림청 - 실시간 산불정보",
+    "krds_convenience": 25.0,
+    "source_file": "산림청 - 실시간 산불정보 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "성평등가족부",
+    "site_name": "대표누리집",
+    "full_name": "성평등가족부 - 대표누리집",
+    "krds_convenience": 92.0,
+    "source_file": "성평등가족부 - 대표누리집 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "소방청",
+    "site_name": "중앙소방학교",
+    "full_name": "소방청 - 중앙소방학교",
+    "krds_convenience": 37.5,
+    "source_file": "소방청 - 중앙소방학교 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "지식재산처",
+    "site_name": "지식재산처 도서관",
+    "full_name": "지식재산처 - 지식재산처 도서관",
+    "krds_convenience": 27.6,
+    "source_file": "지식재산처 - 지식재산처 도서관 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "해양경찰청",
+    "site_name": "대표누리집",
+    "full_name": "해양경찰청 - 대표누리집",
+    "krds_convenience": 36.4,
+    "source_file": "해양경찰청 - 대표누리집 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "해양수산부",
+    "site_name": "연안포털",
+    "full_name": "해양수산부 - 연안포털",
+    "krds_convenience": 97.5,
+    "source_file": "해양수산부 - 연안포털 - 웹사이트 품질관리 수준진단 보고서.docx"
+  },
+  {
+    "department": "행정중심복합도시건설청",
+    "site_name": "대표누리집",
+    "full_name": "행정중심복합도시건설청 - 대표누리집",
+    "krds_convenience": 39.1,
+    "source_file": "행정중심복합도시건설청 - 대표누리집 - 웹사이트 품질관리 수준진단 보고서.docx"
+  }
+]
