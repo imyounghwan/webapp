@@ -1,0 +1,1383 @@
+{
+  "statistics": {
+    "total_agencies": 49,
+    "average_score": 3.79,
+    "highest_score": 4.29,
+    "lowest_score": 2.7,
+    "with_krds": 10,
+    "with_heuristic": 37,
+    "with_all_three": 10
+  },
+  "agencies": [
+    {
+      "site_name": "국무조정실",
+      "url": "",
+      "final_nielsen_score": 4.29,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.29,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.17,
+        "N2_match": 4.39,
+        "N3_control": 4.64,
+        "N4_consistency": 4.3,
+        "N5_error_prevention": 4.14,
+        "N6_recognition": 4.33,
+        "N7_flexibility": 4.11,
+        "N8_minimalism": 4.36,
+        "N9_error_recovery": 4.14,
+        "N10_help": 4.33
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "해양수산부",
+      "url": "",
+      "final_nielsen_score": 4.27,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.35,
+        "krds_score": 4.88,
+        "heuristic_nielsen": 3.55
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.47,
+        "N2_match": 4.25,
+        "N3_control": 4.39,
+        "N4_consistency": 4.07,
+        "N5_error_prevention": 3.78,
+        "N6_recognition": 4.08,
+        "N7_flexibility": 4.05,
+        "N8_minimalism": 4.28,
+        "N9_error_recovery": 3.78,
+        "N10_help": 4.08
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "국민권익위원회",
+      "url": "",
+      "final_nielsen_score": 4.25,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.25,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.46,
+        "N2_match": 4.1,
+        "N3_control": 4.11,
+        "N4_consistency": 4.1,
+        "N5_error_prevention": 4.39,
+        "N6_recognition": 4.36,
+        "N7_flexibility": 4.28,
+        "N8_minimalism": 4.0,
+        "N9_error_recovery": 4.39,
+        "N10_help": 4.36
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "국토교통부",
+      "url": "",
+      "final_nielsen_score": 4.2,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.2,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.36,
+        "N2_match": 4.2,
+        "N3_control": 4.36,
+        "N4_consistency": 4.17,
+        "N5_error_prevention": 4.25,
+        "N6_recognition": 4.11,
+        "N7_flexibility": 4.22,
+        "N8_minimalism": 3.97,
+        "N9_error_recovery": 4.25,
+        "N10_help": 4.11
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "식품의약품안전처",
+      "url": "",
+      "final_nielsen_score": 4.18,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.18,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.4,
+        "N2_match": 4.32,
+        "N3_control": 4.16,
+        "N4_consistency": 4.1,
+        "N5_error_prevention": 4.0,
+        "N6_recognition": 4.22,
+        "N7_flexibility": 3.94,
+        "N8_minimalism": 4.39,
+        "N9_error_recovery": 4.0,
+        "N10_help": 4.22
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "국가보훈부",
+      "url": "",
+      "final_nielsen_score": 4.16,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.16,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.23,
+        "N2_match": 4.17,
+        "N3_control": 4.33,
+        "N4_consistency": 3.98,
+        "N5_error_prevention": 4.25,
+        "N6_recognition": 4.14,
+        "N7_flexibility": 4.11,
+        "N8_minimalism": 4.03,
+        "N9_error_recovery": 4.25,
+        "N10_help": 4.14
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "보건복지부",
+      "url": "",
+      "final_nielsen_score": 4.15,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.15,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.15,
+        "N2_match": 4.21,
+        "N3_control": 4.39,
+        "N4_consistency": 3.97,
+        "N5_error_prevention": 4.03,
+        "N6_recognition": 4.39,
+        "N7_flexibility": 3.86,
+        "N8_minimalism": 4.05,
+        "N9_error_recovery": 4.03,
+        "N10_help": 4.39
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "여성가족부(성평등가족부)",
+      "url": "",
+      "final_nielsen_score": 4.14,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.35,
+        "krds_score": 4.6,
+        "heuristic_nielsen": 3.41
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.32,
+        "N2_match": 4.34,
+        "N3_control": 4.34,
+        "N4_consistency": 4.11,
+        "N5_error_prevention": 4.11,
+        "N6_recognition": 4.31,
+        "N7_flexibility": 4.28,
+        "N8_minimalism": 4.25,
+        "N9_error_recovery": 4.11,
+        "N10_help": 4.31
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "기획재정부(재정경제부)",
+      "url": "",
+      "final_nielsen_score": 4.13,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.13,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.29,
+        "N2_match": 4.21,
+        "N3_control": 3.86,
+        "N4_consistency": 4.25,
+        "N5_error_prevention": 4.03,
+        "N6_recognition": 4.22,
+        "N7_flexibility": 3.89,
+        "N8_minimalism": 4.3,
+        "N9_error_recovery": 4.03,
+        "N10_help": 4.22
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "통계청(국가데이터처)",
+      "url": "",
+      "final_nielsen_score": 4.13,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.13,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.37,
+        "N2_match": 4.0,
+        "N3_control": 4.58,
+        "N4_consistency": 4.09,
+        "N5_error_prevention": 4.03,
+        "N6_recognition": 4.03,
+        "N7_flexibility": 3.97,
+        "N8_minimalism": 4.22,
+        "N9_error_recovery": 4.03,
+        "N10_help": 4.03
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "공정거래위원회",
+      "url": "",
+      "final_nielsen_score": 4.09,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.28,
+        "krds_score": 4.4,
+        "heuristic_nielsen": 3.54
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.54,
+        "N2_match": 4.21,
+        "N3_control": 4.08,
+        "N4_consistency": 4.16,
+        "N5_error_prevention": 4.22,
+        "N6_recognition": 4.22,
+        "N7_flexibility": 4.22,
+        "N8_minimalism": 4.2,
+        "N9_error_recovery": 4.22,
+        "N10_help": 4.22
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "대검찰청",
+      "url": "",
+      "final_nielsen_score": 4.08,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.47,
+        "krds_score": 4.51,
+        "heuristic_nielsen": 3.13
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.58,
+        "N2_match": 4.39,
+        "N3_control": 4.36,
+        "N4_consistency": 4.4,
+        "N5_error_prevention": 4.55,
+        "N6_recognition": 4.53,
+        "N7_flexibility": 4.44,
+        "N8_minimalism": 4.33,
+        "N9_error_recovery": 4.55,
+        "N10_help": 4.53
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "법무부",
+      "url": "",
+      "final_nielsen_score": 4.06,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.41,
+        "krds_score": 4.51,
+        "heuristic_nielsen": 3.13
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.5,
+        "N2_match": 4.39,
+        "N3_control": 4.47,
+        "N4_consistency": 4.35,
+        "N5_error_prevention": 4.36,
+        "N6_recognition": 4.33,
+        "N7_flexibility": 4.33,
+        "N8_minimalism": 4.28,
+        "N9_error_recovery": 4.36,
+        "N10_help": 4.33
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "농림축산식품부",
+      "url": "",
+      "final_nielsen_score": 4.02,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.11,
+        "krds_score": 4.38,
+        "heuristic_nielsen": 3.55
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.1,
+        "N2_match": 3.86,
+        "N3_control": 4.36,
+        "N4_consistency": 3.7,
+        "N5_error_prevention": 3.95,
+        "N6_recognition": 4.06,
+        "N7_flexibility": 3.92,
+        "N8_minimalism": 3.94,
+        "N9_error_recovery": 3.95,
+        "N10_help": 4.06
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "질병관리청",
+      "url": "",
+      "final_nielsen_score": 4.01,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.01,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.11,
+        "N2_match": 4.05,
+        "N3_control": 4.0,
+        "N4_consistency": 3.86,
+        "N5_error_prevention": 4.05,
+        "N6_recognition": 4.03,
+        "N7_flexibility": 3.86,
+        "N8_minimalism": 4.03,
+        "N9_error_recovery": 4.05,
+        "N10_help": 4.03
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "과학기술정보통신부",
+      "url": "",
+      "final_nielsen_score": 3.99,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.99,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 3.94,
+        "N2_match": 4.1,
+        "N3_control": 4.22,
+        "N4_consistency": 3.92,
+        "N5_error_prevention": 4.03,
+        "N6_recognition": 3.97,
+        "N7_flexibility": 3.72,
+        "N8_minimalism": 4.03,
+        "N9_error_recovery": 4.03,
+        "N10_help": 3.97
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "우주항공청",
+      "url": "",
+      "final_nielsen_score": 3.98,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.38,
+        "krds_score": null,
+        "heuristic_nielsen": 3.58
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.42,
+        "N2_match": 4.4,
+        "N3_control": 4.45,
+        "N4_consistency": 4.28,
+        "N5_error_prevention": 4.39,
+        "N6_recognition": 4.39,
+        "N7_flexibility": 4.36,
+        "N8_minimalism": 4.33,
+        "N9_error_recovery": 4.39,
+        "N10_help": 4.39
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "고용노동부",
+      "url": "",
+      "final_nielsen_score": 3.97,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.48,
+        "krds_score": null,
+        "heuristic_nielsen": 3.46
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.47,
+        "N2_match": 4.52,
+        "N3_control": 4.58,
+        "N4_consistency": 4.38,
+        "N5_error_prevention": 4.45,
+        "N6_recognition": 4.55,
+        "N7_flexibility": 4.42,
+        "N8_minimalism": 4.39,
+        "N9_error_recovery": 4.45,
+        "N10_help": 4.55
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "문화체육관광부",
+      "url": "",
+      "final_nielsen_score": 3.97,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.23,
+        "krds_score": null,
+        "heuristic_nielsen": 3.7
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.3,
+        "N2_match": 4.31,
+        "N3_control": 4.2,
+        "N4_consistency": 4.43,
+        "N5_error_prevention": 4.33,
+        "N6_recognition": 4.11,
+        "N7_flexibility": 4.14,
+        "N8_minimalism": 4.03,
+        "N9_error_recovery": 4.33,
+        "N10_help": 4.11
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "금융위원회",
+      "url": "",
+      "final_nielsen_score": 3.97,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.97,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 3.78,
+        "N2_match": 3.64,
+        "N3_control": 3.92,
+        "N4_consistency": 3.95,
+        "N5_error_prevention": 4.14,
+        "N6_recognition": 4.05,
+        "N7_flexibility": 4.22,
+        "N8_minimalism": 3.86,
+        "N9_error_recovery": 4.14,
+        "N10_help": 4.05
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "산업통상자원부(산업통상부)",
+      "url": "",
+      "final_nielsen_score": 3.94,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.23,
+        "krds_score": null,
+        "heuristic_nielsen": 3.65
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.24,
+        "N2_match": 4.28,
+        "N3_control": 4.17,
+        "N4_consistency": 4.17,
+        "N5_error_prevention": 4.25,
+        "N6_recognition": 4.3,
+        "N7_flexibility": 4.11,
+        "N8_minimalism": 4.25,
+        "N9_error_recovery": 4.25,
+        "N10_help": 4.3
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "국방부",
+      "url": "",
+      "final_nielsen_score": 3.9,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.44,
+        "krds_score": null,
+        "heuristic_nielsen": 3.35
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.51,
+        "N2_match": 4.57,
+        "N3_control": 4.45,
+        "N4_consistency": 4.36,
+        "N5_error_prevention": 4.47,
+        "N6_recognition": 4.44,
+        "N7_flexibility": 4.28,
+        "N8_minimalism": 4.39,
+        "N9_error_recovery": 4.47,
+        "N10_help": 4.44
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "개인정보보호위원회",
+      "url": "",
+      "final_nielsen_score": 3.87,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.39,
+        "krds_score": null,
+        "heuristic_nielsen": 3.35
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.33,
+        "N2_match": 4.38,
+        "N3_control": 4.47,
+        "N4_consistency": 4.39,
+        "N5_error_prevention": 4.45,
+        "N6_recognition": 4.42,
+        "N7_flexibility": 4.25,
+        "N8_minimalism": 4.33,
+        "N9_error_recovery": 4.45,
+        "N10_help": 4.42
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "외교부",
+      "url": "",
+      "final_nielsen_score": 3.84,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.1,
+        "krds_score": null,
+        "heuristic_nielsen": 3.58
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.18,
+        "N2_match": 4.05,
+        "N3_control": 4.34,
+        "N4_consistency": 4.04,
+        "N5_error_prevention": 4.05,
+        "N6_recognition": 4.08,
+        "N7_flexibility": 3.95,
+        "N8_minimalism": 4.22,
+        "N9_error_recovery": 4.05,
+        "N10_help": 4.08
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "방위사업청",
+      "url": "",
+      "final_nielsen_score": 3.82,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.35,
+        "krds_score": null,
+        "heuristic_nielsen": 3.29
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.51,
+        "N2_match": 4.26,
+        "N3_control": 4.61,
+        "N4_consistency": 4.1,
+        "N5_error_prevention": 4.28,
+        "N6_recognition": 4.53,
+        "N7_flexibility": 4.28,
+        "N8_minimalism": 4.11,
+        "N9_error_recovery": 4.28,
+        "N10_help": 4.53
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "국가유산청",
+      "url": "",
+      "final_nielsen_score": 3.79,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.31,
+        "krds_score": null,
+        "heuristic_nielsen": 3.28
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.47,
+        "N2_match": 4.39,
+        "N3_control": 4.47,
+        "N4_consistency": 4.11,
+        "N5_error_prevention": 4.28,
+        "N6_recognition": 4.45,
+        "N7_flexibility": 4.11,
+        "N8_minimalism": 4.11,
+        "N9_error_recovery": 4.28,
+        "N10_help": 4.45
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "중소벤처기업부",
+      "url": "",
+      "final_nielsen_score": 3.79,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.14,
+        "krds_score": null,
+        "heuristic_nielsen": 3.43
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.17,
+        "N2_match": 3.99,
+        "N3_control": 4.25,
+        "N4_consistency": 4.15,
+        "N5_error_prevention": 4.19,
+        "N6_recognition": 4.11,
+        "N7_flexibility": 4.2,
+        "N8_minimalism": 4.06,
+        "N9_error_recovery": 4.19,
+        "N10_help": 4.11
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "방송통신위원회(방송미디어통신위원회)",
+      "url": "",
+      "final_nielsen_score": 3.78,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.33,
+        "krds_score": null,
+        "heuristic_nielsen": 3.22
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.47,
+        "N2_match": 4.41,
+        "N3_control": 4.53,
+        "N4_consistency": 4.22,
+        "N5_error_prevention": 4.25,
+        "N6_recognition": 4.33,
+        "N7_flexibility": 4.3,
+        "N8_minimalism": 4.22,
+        "N9_error_recovery": 4.25,
+        "N10_help": 4.33
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "행정안전부",
+      "url": "",
+      "final_nielsen_score": 3.78,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.09,
+        "krds_score": null,
+        "heuristic_nielsen": 3.47
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.36,
+        "N2_match": 4.11,
+        "N3_control": 4.39,
+        "N4_consistency": 3.97,
+        "N5_error_prevention": 3.97,
+        "N6_recognition": 4.0,
+        "N7_flexibility": 4.05,
+        "N8_minimalism": 4.11,
+        "N9_error_recovery": 3.97,
+        "N10_help": 4.0
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "조달청",
+      "url": "",
+      "final_nielsen_score": 3.77,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.3,
+        "krds_score": null,
+        "heuristic_nielsen": 3.24
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.37,
+        "N2_match": 4.28,
+        "N3_control": 4.31,
+        "N4_consistency": 4.07,
+        "N5_error_prevention": 4.5,
+        "N6_recognition": 4.42,
+        "N7_flexibility": 4.3,
+        "N8_minimalism": 3.86,
+        "N9_error_recovery": 4.5,
+        "N10_help": 4.42
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "재외동포청",
+      "url": "",
+      "final_nielsen_score": 3.76,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.17,
+        "krds_score": null,
+        "heuristic_nielsen": 3.36
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.32,
+        "N2_match": 4.14,
+        "N3_control": 4.47,
+        "N4_consistency": 4.0,
+        "N5_error_prevention": 4.14,
+        "N6_recognition": 4.17,
+        "N7_flexibility": 3.92,
+        "N8_minimalism": 4.22,
+        "N9_error_recovery": 4.14,
+        "N10_help": 4.17
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "원자력안전위원회",
+      "url": "",
+      "final_nielsen_score": 3.75,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.28,
+        "krds_score": null,
+        "heuristic_nielsen": 3.23
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.47,
+        "N2_match": 4.38,
+        "N3_control": 4.25,
+        "N4_consistency": 4.25,
+        "N5_error_prevention": 4.08,
+        "N6_recognition": 4.47,
+        "N7_flexibility": 4.19,
+        "N8_minimalism": 4.17,
+        "N9_error_recovery": 4.08,
+        "N10_help": 4.47
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "교육부",
+      "url": "",
+      "final_nielsen_score": 3.75,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.27,
+        "krds_score": null,
+        "heuristic_nielsen": 3.22
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.48,
+        "N2_match": 4.24,
+        "N3_control": 4.22,
+        "N4_consistency": 4.1,
+        "N5_error_prevention": 4.33,
+        "N6_recognition": 4.36,
+        "N7_flexibility": 4.11,
+        "N8_minimalism": 4.17,
+        "N9_error_recovery": 4.33,
+        "N10_help": 4.36
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "농촌진흥청",
+      "url": "",
+      "final_nielsen_score": 3.73,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.09,
+        "krds_score": null,
+        "heuristic_nielsen": 3.37
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.29,
+        "N2_match": 4.23,
+        "N3_control": 4.11,
+        "N4_consistency": 4.07,
+        "N5_error_prevention": 3.86,
+        "N6_recognition": 4.14,
+        "N7_flexibility": 3.89,
+        "N8_minimalism": 4.28,
+        "N9_error_recovery": 3.86,
+        "N10_help": 4.14
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "환경부(기후에너지환경부)",
+      "url": "",
+      "final_nielsen_score": 3.69,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.21,
+        "krds_score": null,
+        "heuristic_nielsen": 3.17
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.39,
+        "N2_match": 4.28,
+        "N3_control": 4.39,
+        "N4_consistency": 4.12,
+        "N5_error_prevention": 4.11,
+        "N6_recognition": 4.25,
+        "N7_flexibility": 4.03,
+        "N8_minimalism": 4.19,
+        "N9_error_recovery": 4.11,
+        "N10_help": 4.25
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "국세청",
+      "url": "",
+      "final_nielsen_score": 3.68,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.19,
+        "krds_score": null,
+        "heuristic_nielsen": 3.17
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.18,
+        "N2_match": 4.29,
+        "N3_control": 4.28,
+        "N4_consistency": 4.1,
+        "N5_error_prevention": 4.25,
+        "N6_recognition": 4.08,
+        "N7_flexibility": 4.28,
+        "N8_minimalism": 4.06,
+        "N9_error_recovery": 4.25,
+        "N10_help": 4.08
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "기상청",
+      "url": "",
+      "final_nielsen_score": 3.62,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.09,
+        "krds_score": null,
+        "heuristic_nielsen": 3.15
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.47,
+        "N2_match": 4.18,
+        "N3_control": 3.95,
+        "N4_consistency": 3.98,
+        "N5_error_prevention": 4.0,
+        "N6_recognition": 4.19,
+        "N7_flexibility": 3.86,
+        "N8_minimalism": 4.05,
+        "N9_error_recovery": 4.0,
+        "N10_help": 4.19
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "관세청",
+      "url": "",
+      "final_nielsen_score": 3.6,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.06,
+        "krds_score": null,
+        "heuristic_nielsen": 3.15
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.43,
+        "N2_match": 4.09,
+        "N3_control": 4.28,
+        "N4_consistency": 3.9,
+        "N5_error_prevention": 4.14,
+        "N6_recognition": 3.8,
+        "N7_flexibility": 4.03,
+        "N8_minimalism": 3.97,
+        "N9_error_recovery": 4.14,
+        "N10_help": 3.8
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "새만금개발청",
+      "url": "",
+      "final_nielsen_score": 3.59,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.03,
+        "krds_score": null,
+        "heuristic_nielsen": 3.15
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.29,
+        "N2_match": 4.12,
+        "N3_control": 3.97,
+        "N4_consistency": 3.88,
+        "N5_error_prevention": 3.97,
+        "N6_recognition": 4.06,
+        "N7_flexibility": 3.86,
+        "N8_minimalism": 4.08,
+        "N9_error_recovery": 3.97,
+        "N10_help": 4.06
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "통일부",
+      "url": "",
+      "final_nielsen_score": 3.58,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.96,
+        "krds_score": null,
+        "heuristic_nielsen": 3.2
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.04,
+        "N2_match": 3.88,
+        "N3_control": 4.28,
+        "N4_consistency": 3.85,
+        "N5_error_prevention": 3.83,
+        "N6_recognition": 4.08,
+        "N7_flexibility": 3.86,
+        "N8_minimalism": 3.92,
+        "N9_error_recovery": 3.83,
+        "N10_help": 4.08
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "인사혁신처",
+      "url": "",
+      "final_nielsen_score": 3.52,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.0,
+        "krds_score": null,
+        "heuristic_nielsen": 3.04
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.2,
+        "N2_match": 3.89,
+        "N3_control": 4.56,
+        "N4_consistency": 3.87,
+        "N5_error_prevention": 3.94,
+        "N6_recognition": 3.89,
+        "N7_flexibility": 3.95,
+        "N8_minimalism": 3.92,
+        "N9_error_recovery": 3.94,
+        "N10_help": 3.89
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "경찰청",
+      "url": "",
+      "final_nielsen_score": 3.44,
+      "data_sources": [
+        "citizen"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.44,
+        "krds_score": null,
+        "heuristic_nielsen": null
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.11,
+        "N2_match": 4.31,
+        "N3_control": 4.31,
+        "N4_consistency": 4.14,
+        "N5_error_prevention": 3.89,
+        "N6_recognition": 4.22,
+        "N7_flexibility": 4.03,
+        "N8_minimalism": 4.22,
+        "N9_error_recovery": 3.89,
+        "N10_help": 4.22
+      },
+      "has_krds": false,
+      "has_heuristic": false
+    },
+    {
+      "site_name": "병무청",
+      "url": "",
+      "final_nielsen_score": 3.3,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.86,
+        "krds_score": null,
+        "heuristic_nielsen": 2.74
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 3.84,
+        "N2_match": 3.83,
+        "N3_control": 4.25,
+        "N4_consistency": 3.73,
+        "N5_error_prevention": 3.8,
+        "N6_recognition": 3.83,
+        "N7_flexibility": 3.64,
+        "N8_minimalism": 4.0,
+        "N9_error_recovery": 3.8,
+        "N10_help": 3.83
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "법제처",
+      "url": "",
+      "final_nielsen_score": 3.27,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.08,
+        "krds_score": null,
+        "heuristic_nielsen": 2.46
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.1,
+        "N2_match": 3.97,
+        "N3_control": 4.17,
+        "N4_consistency": 3.96,
+        "N5_error_prevention": 4.0,
+        "N6_recognition": 4.28,
+        "N7_flexibility": 3.97,
+        "N8_minimalism": 4.08,
+        "N9_error_recovery": 4.0,
+        "N10_help": 4.28
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "행정도시건설청",
+      "url": "",
+      "final_nielsen_score": 3.24,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 4.35,
+        "krds_score": 1.96,
+        "heuristic_nielsen": 3.04
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.34,
+        "N2_match": 4.5,
+        "N3_control": 4.36,
+        "N4_consistency": 4.29,
+        "N5_error_prevention": 4.28,
+        "N6_recognition": 4.42,
+        "N7_flexibility": 4.28,
+        "N8_minimalism": 4.28,
+        "N9_error_recovery": 4.28,
+        "N10_help": 4.42
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "특허청(지식재산처)",
+      "url": "",
+      "final_nielsen_score": 3.21,
+      "data_sources": [
+        "citizen",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.24,
+        "krds_score": null,
+        "heuristic_nielsen": 3.19
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.26,
+        "N2_match": 4.21,
+        "N3_control": 4.11,
+        "N4_consistency": 4.04,
+        "N5_error_prevention": 3.83,
+        "N6_recognition": 4.03,
+        "N7_flexibility": 3.86,
+        "N8_minimalism": 4.22,
+        "N9_error_recovery": 3.83,
+        "N10_help": 4.03
+      },
+      "has_krds": false,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "소방청",
+      "url": "",
+      "final_nielsen_score": 2.94,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.6,
+        "krds_score": 1.88,
+        "heuristic_nielsen": 3.14
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.42,
+        "N2_match": 4.38,
+        "N3_control": 4.28,
+        "N4_consistency": 4.38,
+        "N5_error_prevention": 4.22,
+        "N6_recognition": 4.42,
+        "N7_flexibility": 4.3,
+        "N8_minimalism": 4.42,
+        "N9_error_recovery": 4.22,
+        "N10_help": 4.42
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "해양경찰청",
+      "url": "",
+      "final_nielsen_score": 2.82,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.38,
+        "krds_score": 1.82,
+        "heuristic_nielsen": 3.06
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.11,
+        "N2_match": 4.2,
+        "N3_control": 4.22,
+        "N4_consistency": 3.94,
+        "N5_error_prevention": 3.97,
+        "N6_recognition": 4.0,
+        "N7_flexibility": 4.08,
+        "N8_minimalism": 4.06,
+        "N9_error_recovery": 3.97,
+        "N10_help": 4.0
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    },
+    {
+      "site_name": "산림청",
+      "url": "",
+      "final_nielsen_score": 2.7,
+      "data_sources": [
+        "citizen",
+        "krds",
+        "heuristic"
+      ],
+      "breakdown": {
+        "citizen_nielsen": 3.25,
+        "krds_score": 1.25,
+        "heuristic_nielsen": 3.42
+      },
+      "nielsen_10_principles": {
+        "N1_visibility": 4.11,
+        "N2_match": 4.08,
+        "N3_control": 4.36,
+        "N4_consistency": 4.03,
+        "N5_error_prevention": 4.08,
+        "N6_recognition": 4.11,
+        "N7_flexibility": 4.14,
+        "N8_minimalism": 3.92,
+        "N9_error_recovery": 4.08,
+        "N10_help": 4.11
+      },
+      "has_krds": true,
+      "has_heuristic": true
+    }
+  ]
+}

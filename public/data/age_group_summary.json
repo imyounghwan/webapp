@@ -1,0 +1,50 @@
+{
+  "20대": {
+    "count": 49,
+    "total_avg": 4.25,
+    "convenience_avg": 4.28,
+    "design_avg": 4.2,
+    "total_max": 4.95,
+    "total_min": 3.23
+  },
+  "30대": {
+    "count": 49,
+    "total_avg": 4.3,
+    "convenience_avg": 4.33,
+    "design_avg": 4.26,
+    "total_max": 4.8,
+    "total_min": 3.43
+  },
+  "40대": {
+    "count": 49,
+    "total_avg": 4.22,
+    "convenience_avg": 4.26,
+    "design_avg": 4.16,
+    "total_max": 4.67,
+    "total_min": 3.47
+  },
+  "50대": {
+    "count": 49,
+    "total_avg": 4.2,
+    "convenience_avg": 4.24,
+    "design_avg": 4.15,
+    "total_max": 4.67,
+    "total_min": 3.48
+  },
+  "60대이상": {
+    "count": 49,
+    "total_avg": 4.28,
+    "convenience_avg": 4.33,
+    "design_avg": 4.2,
+    "total_max": 4.77,
+    "total_min": 3.72
+  },
+  "디지털취약계층": {
+    "count": 49,
+    "total_avg": 3.9,
+    "convenience_avg": 4.0,
+    "design_avg": 3.75,
+    "total_max": 4.7,
+    "total_min": 2.06
+  }
+}
