@@ -4,6 +4,7 @@
 let allSites = [];
 let ageGroupSummary = {};
 let rankings = {};
+let nielsenReports = []; // Nielsen 상세 분석 데이터
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -56,7 +57,11 @@ async function loadData() {
         const rankingsResponse = await fetch('data/rankings.json');
         rankings = await rankingsResponse.json();
         
-        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료`);
+        // Load Nielsen detailed reports
+        const nielsenResponse = await fetch('data/nielsen_detailed_reports.json');
+        nielsenReports = await nielsenResponse.json();
+        
+        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료 (Nielsen 상세 분석 포함)`);
     } catch (error) {
         console.error('데이터 로드 실패:', error);
         throw error;
@@ -265,6 +270,11 @@ function renderSitesTable(sites = allSites) {
             <td>${site.convenience_avg.toFixed(2)}</td>
             <td>${site.design_avg.toFixed(2)}</td>
             <td>
+                <button class="btn-detail" onclick="showNielsenReport('${site.name}')" style="background: #10b981; margin-right: 5px;" title="Nielsen 25항목 상세">
+                    <i class="fas fa-microscope"></i>
+                </button>
+            </td>
+            <td>
                 <button class="btn-detail" onclick="showSiteDetail('${site.name}')">
                     상세
                 </button>
@@ -391,6 +401,153 @@ function showSiteDetail(siteName) {
         </h3>
         <div>
             ${ageGroupData}
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+// Show Nielsen detailed report
+function showNielsenReport(siteName) {
+    const report = nielsenReports.find(r => r.site_name === siteName);
+    if (!report) {
+        alert('Nielsen 상세 분석 데이터를 찾을 수 없습니다.');
+        return;
+    }
+    
+    const modal = document.getElementById('siteModal');
+    const modalBody = document.getElementById('modalBody');
+    
+    // Nielsen 10원칙별 분석 생성
+    let principlesHTML = '';
+    
+    const principleCodes = [
+        'N1_visibility', 'N2_real_world', 'N3_control', 'N4_consistency', 'N5_prevention',
+        'N6_recognition', 'N7_flexibility', 'N8_minimalist', 'N9_error_recovery', 'N10_help'
+    ];
+    
+    principleCodes.forEach((code, idx) => {
+        const principle = report.principles[code];
+        if (!principle) return;
+        
+        const score = principle.overall_score;
+        const percentage = (score / 5) * 100;
+        const color = score >= 4.5 ? '#10b981' :
+                      score >= 4.0 ? '#06b6d4' :
+                      score >= 3.5 ? '#f59e0b' : '#ef4444';
+        
+        // 세부 항목 생성
+        let itemsHTML = '';
+        Object.entries(principle.items).forEach(([itemCode, itemData]) => {
+            const itemPercentage = (itemData.score / 5) * 100;
+            const itemColor = itemData.level === 'excellent' ? '#10b981' :
+                              itemData.level === 'good' ? '#06b6d4' : '#ef4444';
+            
+            const emoji = itemData.level === 'excellent' ? '✅' :
+                          itemData.level === 'good' ? '⚠️' : '❌';
+            
+            itemsHTML += `
+                <div style="margin-left: 20px; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-left: 4px solid ${itemColor}; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-weight: 600; color: #1e293b;">${itemCode} ${itemData.name}</span>
+                        <span style="font-weight: bold; color: ${itemColor};">${itemData.score.toFixed(2)}</span>
+                    </div>
+                    <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 8px; margin-bottom: 10px;">
+                        <div style="width: ${itemPercentage}%; background: ${itemColor}; height: 8px; border-radius: 10px; transition: width 0.5s;"></div>
+                    </div>
+                    <div style="margin-bottom: 10px; font-size: 0.95rem; color: #475569;">
+                        ${emoji} <strong>진단:</strong> ${itemData.diagnosis}
+                    </div>
+                    <div style="font-size: 0.9rem; color: #64748b; padding: 10px; background: white; border-radius: 6px;">
+                        💡 <strong>개선 방안:</strong> ${itemData.improvement}
+                    </div>
+                </div>
+            `;
+        });
+        
+        principlesHTML += `
+            <div style="margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0; font-size: 1.1rem; color: #1e293b;">
+                        <i class="fas fa-check-circle" style="color: ${color};"></i>
+                        ${idx + 1}. ${principle.name}
+                    </h4>
+                    <span style="font-size: 1.3rem; font-weight: bold; color: ${color};">${score.toFixed(2)}/5.0</span>
+                </div>
+                <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 12px; margin-bottom: 20px;">
+                    <div style="width: ${percentage}%; background: ${color}; height: 12px; border-radius: 10px; transition: width 0.5s;"></div>
+                </div>
+                ${itemsHTML}
+            </div>
+        `;
+    });
+    
+    modalBody.innerHTML = `
+        <h2 style="margin-bottom: 20px; color: #1e293b;">
+            <i class="fas fa-microscope"></i>
+            ${siteName} - Nielsen 상세 분석
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;">
+            <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; border-radius: 10px;">
+                <div style="font-size: 2rem; font-weight: bold;">${report.overall_score.toFixed(2)}</div>
+                <div>Nielsen 종합 점수</div>
+            </div>
+            <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border-radius: 10px;">
+                <div style="font-size: 2rem; font-weight: bold;">25</div>
+                <div>세부 평가 항목</div>
+            </div>
+            <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 10px;">
+                <div style="font-size: 2rem; font-weight: bold;">10</div>
+                <div>Nielsen 원칙</div>
+            </div>
+        </div>
+        
+        <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 30px;">
+            <h4 style="margin-bottom: 10px;">
+                <i class="fas fa-info-circle"></i>
+                Nielsen 10가지 사용성 원칙 기반 분석
+            </h4>
+            <p style="margin: 0; font-size: 0.95rem; color: #475569;">
+                제이콥 닐슨(Jakob Nielsen)의 10가지 사용성 원칙을 기반으로 25개 세부 항목을 평가했습니다.
+                각 항목은 실제 사용자 평가 데이터(Q1~Q10)를 기반으로 점수가 산출되며, 
+                구체적인 진단과 개선 방안이 제시됩니다.
+            </p>
+        </div>
+        
+        <h3 style="margin-bottom: 20px;">
+            <i class="fas fa-chart-bar"></i>
+            10가지 원칙별 상세 분석
+        </h3>
+        ${principlesHTML}
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 30px;">
+            <h4 style="margin-bottom: 15px;">
+                <i class="fas fa-lightbulb"></i>
+                개선 우선순위
+            </h4>
+            <p style="font-size: 0.95rem; color: #475569; margin-bottom: 15px;">
+                낮은 점수를 받은 항목부터 개선하면 사용성 향상 효과가 큽니다:
+            </p>
+            <ol style="font-size: 0.95rem; color: #475569; margin: 0; padding-left: 25px;">
+                ${Object.entries(report.principles)
+                    .flatMap(([code, principle]) => 
+                        Object.entries(principle.items).map(([itemCode, itemData]) => ({
+                            code: itemCode,
+                            name: itemData.name,
+                            score: itemData.score,
+                            improvement: itemData.improvement
+                        }))
+                    )
+                    .sort((a, b) => a.score - b.score)
+                    .slice(0, 5)
+                    .map((item, idx) => `
+                        <li style="margin-bottom: 10px;">
+                            <strong>${item.code} ${item.name}</strong> (${item.score.toFixed(2)}점)<br>
+                            <span style="color: #64748b; font-size: 0.9rem;">${item.improvement}</span>
+                        </li>
+                    `).join('')}
+            </ol>
         </div>
     `;
     
