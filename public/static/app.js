@@ -4,12 +4,18 @@ document.getElementById('analyzeBtn')?.addEventListener('click', async () => {
     const url = document.getElementById('analyzeUrl').value;
     const result = document.getElementById('analyzeResult');
     
+    if (!result) {
+        console.error('analyzeResult element not found!');
+        alert('오류: 결과 표시 영역을 찾을 수 없습니다.');
+        return;
+    }
+    
     if (!url) {
         alert('URL을 입력하세요');
         return;
     }
     
-    result.innerHTML = '<div class="text-center"><div class="text-gray-600 animate-pulse">🔍 URL 분석 중...</div></div>';
+    result.innerHTML = '<div style="text-align: center; padding: 20px;"><div style="color: #666;">🔍 URL 분석 중...</div></div>';
     result.style.display = 'block';
     
     try {
