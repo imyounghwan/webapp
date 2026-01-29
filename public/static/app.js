@@ -1,8 +1,8 @@
 console.log('AutoAnalyzer v2.0 - Item Labels');
 
-document.getElementById('analyze')?.addEventListener('click', async () => {
-    const url = document.getElementById('url').value;
-    const result = document.getElementById('result');
+document.getElementById('analyzeBtn')?.addEventListener('click', async () => {
+    const url = document.getElementById('analyzeUrl').value;
+    const result = document.getElementById('analyzeResult');
     
     if (!url) {
         alert('URL을 입력하세요');
@@ -10,7 +10,7 @@ document.getElementById('analyze')?.addEventListener('click', async () => {
     }
     
     result.innerHTML = '<div class="text-center"><div class="text-gray-600 animate-pulse">🔍 URL 분석 중...</div></div>';
-    result.classList.remove('hidden');
+    result.style.display = 'block';
     
     try {
         const response = await fetch('/api/analyze', {
