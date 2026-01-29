@@ -7,6 +7,7 @@ let rankings = {};
 let nielsenReports = []; // Nielsen 상세 분석 데이터
 let integratedNielsen = []; // 통합 Nielsen 점수 (국민평가 + KRDS)
 let krdsImageAnalysis = []; // KRDS 이미지 분석 결과
+let finalIntegratedScores = []; // 최종 통합 점수 (국민평가 + KRDS + 휴리스틱)
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -71,7 +72,14 @@ async function loadData() {
         const krdsImageResponse = await fetch('data/nielsen_mapped_results.json');
         krdsImageAnalysis = await krdsImageResponse.json();
         
-        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료 (Nielsen 상세 분석 + 통합 점수 + KRDS 이미지 분석 포함)`);
+        // Load FINAL integrated scores (국민평가 + KRDS + 휴리스틱) ⭐ 최종 통합!
+        const finalIntegratedResponse = await fetch('data/final_integrated_scores.json');
+        const finalData = await finalIntegratedResponse.json();
+        finalIntegratedScores = finalData.agencies || [];
+        
+        console.log(`✅ ${allSites.length}개 기관 데이터 로드 완료`);
+        console.log(`   - 최종 통합 점수: ${finalIntegratedScores.length}개 기관`);
+        console.log(`   - 3개 데이터 모두: ${finalIntegratedScores.filter(a => a.data_sources.length === 3).length}개`);
     } catch (error) {
         console.error('데이터 로드 실패:', error);
         throw error;
@@ -207,26 +215,64 @@ function renderQScoresChart() {
     });
 }
 
-// Render top 5 sites
+// Render top 5 sites (최종 통합 점수 기준)
 function renderTop5Sites() {
     const container = document.getElementById('top5Sites');
     container.innerHTML = '';
     
-    rankings.top_5.forEach((site, index) => {
-        const card = createRankingCard(site, index + 1, 'high');
-        container.appendChild(card);
-    });
+    // 최종 통합 점수 기준으로 정렬
+    if (finalIntegratedScores.length > 0) {
+        const sorted = [...finalIntegratedScores].sort((a, b) => b.final_nielsen_score - a.final_nielsen_score);
+        const top5 = sorted.slice(0, 5);
+        
+        top5.forEach((scoreData, index) => {
+            const site = allSites.find(s => s.site_name === scoreData.site_name || s.name === scoreData.site_name);
+            if (site) {
+                const card = createRankingCard({
+                    ...site,
+                    final_score: scoreData.final_nielsen_score,
+                    data_sources: scoreData.data_sources
+                }, index + 1, 'high');
+                container.appendChild(card);
+            }
+        });
+    } else {
+        // Fallback: 기존 rankings 데이터 사용
+        rankings.top_5.forEach((site, index) => {
+            const card = createRankingCard(site, index + 1, 'high');
+            container.appendChild(card);
+        });
+    }
 }
 
-// Render bottom 5 sites
+// Render bottom 5 sites (최종 통합 점수 기준)
 function renderBottom5Sites() {
     const container = document.getElementById('bottom5Sites');
     container.innerHTML = '';
     
-    rankings.bottom_5.forEach((site, index) => {
-        const card = createRankingCard(site, allSites.length - 4 + index, 'low');
-        container.appendChild(card);
-    });
+    // 최종 통합 점수 기준으로 정렬
+    if (finalIntegratedScores.length > 0) {
+        const sorted = [...finalIntegratedScores].sort((a, b) => a.final_nielsen_score - b.final_nielsen_score);
+        const bottom5 = sorted.slice(0, 5);
+        
+        bottom5.forEach((scoreData, index) => {
+            const site = allSites.find(s => s.site_name === scoreData.site_name || s.name === scoreData.site_name);
+            if (site) {
+                const card = createRankingCard({
+                    ...site,
+                    final_score: scoreData.final_nielsen_score,
+                    data_sources: scoreData.data_sources
+                }, allSites.length - 4 + index, 'low');
+                container.appendChild(card);
+            }
+        });
+    } else {
+        // Fallback: 기존 rankings 데이터 사용
+        rankings.bottom_5.forEach((site, index) => {
+            const card = createRankingCard(site, allSites.length - 4 + index, 'low');
+            container.appendChild(card);
+        });
+    }
 }
 
 // Create ranking card
@@ -239,13 +285,23 @@ function createRankingCard(site, rank, level) {
     else if (rank === 2) badgeClass = 'silver';
     else if (rank === 3) badgeClass = 'bronze';
     
+    // 데이터 소스 태그 생성
+    let dataSourceTag = '';
+    if (site.data_sources && site.data_sources.length === 3) {
+        dataSourceTag = '<span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.75rem; margin-top: 5px; display: inline-block;">국민+KRDS+휴리스틱</span>';
+    } else if (site.data_sources && site.data_sources.includes('krds')) {
+        dataSourceTag = '<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 3px; font-size: 0.75rem; margin-top: 5px; display: inline-block;">+KRDS</span>';
+    } else if (site.data_sources && site.data_sources.includes('heuristic')) {
+        dataSourceTag = '<span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 3px; font-size: 0.75rem; margin-top: 5px; display: inline-block;">+휴리스틱</span>';
+    }
+    
     card.innerHTML = `
         <div class="ranking-badge ${badgeClass}">${rank}</div>
         <div class="site-name">${site.name}</div>
         <div class="site-url">${site.url}</div>
         <div class="score-display">
             <div class="score-circle ${level}">
-                ${site.total_avg.toFixed(2)}
+                ${site.final_score ? site.final_score.toFixed(2) : site.total_avg.toFixed(2)}
             </div>
             <div class="score-details">
                 <div class="score-item">
@@ -256,6 +312,7 @@ function createRankingCard(site, rank, level) {
                     <span class="score-label">디자인</span>
                     <span class="score-value">${site.design_avg.toFixed(2)}</span>
                 </div>
+                ${site.final_score ? '<div class="score-item" style="grid-column: 1/-1; text-align: center;">' + dataSourceTag + '</div>' : ''}
             </div>
         </div>
         <button class="btn-detail" onclick="showSiteDetail('${site.name}')">
@@ -272,8 +329,24 @@ function renderSitesTable(sites = allSites) {
     tbody.innerHTML = '';
     
     sites.forEach((site, index) => {
-        // 통합 Nielsen 점수 찾기
+        // 최종 통합 점수 찾기 (국민평가 + KRDS + 휴리스틱)
+        const finalScore = finalIntegratedScores.find(f => f.site_name === site.name);
+        
+        // 기존 통합 Nielsen 점수 (국민평가 + KRDS만)
         const nielsenData = integratedNielsen.find(n => n.site_name === site.name);
+        
+        // 데이터 소스 태그 생성
+        let dataSourceTag = '';
+        if (finalScore && finalScore.data_sources) {
+            const sources = finalScore.data_sources;
+            if (sources.length === 3) {
+                dataSourceTag = '<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-left: 5px;">3개 통합</span>';
+            } else if (sources.includes('krds')) {
+                dataSourceTag = '<span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-left: 5px;">+KRDS</span>';
+            } else if (sources.includes('heuristic')) {
+                dataSourceTag = '<span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-left: 5px;">+휴리스틱</span>';
+            }
+        }
         
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -283,10 +356,12 @@ function renderSitesTable(sites = allSites) {
             <td>${site.convenience_avg.toFixed(2)}</td>
             <td>${site.design_avg.toFixed(2)}</td>
             <td>
-                ${nielsenData ? `
+                ${finalScore ? `
+                    <strong style="color: #10b981; font-size: 1.1em;">${finalScore.final_nielsen_score.toFixed(2)}</strong>
+                    ${dataSourceTag}
+                ` : (nielsenData ? `
                     <strong style="color: #f59e0b;">${nielsenData.nielsen_average.toFixed(2)}</strong>
-                    ${nielsenData.has_krds ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; margin-left: 5px;">+KRDS</span>' : ''}
-                ` : '-'}
+                ` : '-')}
             </td>
             <td>
                 <button class="btn-detail" onclick="showNielsenReport('${site.name}')" style="background: #10b981; margin-right: 5px;" title="Nielsen 25항목 상세">
