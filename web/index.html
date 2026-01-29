@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoAnalyzer - AI 기반 UI/UX 자동 분석</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    AutoAnalyzer
+                </h1>
+                <p class="tagline">AI 기반 UI/UX 자동 분석 시스템</p>
+                <p class="subtitle">49개 공공기관 · 6개 연령대 · Nielsen 10가지 사용성 기준</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            
+            <!-- Stats Overview -->
+            <section class="stats-section">
+                <h2 class="section-title">
+                    <i class="fas fa-database"></i>
+                    분석 데이터 현황
+                </h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-building"></i>
+                        <div class="stat-value" id="totalSites">-</div>
+                        <div class="stat-label">분석 기관</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-value" id="totalAgeGroups">6</div>
+                        <div class="stat-label">연령대</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-star"></i>
+                        <div class="stat-value" id="avgScore">-</div>
+                        <div class="stat-label">평균 점수</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-bar"></i>
+                        <div class="stat-value">10</div>
+                        <div class="stat-label">평가 항목</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Age Group Comparison -->
+            <section class="chart-section">
+                <h2 class="section-title">
+                    <i class="fas fa-users-line"></i>
+                    연령대별 평가 점수
+                </h2>
+                <div class="chart-container">
+                    <canvas id="ageGroupChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Top 5 Sites -->
+            <section class="ranking-section">
+                <h2 class="section-title">
+                    <i class="fas fa-trophy"></i>
+                    최고 점수 5개 기관
+                </h2>
+                <div class="ranking-grid" id="top5Sites">
+                    <!-- 동적 생성 -->
+                </div>
+            </section>
+
+            <!-- Bottom 5 Sites -->
+            <section class="ranking-section">
+                <h2 class="section-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    최저 점수 5개 기관
+                </h2>
+                <div class="ranking-grid" id="bottom5Sites">
+                    <!-- 동적 생성 -->
+                </div>
+            </section>
+
+            <!-- Q1-Q10 Average Scores -->
+            <section class="chart-section">
+                <h2 class="section-title">
+                    <i class="fas fa-list-check"></i>
+                    항목별 평균 점수 (Q1~Q10)
+                </h2>
+                <div class="chart-container">
+                    <canvas id="qScoresChart"></canvas>
+                </div>
+            </section>
+
+            <!-- All Sites Table -->
+            <section class="table-section">
+                <h2 class="section-title">
+                    <i class="fas fa-table"></i>
+                    전체 기관 목록
+                </h2>
+                <div class="table-controls">
+                    <input type="text" id="searchInput" placeholder="기관명 검색..." class="search-input">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="total_desc">종합점수 (높은순)</option>
+                        <option value="total_asc">종합점수 (낮은순)</option>
+                        <option value="convenience_desc">편의성 (높은순)</option>
+                        <option value="design_desc">디자인 (높은순)</option>
+                        <option value="name">기관명 (가나다순)</option>
+                    </select>
+                </div>
+                <div class="table-wrapper">
+                    <table class="sites-table" id="sitesTable">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>기관명</th>
+                                <th>종합점수</th>
+                                <th>편의성</th>
+                                <th>디자인</th>
+                                <th>상세</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sitesTableBody">
+                            <!-- 동적 생성 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 AutoAnalyzer. All rights reserved.</p>
+            <p>49개 공공기관 국민평가 데이터 기반 분석</p>
+        </div>
+    </footer>
+
+    <!-- Modal for Site Details -->
+    <div id="siteModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalBody">
+                <!-- 동적 생성 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+</html>
