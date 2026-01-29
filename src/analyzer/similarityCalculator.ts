@@ -96,140 +96,85 @@ export function findSimilarSites(structure: HTMLStructure, referenceData: any[])
 }
 
 /**
- * 유사도 계산 알고리즘 (개선)
+ * 유사도 계산 알고리즘
+ * HTML 구조 기반으로 유사도 계산 (49개 기관 데이터에는 HTML 구조 없음)
  */
 function calculateSimilarity(newSite: HTMLStructure, referenceSite: any): number {
   let totalScore = 0
-  let weights = 0
+  let maxScore = 0
 
-  // 1. 네비게이션 구조 유사도 (가중치: 20)
-  const navScore = compareNavigation(newSite.navigation, referenceSite)
-  totalScore += navScore * 20
-  weights += 20
+  // 1. 네비게이션 점수 (0~25점)
+  const navScore = scoreNavigation(newSite.navigation)
+  totalScore += navScore
+  maxScore += 25
 
-  // 2. 접근성 점수 (가중치: 30) - 가장 중요
-  const a11yScore = compareAccessibility(newSite.accessibility, referenceSite)
-  totalScore += a11yScore * 30
-  weights += 30
+  // 2. 접근성 점수 (0~35점) - 가장 중요
+  const a11yScore = scoreAccessibility(newSite.accessibility)
+  totalScore += a11yScore
+  maxScore += 35
 
-  // 3. 콘텐츠 구조 유사도 (가중치: 20)
-  const contentScore = compareContent(newSite.content, referenceSite)
-  totalScore += contentScore * 20
-  weights += 20
+  // 3. 콘텐츠 점수 (0~20점)
+  const contentScore = scoreContent(newSite.content)
+  totalScore += contentScore
+  maxScore += 20
 
-  // 4. 폼 구조 유사도 (가중치: 15)
-  const formScore = compareForms(newSite.forms, referenceSite)
-  totalScore += formScore * 15
-  weights += 15
+  // 4. 폼 점수 (0~10점)
+  const formScore = scoreForms(newSite.forms)
+  totalScore += formScore
+  maxScore += 10
 
-  // 5. 시각적 요소 (가중치: 15)
-  const visualScore = compareVisuals(newSite.visuals, referenceSite)
-  totalScore += visualScore * 15
-  weights += 15
+  // 5. 시각적 요소 (0~10점)
+  const visualScore = scoreVisuals(newSite.visuals)
+  totalScore += visualScore
+  maxScore += 10
 
-  // 가중 평균 계산 (0~100)
-  return Math.round((totalScore / weights) * 100)
+  // 0~100 범위로 정규화
+  return Math.round((totalScore / maxScore) * 100)
 }
 
-function compareNavigation(nav: any, ref: any): number {
-  let score = 0
-  
-  // 검색 기능 존재 여부 (중요)
-  if (nav.searchExists) score += 0.3
-  
-  // Breadcrumb 존재 여부
-  if (nav.breadcrumbExists) score += 0.2
-  
-  // 링크 개수 적정성 (20~100개가 적정)
-  const linkScore = nav.linkCount >= 20 && nav.linkCount <= 100 ? 0.3 : 0.1
-  score += linkScore
-  
-  // 메뉴 깊이 적정성 (2단계가 적정)
-  const depthScore = nav.depthLevel === 2 ? 0.2 : 0.1
-  score += depthScore
-
+// 개별 점수 계산 함수들
+function scoreNavigation(nav: any): number {
+  let score = 5 // 기본 점수
+  if (nav.searchExists) score += 8
+  if (nav.breadcrumbExists) score += 7
+  if (nav.linkCount >= 20 && nav.linkCount <= 100) score += 5
   return score
 }
 
-function compareAccessibility(a11y: any, ref: any): number {
-  let score = 0
-  
-  // Alt 텍스트 비율 (가장 중요)
-  score += a11y.altTextRatio * 0.4
-  
-  // ARIA 레이블 존재 여부
-  if (a11y.ariaLabelCount > 5) score += 0.2
-  else if (a11y.ariaLabelCount > 0) score += 0.1
-  
-  // 헤딩 구조 존재 여부
-  if (a11y.headingStructure) score += 0.2
-  
-  // Lang 속성 존재 여부
-  if (a11y.langAttribute) score += 0.1
-  
-  // Skip link 존재 여부
-  if (a11y.skipLinkExists) score += 0.1
-
-  return score
+function scoreAccessibility(a11y: any): number {
+  let score = 5 // 기본 점수
+  score += a11y.altTextRatio * 10 // 0~10점
+  if (a11y.langAttribute) score += 7
+  if (a11y.skipLinkExists) score += 5
+  if (a11y.headingStructure) score += 5
+  if (a11y.ariaLabelCount > 5) score += 3
+  return Math.min(score, 35)
 }
 
-function compareContent(content: any, ref: any): number {
-  let score = 0
-  
-  // 헤딩 개수 적정성 (5~20개가 적정)
-  if (content.headingCount >= 5 && content.headingCount <= 20) score += 0.3
-  else if (content.headingCount > 0) score += 0.1
-  
-  // 문단 개수 적정성
-  if (content.paragraphCount >= 10) score += 0.3
-  else if (content.paragraphCount > 0) score += 0.1
-  
-  // 리스트 활용
-  if (content.listCount > 3) score += 0.2
-  else if (content.listCount > 0) score += 0.1
-  
-  // 테이블 활용
-  if (content.tableCount > 0) score += 0.2
-
-  return score
+function scoreContent(content: any): number {
+  let score = 5 // 기본 점수
+  if (content.headingCount >= 5 && content.headingCount <= 20) score += 6
+  if (content.paragraphCount >= 10) score += 4
+  if (content.listCount > 3) score += 3
+  if (content.tableCount > 0) score += 2
+  return Math.min(score, 20)
 }
 
-function compareForms(forms: any, ref: any): number {
-  let score = 0
+function scoreForms(forms: any): number {
+  if (forms.formCount === 0) return 5 // 폼 없어도 기본 점수
   
-  // 폼이 있는 경우
-  if (forms.formCount > 0) {
-    // Label 비율 (가장 중요)
-    score += forms.labelRatio * 0.5
-    
-    // Validation 존재 여부
-    if (forms.validationExists) score += 0.3
-    
-    // 적정한 Input 개수 (1~10개)
-    if (forms.inputCount >= 1 && forms.inputCount <= 10) score += 0.2
-  } else {
-    // 폼이 없어도 기본 점수
-    score = 0.5
-  }
-
-  return score
+  let score = 2
+  if (forms.validationExists) score += 4
+  score += forms.labelRatio * 4 // 0~4점
+  return Math.min(score, 10)
 }
 
-function compareVisuals(visuals: any, ref: any): number {
-  let score = 0
-  
-  // 이미지 존재 여부
-  if (visuals.imageCount > 0 && visuals.imageCount <= 50) score += 0.4
-  else if (visuals.imageCount > 0) score += 0.2
-  
-  // 아이콘 활용
-  if (visuals.iconCount > 5) score += 0.3
-  else if (visuals.iconCount > 0) score += 0.1
-  
-  // 비디오 활용
-  if (visuals.videoCount > 0) score += 0.3
-
-  return score
+function scoreVisuals(visuals: any): number {
+  let score = 2 // 기본 점수
+  if (visuals.imageCount > 0 && visuals.imageCount <= 30) score += 4
+  if (visuals.iconCount > 3) score += 3
+  if (visuals.videoCount > 0) score += 1
+  return Math.min(score, 10)
 }
 
 /**
