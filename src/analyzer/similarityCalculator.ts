@@ -241,19 +241,94 @@ function scoreVisuals(visuals: any): number {
 }
 
 /**
+ * HTML 구조 기반 편의성 점수 (0~5점)
+ */
+function calculateConvenienceScore(structure: HTMLStructure): number {
+  let score = 0
+  const { navigation, accessibility, forms } = structure
+  
+  // 네비게이션 (0~1.5점)
+  if (navigation.breadcrumbExists) score += 0.5
+  if (navigation.searchExists) score += 0.5
+  score += Math.min(navigation.linkCount / 50, 0.5) // 링크 수 (최대 50개 기준)
+  
+  // 접근성 (0~2.0점)
+  score += accessibility.altTextRatio * 0.5 // 대체 텍스트 비율
+  if (accessibility.langAttribute) score += 0.3
+  if (accessibility.skipLinkExists) score += 0.2
+  if (accessibility.headingStructure) score += 0.5
+  score += Math.min(accessibility.ariaLabelCount / 10, 0.5) // ARIA 레이블
+  
+  // 폼 편의성 (0~1.5점)
+  if (forms.formCount > 0) {
+    if (forms.validationExists) score += 0.5
+    score += forms.labelRatio * 1.0 // 라벨 연결 비율
+  } else {
+    score += 0.75 // 폼이 없어도 중간 점수
+  }
+  
+  return Math.min(score, 5.0)
+}
+
+/**
+ * HTML 구조 기반 디자인 점수 (0~5점)
+ */
+function calculateDesignScore(structure: HTMLStructure): number {
+  let score = 0
+  const { content, visuals, accessibility } = structure
+  
+  // 콘텐츠 구조 (0~2.0점)
+  const headingScore = Math.min(content.headingCount / 10, 1.0) // 제목 개수 (최대 10개 기준)
+  score += headingScore
+  
+  const paragraphScore = content.paragraphCount >= 10 && content.paragraphCount <= 50 
+    ? 0.5 
+    : content.paragraphCount < 10 
+    ? content.paragraphCount * 0.05 
+    : 0.3 // 10~50개가 적정
+  score += paragraphScore
+  
+  if (content.listCount > 0) score += Math.min(content.listCount / 10, 0.5)
+  
+  // 시각적 요소 (0~2.0점)
+  const imageScore = visuals.imageCount > 0 && visuals.imageCount <= 30
+    ? Math.min(visuals.imageCount / 15, 1.0) // 적정 이미지 수
+    : visuals.imageCount > 30
+    ? 0.3 // 과다
+    : 0.5 // 없어도 중간
+  score += imageScore
+  
+  const iconScore = Math.min(visuals.iconCount / 10, 0.5) // 아이콘
+  score += iconScore
+  
+  if (visuals.videoCount > 0 && visuals.videoCount <= 3) score += 0.5
+  
+  // 일관성 (0~1.0점)
+  if (accessibility.headingStructure) score += 0.5 // 제목 계층 구조
+  if (accessibility.langAttribute) score += 0.5 // 언어 속성
+  
+  return Math.min(score, 5.0)
+}
+
+/**
+ * 기본 구조 점수 (사용 안함 - 호환성 유지)
+ */
+function calculateStructureScore(structure: HTMLStructure): number {
+  return (calculateConvenienceScore(structure) + calculateDesignScore(structure)) / 2
+}
+
+/**
  * 예측 점수 산출
  */
 export function calculatePredictedScore(similarSites: SimilarSite[], structure: HTMLStructure, url: string): PredictedScore {
-  // 유사한 사이트들의 가중 평균 (유사도가 높을수록 가중치 큼)
-  const totalWeight = similarSites.reduce((sum, site) => sum + site.similarity, 0)
+  // HTML 구조 기반 점수 계산 (결정적, 재현 가능)
+  const baseScore = calculateStructureScore(structure)
   
-  const weightedAvg = similarSites.reduce((sum, site) => {
-    return sum + (site.total_score * site.similarity)
-  }, 0) / totalWeight
-
-  // 편의성/디자인 점수는 약간의 변동
-  const convenience = weightedAvg * (0.9 + Math.random() * 0.2)
-  const design = weightedAvg * (0.9 + Math.random() * 0.2)
+  // 편의성: 접근성 + 네비게이션 중심
+  const convenience = calculateConvenienceScore(structure)
+  
+  // 디자인: 시각적 요소 + 콘텐츠 구조 중심
+  const design = calculateDesignScore(structure)
   
   // 종합 점수 = (편의성 + 디자인) / 2
   const overall = (convenience + design) / 2
