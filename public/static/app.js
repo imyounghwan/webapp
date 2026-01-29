@@ -1,4 +1,5 @@
-console.log('AutoAnalyzer v2.0 - Item Labels');
+console.log('🚀 AutoAnalyzer v2.1 - Fixed Version');
+console.log('Element IDs: analyzeBtn, analyzeUrl, analyzeResult');
 
 document.getElementById('analyzeBtn')?.addEventListener('click', async () => {
     const url = document.getElementById('analyzeUrl').value;
