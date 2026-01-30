@@ -4,6 +4,7 @@ import { analyzeHTML } from './analyzer/htmlAnalyzer'
 import { findSimilarSites, calculatePredictedScore } from './analyzer/similarityCalculator'
 import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
 import { nielsenDescriptions, getItemDescription } from './analyzer/nielsenDescriptions'
+import { evaluateItemRelevance } from './analyzer/itemRelevance'
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
@@ -185,8 +186,8 @@ app.post('/api/analyze', async (c) => {
     // 2. 결과 종합
     const structure = aggregateResults(pageResults)
     
-    // 2.5. 분석된 페이지 URL 목록 생성
-    const analyzedPageUrls = pageResults.map(p => p.url)
+    // 2.5. 항목별 영향 페이지 추적
+    const itemRelevance = evaluateItemRelevance(pageResults)
 
     // 3. 개선된 Nielsen 평가 (22개 독립 항목)
     const improvedScores = calculateImprovedNielsen(structure)
@@ -262,6 +263,7 @@ app.post('/api/analyze', async (c) => {
       const { key, id } = convenienceMapping[idx]
       const desc = getItemDescription(id)
       const diagnosisKey = convenienceDiagnosisKeys[idx]
+      const relevantPages = itemRelevance.get(id) || [url]
       
       convenience_items_detail.push({
         item: key,
@@ -273,7 +275,7 @@ app.post('/api/analyze', async (c) => {
         principle: desc?.principle || '',
         why_important: desc?.why_important || '',
         evaluation_criteria: desc?.evaluation_criteria || '',
-        evaluated_pages: analyzedPageUrls,  // 평가한 모든 페이지
+        evaluated_pages: relevantPages,  // 이 항목 평가에 실제로 영향을 준 페이지들
         evaluated_url: url  // 메인 URL (하위 호환성)
       })
     })
@@ -307,6 +309,7 @@ app.post('/api/analyze', async (c) => {
       const { key, id } = designMapping[idx]
       const desc = getItemDescription(id)
       const diagnosisKey = designDiagnosisKeys[idx]
+      const relevantPages = itemRelevance.get(id) || [url]
       
       design_items_detail.push({
         item: key,
@@ -318,7 +321,7 @@ app.post('/api/analyze', async (c) => {
         principle: desc?.principle || '',
         why_important: desc?.why_important || '',
         evaluation_criteria: desc?.evaluation_criteria || '',
-        evaluated_pages: analyzedPageUrls,  // 평가한 모든 페이지
+        evaluated_pages: relevantPages,  // 이 항목 평가에 실제로 영향을 준 페이지들
         evaluated_url: url  // 메인 URL (하위 호환성)
       })
     })
