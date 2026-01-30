@@ -695,7 +695,7 @@ window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
 }
 
 /**
- * PDF 다운로드 함수
+ * PDF 다운로드 함수 (html2canvas 방식)
  */
 async function downloadPDF(data) {
     try {
@@ -703,107 +703,49 @@ async function downloadPDF(data) {
         btn.disabled = true;
         btn.innerHTML = '<span>⏳</span> PDF 생성 중...';
         
+        // 화면 캡처 영역 선택
+        const resultElement = document.getElementById('analyzeResult');
+        if (!resultElement) {
+            throw new Error('분석 결과를 찾을 수 없습니다.');
+        }
+        
+        // 수정 버튼 숨기기 (PDF에 불필요)
+        const editButtons = resultElement.querySelectorAll('.edit-score-btn, #downloadPdfBtn, #downloadPptBtn');
+        editButtons.forEach(btn => btn.style.display = 'none');
+        
+        // html2canvas로 캡처
+        const canvas = await html2canvas(resultElement, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+        });
+        
+        // 버튼 다시 표시
+        editButtons.forEach(btn => btn.style.display = '');
+        
+        // PDF 생성
         const { jsPDF } = window.jspdf;
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        
         const pdf = new jsPDF('p', 'mm', 'a4');
+        let position = 0;
         
-        const { predicted_score, url, analysis_date } = data;
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        let yPos = 20;
+        // 이미지를 PDF에 추가
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
         
-        // 제목
-        pdf.setFontSize(20);
-        pdf.setTextColor(37, 99, 235);
-        pdf.text('MGINE AutoAnalyzer', pageWidth / 2, yPos, { align: 'center' });
-        
-        yPos += 10;
-        pdf.setFontSize(16);
-        pdf.setTextColor(107, 114, 128);
-        pdf.text('UI/UX 분석 보고서', pageWidth / 2, yPos, { align: 'center' });
-        
-        yPos += 15;
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(`분석 URL: ${url}`, 20, yPos);
-        yPos += 7;
-        pdf.text(`분석 일시: ${new Date(analysis_date).toLocaleString('ko-KR')}`, 20, yPos);
-        
-        // 종합 점수
-        yPos += 15;
-        pdf.setFontSize(14);
-        pdf.setTextColor(37, 99, 235);
-        pdf.text('종합 점수', 20, yPos);
-        
-        yPos += 10;
-        pdf.setFontSize(24);
-        pdf.text(predicted_score.overall.toFixed(2), pageWidth / 2, yPos, { align: 'center' });
-        
-        yPos += 10;
-        pdf.setFontSize(12);
-        pdf.text(`편의성: ${predicted_score.convenience.toFixed(2)}`, pageWidth / 2 - 30, yPos);
-        pdf.text(`디자인: ${predicted_score.design.toFixed(2)}`, pageWidth / 2 + 10, yPos);
-        
-        // 새 페이지 - 편의성 항목
-        pdf.addPage();
-        yPos = 20;
-        pdf.setFontSize(14);
-        pdf.setTextColor(5, 150, 105);
-        pdf.text('편의성 항목 (21개)', 20, yPos);
-        
-        yPos += 10;
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0);
-        
-        (predicted_score.convenience_items || []).forEach((item, idx) => {
-            if (yPos > pageHeight - 20) {
-                pdf.addPage();
-                yPos = 20;
-            }
-            
-            pdf.setFont(undefined, 'bold');
-            pdf.text(`${idx + 1}. ${item.item}`, 20, yPos);
-            yPos += 6;
-            
-            pdf.setFont(undefined, 'normal');
-            pdf.text(`점수: ${item.score.toFixed(1)} / 5.0`, 25, yPos);
-            yPos += 6;
-            
-            const diagnosis = item.diagnosis || '진단 없음';
-            const lines = pdf.splitTextToSize(`진단: ${diagnosis}`, pageWidth - 50);
-            pdf.text(lines, 25, yPos);
-            yPos += lines.length * 5 + 5;
-        });
-        
-        // 새 페이지 - 디자인 항목
-        pdf.addPage();
-        yPos = 20;
-        pdf.setFontSize(14);
-        pdf.setTextColor(124, 58, 237);
-        pdf.text('디자인 항목 (5개)', 20, yPos);
-        
-        yPos += 10;
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0);
-        
-        (predicted_score.design_items || []).forEach((item, idx) => {
-            if (yPos > pageHeight - 20) {
-                pdf.addPage();
-                yPos = 20;
-            }
-            
-            pdf.setFont(undefined, 'bold');
-            pdf.text(`${idx + 1}. ${item.item}`, 20, yPos);
-            yPos += 6;
-            
-            pdf.setFont(undefined, 'normal');
-            pdf.text(`점수: ${item.score.toFixed(1)} / 5.0`, 25, yPos);
-            yPos += 6;
-            
-            const diagnosis = item.diagnosis || '진단 없음';
-            const lines = pdf.splitTextToSize(`진단: ${diagnosis}`, pageWidth - 50);
-            pdf.text(lines, 25, yPos);
-            yPos += lines.length * 5 + 5;
-        });
+        // 페이지가 넘어가면 새 페이지 추가
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
         
         // PDF 저장
         const filename = `UIUX_분석보고서_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -817,8 +759,10 @@ async function downloadPDF(data) {
         console.error('PDF 생성 오류:', error);
         alert('❌ PDF 생성 실패: ' + error.message);
         const btn = document.getElementById('downloadPdfBtn');
-        btn.disabled = false;
-        btn.innerHTML = '<span>📄</span> PDF 다운로드';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>📄</span> PDF 다운로드';
+        }
     }
 }
 
