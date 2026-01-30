@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGINE AutoAnalyzer - AI 기반 웹사이트 UI/UX 자동 평가 시스템</title>
+    <meta name="description" content="10초만에 웹사이트의 UI/UX를 자동으로 평가하고 개선점을 제안하는 AI 기반 분석 시스템">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 20px 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></svg>');
+            animation: float 20s linear infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 100px); }
+        }
+        
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        .hero .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            opacity: 0.95;
+            animation: fadeInUp 0.8s ease 0.2s backwards;
+        }
+        
+        .hero .description {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            animation: fadeInUp 0.8s ease 0.4s backwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.6s backwards;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+        }
+        
+        /* Stats Section */
+        .stats {
+            background: #f8f9fa;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+        
+        .stat-item {
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 80px 20px;
+            background: white;
+        }
+        
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 60px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+        
+        .feature-card {
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .steps-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+        
+        .step {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: white;
+            color: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 auto 20px;
+        }
+        
+        .step h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .step p {
+            opacity: 0.9;
+        }
+        
+        /* Beta Results */
+        .beta-results {
+            padding: 80px 20px;
+            background: #f8f9fa;
+        }
+        
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .result-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .result-label {
+            font-size: 1.1rem;
+            color: #666;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2d3748;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1><i class="fas fa-rocket"></i> MGINE AutoAnalyzer</h1>
+            <p class="subtitle">AI 기반 웹사이트 UI/UX 자동 평가 시스템</p>
+            <p class="description">10초만에 웹사이트의 사용성을 분석하고, PDF/PPT 보고서를 자동 생성합니다</p>
+            <div class="cta-buttons">
+                <a href="/analyzer" class="btn btn-primary">
+                    <i class="fas fa-play"></i> 무료로 시작하기
+                </a>
+                <a href="#features" class="btn btn-secondary">
+                    <i class="fas fa-info-circle"></i> 자세히 알아보기
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">10초</div>
+                <div class="stat-label">평균 분석 시간</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">26개</div>
+                <div class="stat-label">Nielsen 기반 평가 항목</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">49개</div>
+                <div class="stat-label">공공기관 빅데이터 학습</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4.7/5.0</div>
+                <div class="stat-label">베타 테스트 만족도</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="features-container">
+            <h2 class="section-title">핵심 기능</h2>
+            <p class="section-subtitle">전문가 수준의 UI/UX 평가를 누구나 쉽게</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🤖</span>
+                    <h3>AI 자동 분석</h3>
+                    <p>Nielsen 10원칙 기반 26개 세부 항목을 자동으로 평가하고, 5점 척도로 점수화합니다. 메인+서브페이지 최대 10개까지 멀티페이지 분석을 지원합니다.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3>실시간 점수 수정</h3>
+                    <p>전문가가 직접 평가 항목을 수정할 수 있으며, 수정 이력은 자동으로 저장되어 AI 학습에 활용됩니다. 5건 이상 수정 시 가중치가 자동 재조정됩니다.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📄</span>
+                    <h3>보고서 자동 생성</h3>
+                    <p>분석 결과를 PDF(A4 세로) 또는 PPT(16:9)로 즉시 변환합니다. 화면 디자인을 100% 보존하여 프레젠테이션에 바로 사용할 수 있습니다.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h3>정확한 진단</h3>
+                    <p>49개 공공기관의 빅데이터를 학습한 AI가 사용성 문제점을 정확하게 진단하고, 구체적인 개선 방안을 제시합니다.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3>빠른 처리 속도</h3>
+                    <p>Cloudflare Workers 기반의 글로벌 CDN을 활용하여 평균 10-30초 만에 분석을 완료합니다. 평균 응답 시간 50ms 이하, 99.9% 가용성을 보장합니다.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🔒</span>
+                    <h3>보안 및 프라이버시</h3>
+                    <p>HTTPS 암호화 통신과 Cloudflare D1 데이터베이스로 안전하게 데이터를 보호합니다. 분석 데이터는 localStorage에 저장되어 새로고침 후에도 유지됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="steps-container">
+            <h2 class="section-title">사용 방법</h2>
+            <p class="section-subtitle">3단계로 완성되는 UI/UX 평가</p>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>URL 입력</h3>
+                    <p>분석하고 싶은 웹사이트 주소를 입력하세요</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>자동 분석</h3>
+                    <p>AI가 10-30초 동안 26개 항목을 자동으로 평가합니다</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>보고서 다운로드</h3>
+                    <p>결과를 확인하고 PDF/PPT로 다운로드하세요</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Beta Results -->
+    <section class="beta-results">
+        <div class="results-container">
+            <h2 class="section-title">베타 테스트 성과</h2>
+            <p class="section-subtitle">15개 기업이 먼저 경험했습니다</p>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-icon">👥</div>
+                    <div class="result-value">15개</div>
+                    <div class="result-label">참여 기업</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-icon">📈</div>
+                    <div class="result-value">347건</div>
+                    <div class="result-label">총 분석 건수</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-icon">⭐</div>
+                    <div class="result-value">4.7/5.0</div>
+                    <div class="result-label">평균 만족도</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-icon">🔄</div>
+                    <div class="result-value">93%</div>
+                    <div class="result-label">재사용 의향</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>지금 바로 시작하세요</h2>
+            <p>무료로 웹사이트를 분석하고, 전문가 수준의 UI/UX 평가 보고서를 받아보세요</p>
+            <a href="/analyzer" class="btn btn-primary" style="font-size: 1.2rem; padding: 18px 50px;">
+                <i class="fas fa-rocket"></i> 무료 분석 시작하기
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 MGINE AutoAnalyzer. All rights reserved.</p>
+        <p style="margin-top: 10px;">
+            <a href="mailto:contact@mgine.co.kr"><i class="fas fa-envelope"></i> contact@mgine.co.kr</a>
+        </p>
+    </footer>
+</body>
+</html>

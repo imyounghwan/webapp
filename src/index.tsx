@@ -11,7 +11,8 @@ import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } fro
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
-import indexHTML from '../public/index.html?raw'
+import brandHTML from '../public/brand.html?raw'
+import analyzeHTML from '../public/index.html?raw'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -847,9 +848,14 @@ app.post('/api/weight-suggestions/apply', async (c) => {
   })
 })
 
-// Serve index.html for root path
+// Serve brand page for root path
 app.get('/', (c) => {
-  return c.html(indexHTML)
+  return c.html(brandHTML)
+})
+
+// Serve analyze page
+app.get('/analyze', (c) => {
+  return c.html(analyzeHTML)
 })
 
 app.notFound((c) => {
