@@ -179,18 +179,33 @@ function displayResults(data, resultElement) {
     
     // 분석된 페이지 정보
     const analyzedPagesHTML = analyzed_pages ? `
-        <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;margin-bottom:20px;border-radius:8px;">
-            <div style="font-weight:bold;color:#92400e;margin-bottom:10px;">📄 분석된 페이지 (총 ${analyzed_pages.total_count}개)</div>
-            <div style="font-size:13px;color:#78350f;line-height:1.8;">
-                <strong>메인 페이지:</strong> <a href="${analyzed_pages.main_page}" target="_blank" style="color:#2563eb;text-decoration:none;">${analyzed_pages.main_page}</a><br>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:30px;margin-bottom:30px;border-radius:20px;backdrop-filter:blur(10px);">
+            <div style="font-weight:700;color:#E5E7EB;margin-bottom:20px;font-size:18px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:24px;">📄</span> 분석된 페이지 (총 ${analyzed_pages.total_count}개)
+            </div>
+            <div style="font-size:16px;color:#D1D5DB;line-height:2;">
+                <div style="margin-bottom:15px;">
+                    <strong style="color:#9CA3AF;font-size:14px;text-transform:uppercase;letter-spacing:1px;">메인 페이지</strong><br>
+                    <a href="${analyzed_pages.main_page}" target="_blank" style="color:#0066FF;text-decoration:none;font-weight:500;word-break:break-all;">${analyzed_pages.main_page}</a>
+                </div>
                 ${analyzed_pages.sub_pages.length > 0 ? `
-                <strong>서브 페이지 (${analyzed_pages.sub_pages.length}개):</strong><br>
-                ${analyzed_pages.sub_pages.map((page, idx) => 
-                    `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;">${page}</a>`
-                ).join('<br>')}
+                <div style="margin-top:25px;">
+                    <strong style="color:#9CA3AF;font-size:14px;text-transform:uppercase;letter-spacing:1px;">서브 페이지 (${analyzed_pages.sub_pages.length}개)</strong>
+                    <div style="margin-top:15px;display:grid;gap:10px;">
+                        ${analyzed_pages.sub_pages.map((page, idx) => 
+                            `<div style="padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);">
+                                <span style="color:#9CA3AF;font-weight:600;margin-right:10px;">${idx + 1}.</span>
+                                <a href="${page}" target="_blank" style="color:#0066FF;text-decoration:none;font-weight:500;word-break:break-all;">${page}</a>
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
                 ` : ''}
-                <br><br>
-                ℹ️ ${analyzed_pages.note}
+                <div style="margin-top:25px;padding:20px;background:rgba(0,102,255,0.05);border-radius:12px;border:1px solid rgba(0,102,255,0.1);">
+                    <div style="color:#9CA3AF;font-size:15px;line-height:1.8;">
+                        <span style="color:#0066FF;font-weight:700;">ℹ️</span> ${analyzed_pages.note}
+                    </div>
+                </div>
             </div>
         </div>
     ` : '';
@@ -230,9 +245,11 @@ function displayResults(data, resultElement) {
     
     // 총평
     const summaryHTML = summary ? `
-        <div style="background:#fefce8;border:2px solid #eab308;border-radius:12px;padding:20px;margin-bottom:20px;">
-            <div style="font-size:18px;font-weight:bold;color:#854d0e;margin-bottom:15px;">📋 종합 평가 총평</div>
-            <div style="font-size:14px;color:#713f12;line-height:1.8;white-space:pre-line;">${summary}</div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px;margin-bottom:30px;backdrop-filter:blur(10px);">
+            <div style="font-size:20px;font-weight:800;color:#E5E7EB;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:28px;">📋</span> 종합 평가 총평
+            </div>
+            <div style="font-size:16px;color:#D1D5DB;line-height:2;white-space:pre-line;padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.05);">${summary}</div>
         </div>
     ` : '';
     
