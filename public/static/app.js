@@ -767,7 +767,7 @@ async function downloadPDF(data) {
 }
 
 /**
- * PPT 다운로드 함수
+ * PPT 다운로드 함수 (html2canvas 방식)
  */
 async function downloadPPT(data) {
     try {
@@ -775,86 +775,88 @@ async function downloadPPT(data) {
         btn.disabled = true;
         btn.innerHTML = '<span>⏳</span> PPT 생성 중...';
         
-        const pptx = new PptxGenJS();
-        const { predicted_score, url, analysis_date } = data;
-        
-        // 슬라이드 1: 표지
-        let slide = pptx.addSlide();
-        slide.background = { color: '2563eb' };
-        slide.addText('MGINE AutoAnalyzer', {
-            x: 0.5, y: 1.5, w: 9, h: 1,
-            fontSize: 44, bold: true, color: 'FFFFFF', align: 'center'
-        });
-        slide.addText('UI/UX 분석 보고서', {
-            x: 0.5, y: 2.7, w: 9, h: 0.7,
-            fontSize: 28, color: 'E5E7EB', align: 'center'
-        });
-        slide.addText(`분석 일시: ${new Date(analysis_date).toLocaleString('ko-KR')}`, {
-            x: 0.5, y: 5, w: 9, h: 0.5,
-            fontSize: 14, color: 'D1D5DB', align: 'center'
-        });
-        
-        // 슬라이드 2: 종합 점수
-        slide = pptx.addSlide();
-        slide.addText('종합 점수', {
-            x: 0.5, y: 0.5, w: 9, h: 0.7,
-            fontSize: 32, bold: true, color: '1F2937'
-        });
-        slide.addText(predicted_score.overall.toFixed(2), {
-            x: 0.5, y: 1.5, w: 9, h: 1.5,
-            fontSize: 72, bold: true, color: '2563eb', align: 'center'
-        });
-        slide.addText(`편의성: ${predicted_score.convenience.toFixed(2)}  |  디자인: ${predicted_score.design.toFixed(2)}`, {
-            x: 0.5, y: 3.5, w: 9, h: 0.7,
-            fontSize: 24, color: '6B7280', align: 'center'
-        });
-        slide.addText(`분석 URL: ${url}`, {
-            x: 0.5, y: 5, w: 9, h: 0.5,
-            fontSize: 12, color: '9CA3AF', align: 'center'
-        });
-        
-        // 슬라이드 3-4: 편의성 항목 (상위 10개)
-        const convItems = (predicted_score.convenience_items || []).slice(0, 10);
-        for (let i = 0; i < convItems.length; i += 5) {
-            slide = pptx.addSlide();
-            slide.addText(`편의성 항목 (${i + 1}-${Math.min(i + 5, convItems.length)})`, {
-                x: 0.5, y: 0.3, w: 9, h: 0.5,
-                fontSize: 24, bold: true, color: '059669'
-            });
-            
-            let yPos = 1;
-            convItems.slice(i, i + 5).forEach((item, idx) => {
-                slide.addText(`${i + idx + 1}. ${item.item}`, {
-                    x: 0.7, y: yPos, w: 8.6, h: 0.4,
-                    fontSize: 14, bold: true, color: '1F2937'
-                });
-                slide.addText(`점수: ${item.score.toFixed(1)} / 5.0`, {
-                    x: 1, y: yPos + 0.4, w: 8.3, h: 0.3,
-                    fontSize: 12, color: '059669'
-                });
-                yPos += 1;
-            });
+        // 화면 캡처 영역 선택
+        const resultElement = document.getElementById('analyzeResult');
+        if (!resultElement) {
+            throw new Error('분석 결과를 찾을 수 없습니다.');
         }
         
-        // 슬라이드 5: 디자인 항목
-        slide = pptx.addSlide();
-        slide.addText('디자인 항목', {
-            x: 0.5, y: 0.3, w: 9, h: 0.5,
-            fontSize: 24, bold: true, color: '7c3aed'
+        // 수정 버튼 숨기기
+        const editButtons = resultElement.querySelectorAll('.edit-score-btn, #downloadPdfBtn, #downloadPptBtn');
+        editButtons.forEach(btn => btn.style.display = 'none');
+        
+        // 1. 전체 화면 캡처
+        const fullCanvas = await html2canvas(resultElement, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
         });
         
-        let yPos = 1;
-        (predicted_score.design_items || []).forEach((item, idx) => {
-            slide.addText(`${idx + 1}. ${item.item}`, {
-                x: 0.7, y: yPos, w: 8.6, h: 0.4,
-                fontSize: 14, bold: true, color: '1F2937'
+        // 버튼 다시 표시
+        editButtons.forEach(btn => btn.style.display = '');
+        
+        const pptx = new PptxGenJS();
+        pptx.layout = 'LAYOUT_16x9';
+        pptx.author = 'MGINE AutoAnalyzer';
+        pptx.title = 'UI/UX 분석 보고서';
+        
+        // 전체 이미지를 슬라이드 높이에 맞게 분할
+        const slideWidth = 10;  // inches
+        const slideHeight = 5.625;  // inches (16:9)
+        const canvasWidth = fullCanvas.width;
+        const canvasHeight = fullCanvas.height;
+        
+        // 슬라이드 높이에 해당하는 캔버스 높이 계산
+        const pixelsPerSlide = Math.floor((slideHeight / slideWidth) * canvasWidth);
+        const totalSlides = Math.ceil(canvasHeight / pixelsPerSlide);
+        
+        console.log(`📊 Creating ${totalSlides} slides from captured content...`);
+        
+        // 각 슬라이드별로 이미지 분할
+        for (let i = 0; i < totalSlides; i++) {
+            const slide = pptx.addSlide();
+            
+            // 해당 슬라이드에 해당하는 영역 추출
+            const yStart = i * pixelsPerSlide;
+            const yEnd = Math.min((i + 1) * pixelsPerSlide, canvasHeight);
+            const sliceHeight = yEnd - yStart;
+            
+            // 임시 캔버스 생성
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvasWidth;
+            sliceCanvas.height = sliceHeight;
+            const sliceCtx = sliceCanvas.getContext('2d');
+            
+            // 해당 영역 복사
+            sliceCtx.drawImage(
+                fullCanvas,
+                0, yStart, canvasWidth, sliceHeight,
+                0, 0, canvasWidth, sliceHeight
+            );
+            
+            // 이미지를 슬라이드에 추가 (전체 화면 채우기)
+            const imgData = sliceCanvas.toDataURL('image/png');
+            slide.addImage({
+                data: imgData,
+                x: 0,
+                y: 0,
+                w: slideWidth,
+                h: slideHeight
             });
-            slide.addText(`점수: ${item.score.toFixed(1)} / 5.0`, {
-                x: 1, y: yPos + 0.4, w: 8.3, h: 0.3,
-                fontSize: 12, color: '7c3aed'
+            
+            // 슬라이드 번호 추가 (우측 하단)
+            slide.addText(`${i + 1} / ${totalSlides}`, {
+                x: 8.5,
+                y: 5.1,
+                w: 1.3,
+                h: 0.4,
+                fontSize: 10,
+                color: '666666',
+                align: 'right',
+                valign: 'bottom'
             });
-            yPos += 1;
-        });
+        }
         
         // PPT 저장
         const filename = `UIUX_분석보고서_${new Date().toISOString().split('T')[0]}.pptx`;
@@ -862,13 +864,15 @@ async function downloadPPT(data) {
         
         btn.disabled = false;
         btn.innerHTML = '<span>📊</span> PPT 다운로드';
-        alert('✅ PPT 다운로드 완료!');
+        alert(`✅ PPT 다운로드 완료! (${totalSlides}개 슬라이드)`);
         
     } catch (error) {
         console.error('PPT 생성 오류:', error);
         alert('❌ PPT 생성 실패: ' + error.message);
         const btn = document.getElementById('downloadPptBtn');
-        btn.disabled = false;
-        btn.innerHTML = '<span>📊</span> PPT 다운로드';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>📊</span> PPT 다운로드';
+        }
     }
 }
