@@ -11,6 +11,7 @@ import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } fro
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
+import indexHTML from '../public/index.html?raw'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -846,10 +847,9 @@ app.post('/api/weight-suggestions/apply', async (c) => {
   })
 })
 
-// Catch-all route - wrangler will serve static files from dist/
-// This is just a fallback
+// Serve index.html for root path
 app.get('/', (c) => {
-  return c.text('MGINE AutoAnalyzer API v3.0 - Improved Nielsen System with Dynamic Weights', 200)
+  return c.html(indexHTML)
 })
 
 app.notFound((c) => {
