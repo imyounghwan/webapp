@@ -1,0 +1,231 @@
+{
+  "$schema": "weights-schema",
+  "version": "1.0.0",
+  "last_updated": "2024-01-30",
+  "description": "Nielsen 평가 항목별 가중치 설정. 이 파일을 수정하면 코드 변경 없이 평가 기준 조정 가능",
+  
+  "reference_statistics": {
+    "total_agencies": 49,
+    "average_score": 3.79,
+    "highest_score": 4.29,
+    "lowest_score": 2.7,
+    "comment": "국민신문고 공공서비스 49개 기관 데이터 기준"
+  },
+
+  "weights": {
+    "N1_1_current_location": {
+      "base_score": 3.5,
+      "has_feature_bonus": 1.5,
+      "no_feature_penalty": -1.0,
+      "description": "Breadcrumb 존재 시 가산점"
+    },
+    "N1_2_loading_status": {
+      "base_score": 3.5,
+      "threshold": 3,
+      "has_feature_bonus": 1.0,
+      "no_feature_penalty": -0.5,
+      "description": "ARIA 레이블 3개 이상 시 가산점"
+    },
+    "N1_3_action_feedback": {
+      "base_score": 3.5,
+      "validation_bonus": 1.0,
+      "link_threshold": 20,
+      "link_bonus": 0.5,
+      "no_feature_penalty": -0.5,
+      "description": "폼 검증 또는 링크 20개 이상 시 가산점"
+    },
+    
+    "N2_1_familiar_terms": {
+      "base_score": 3.5,
+      "has_feature_bonus": 1.0,
+      "no_feature_penalty": -0.5,
+      "description": "lang 속성 존재 시 가산점"
+    },
+    "N2_2_natural_flow": {
+      "base_score": 3.5,
+      "heading_threshold": 3,
+      "has_feature_bonus": 1.0,
+      "no_feature_penalty": -0.5,
+      "description": "헤딩 3개 이상 시 가산점"
+    },
+    "N2_3_real_world_metaphor": {
+      "base_score": 3.5,
+      "icon_threshold": 5,
+      "has_feature_bonus": 0.5,
+      "no_feature_penalty": -0.5,
+      "description": "아이콘 5개 초과 시 가산점"
+    },
+    
+    "N3_1_undo_redo": {
+      "base_score": 3.0,
+      "has_form_bonus": 0.5,
+      "no_form_penalty": -0.5,
+      "description": "폼 존재 시 가산점"
+    },
+    "N3_3_flexible_navigation": {
+      "base_score": 3.5,
+      "link_threshold": 15,
+      "has_feature_bonus": 1.0,
+      "no_feature_penalty": -1.0,
+      "description": "링크 15개 이상 시 가산점"
+    },
+    
+    "N4_1_visual_consistency": {
+      "base_score": 3.5,
+      "image_min": 3,
+      "image_max": 30,
+      "optimal_bonus": 1.0,
+      "suboptimal_penalty": -0.5,
+      "description": "이미지 3~30개 범위가 최적"
+    },
+    "N4_2_terminology_consistency": {
+      "base_score": 3.5,
+      "heading_threshold": 3,
+      "has_feature_bonus": 0.5,
+      "no_feature_penalty": -0.5,
+      "description": "헤딩 3개 이상 시 가산점"
+    },
+    "N4_3_standard_compliance": {
+      "base_score": 3.5,
+      "lang_bonus": 1.0,
+      "alt_threshold": 0.7,
+      "alt_bonus": 0.5,
+      "no_feature_penalty": -1.0,
+      "description": "lang 속성 또는 alt 비율 70% 이상 시 가산점"
+    },
+    
+    "N5_1_input_validation": {
+      "base_score": 3.5,
+      "has_validation_bonus": 1.5,
+      "no_form_neutral": 0,
+      "no_validation_penalty": -1.5,
+      "description": "입력 검증 존재 시 가산점, 폼 없으면 중립"
+    },
+    "N5_2_confirmation_dialog": {
+      "base_score": 3.0,
+      "has_form_bonus": 0.5,
+      "no_form_neutral": 0,
+      "description": "폼 존재 시 가산점"
+    },
+    "N5_3_constraints": {
+      "base_score": 3.5,
+      "label_high_threshold": 0.8,
+      "label_mid_threshold": 0.5,
+      "high_bonus": 1.5,
+      "mid_bonus": 0.5,
+      "no_form_neutral": 0,
+      "low_penalty": -1.0,
+      "description": "레이블 비율 80% 이상 높은 가산점, 50% 이상 중간 가산점"
+    },
+    
+    "N6_2_recognition_cues": {
+      "base_score": 3.5,
+      "icon_high_threshold": 5,
+      "icon_low_threshold": 0,
+      "high_bonus": 1.0,
+      "low_bonus": 0.5,
+      "no_feature_penalty": -0.5,
+      "description": "아이콘 5개 초과 시 높은 가산점, 1개 이상 시 낮은 가산점"
+    },
+    "N6_3_memory_load": {
+      "base_score": 3.5,
+      "breadcrumb_bonus": 1.0,
+      "depth_threshold": 2,
+      "shallow_bonus": 0.5,
+      "deep_penalty": -1.0,
+      "description": "Breadcrumb 또는 depth 2 이하 시 가산점"
+    },
+    
+    "N7_1_quick_access": {
+      "base_score": 3.5,
+      "menu_threshold": 5,
+      "has_feature_bonus": 1.0,
+      "no_feature_penalty": -0.5,
+      "description": "메뉴 5개 이상 시 가산점"
+    },
+    "N7_2_customization": {
+      "base_score": 3.0,
+      "responsive_bonus": 1.0,
+      "no_feature_neutral": 0,
+      "description": "반응형 디자인 존재 시 가산점"
+    },
+    "N7_3_search_filter": {
+      "base_score": 3.0,
+      "has_search_bonus": 1.5,
+      "no_search_penalty": -1.0,
+      "description": "검색 기능 존재 시 가산점"
+    },
+    
+    "N8_1_essential_info": {
+      "base_score": 3.5,
+      "paragraph_min": 3,
+      "paragraph_max": 20,
+      "optimal_bonus": 1.0,
+      "suboptimal_penalty": -0.5,
+      "description": "문단 3~20개 범위가 최적"
+    },
+    "N8_2_clean_interface": {
+      "base_score": 3.5,
+      "image_max": 20,
+      "good_bonus": 1.0,
+      "moderate_bonus": 0.5,
+      "excessive_penalty": -0.5,
+      "description": "이미지 20개 이하가 최적"
+    },
+    "N8_3_visual_hierarchy": {
+      "base_score": 3.5,
+      "heading_min": 3,
+      "heading_optimal": 8,
+      "optimal_bonus": 1.5,
+      "good_bonus": 1.0,
+      "low_penalty": -1.0,
+      "description": "헤딩 3~8개 범위가 최적"
+    },
+    
+    "N9_2_recovery_support": {
+      "base_score": 3.0,
+      "has_form_bonus": 0.5,
+      "no_form_neutral": 0,
+      "description": "폼 존재 시 가산점"
+    },
+    "N9_4_error_guidance": {
+      "base_score": 3.5,
+      "has_validation_bonus": 1.0,
+      "no_feature_penalty": -0.5,
+      "description": "입력 검증 존재 시 가산점"
+    },
+    
+    "N10_1_help_visibility": {
+      "base_score": 3.0,
+      "link_threshold": 10,
+      "has_feature_bonus": 1.0,
+      "no_feature_penalty": -0.5,
+      "description": "링크 10개 이상 시 가산점"
+    },
+    "N10_2_documentation": {
+      "base_score": 3.0,
+      "link_threshold": 15,
+      "has_feature_bonus": 1.0,
+      "no_feature_penalty": -0.5,
+      "description": "링크 15개 이상 시 가산점"
+    }
+  },
+
+  "adjustment_guide": {
+    "description": "가중치 조정 가이드",
+    "examples": [
+      {
+        "scenario": "Breadcrumb의 중요도를 높이고 싶을 때",
+        "change": "N1_1_current_location.has_feature_bonus를 1.5 → 2.0으로 증가"
+      },
+      {
+        "scenario": "검색 기능의 필수도를 낮추고 싶을 때",
+        "change": "N7_3_search_filter.no_search_penalty를 -1.0 → -0.5로 완화"
+      },
+      {
+        "scenario": "디자인 평가를 더 엄격하게 하고 싶을 때",
+        "change": "N8_1, N8_2, N8_3의 base_score를 3.5 → 3.0으로 하향"
+      }
+    ]
+  }
+}

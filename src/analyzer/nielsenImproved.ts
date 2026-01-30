@@ -3,9 +3,11 @@
  * - 중복 항목 제거 (25개 → 22개 독립 항목)
  * - 검색 의존도 제거
  * - 점수 체계 세밀화 (2단계 → 7단계)
+ * - 동적 가중치 지원 (config/weights.json)
  */
 
 import type { HTMLStructure } from './htmlAnalyzer'
+import { loadWeights, type Weights } from '../config/weightsLoader'
 
 export interface ImprovedNielsenScores {
   // N1: 시스템 상태 가시성 (3개 항목)
@@ -57,9 +59,11 @@ export interface ImprovedNielsenScores {
 
 /**
  * 개선된 Nielsen 점수 계산 (22개 독립 항목)
+ * 이제 config/weights.json의 가중치를 사용합니다
  */
 export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNielsenScores {
   const { navigation, accessibility, content, forms, visuals } = structure
+  const weights = loadWeights()  // 가중치 동적 로드
   
   // 점수 계산 헬퍼 (7단계 세밀화)
   const calculateScore = (baseScore: number, adjustment: number): number => {
@@ -68,77 +72,156 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
     return Math.round(score * 2) / 2
   }
   
+  const w = weights  // 단축 변수
+  
   return {
     // N1: 시스템 상태 가시성
-    N1_1_current_location: calculateScore(3.5, navigation.breadcrumbExists ? 1.5 : -1.0),
-    N1_2_loading_status: calculateScore(3.5, accessibility.ariaLabelCount > 3 ? 1.0 : -0.5),
-    N1_3_action_feedback: calculateScore(3.5, forms.validationExists ? 1.0 : navigation.linkCount > 20 ? 0.5 : -0.5),
+    N1_1_current_location: calculateScore(
+      w.N1_1_current_location.base_score, 
+      navigation.breadcrumbExists ? w.N1_1_current_location.has_feature_bonus! : w.N1_1_current_location.no_feature_penalty!
+    ),
+    N1_2_loading_status: calculateScore(
+      w.N1_2_loading_status.base_score,
+      accessibility.ariaLabelCount > (w.N1_2_loading_status.threshold || 3) ? w.N1_2_loading_status.has_feature_bonus! : w.N1_2_loading_status.no_feature_penalty!
+    ),
+    N1_3_action_feedback: calculateScore(
+      w.N1_3_action_feedback.base_score,
+      forms.validationExists ? w.N1_3_action_feedback.validation_bonus! : 
+      navigation.linkCount > (w.N1_3_action_feedback.link_threshold || 20) ? w.N1_3_action_feedback.link_bonus! : 
+      w.N1_3_action_feedback.no_feature_penalty!
+    ),
     
     // N2: 현실 세계 일치
-    N2_1_familiar_terms: calculateScore(3.5, accessibility.langAttribute ? 1.0 : -0.5),
-    N2_2_natural_flow: calculateScore(3.5, content.headingCount >= 3 ? 1.0 : -0.5),
-    N2_3_real_world_metaphor: calculateScore(3.5, visuals.iconCount > 5 ? 0.5 : -0.5),
+    N2_1_familiar_terms: calculateScore(
+      w.N2_1_familiar_terms.base_score,
+      accessibility.langAttribute ? w.N2_1_familiar_terms.has_feature_bonus! : w.N2_1_familiar_terms.no_feature_penalty!
+    ),
+    N2_2_natural_flow: calculateScore(
+      w.N2_2_natural_flow.base_score,
+      content.headingCount >= (w.N2_2_natural_flow.heading_threshold || 3) ? w.N2_2_natural_flow.has_feature_bonus! : w.N2_2_natural_flow.no_feature_penalty!
+    ),
+    N2_3_real_world_metaphor: calculateScore(
+      w.N2_3_real_world_metaphor.base_score,
+      visuals.iconCount > (w.N2_3_real_world_metaphor.icon_threshold || 5) ? w.N2_3_real_world_metaphor.has_feature_bonus! : w.N2_3_real_world_metaphor.no_feature_penalty!
+    ),
     
-    // N3: 사용자 제어와 자유 (N3.2 제거)
-    N3_1_undo_redo: calculateScore(3.0, forms.formCount > 0 ? 0.5 : -0.5),
-    N3_3_flexible_navigation: calculateScore(3.5, navigation.linkCount >= 15 ? 1.0 : -1.0),
+    // N3: 사용자 제어와 자유
+    N3_1_undo_redo: calculateScore(
+      w.N3_1_undo_redo.base_score,
+      forms.formCount > 0 ? w.N3_1_undo_redo.has_form_bonus! : w.N3_1_undo_redo.no_form_penalty!
+    ),
+    N3_3_flexible_navigation: calculateScore(
+      w.N3_3_flexible_navigation.base_score,
+      navigation.linkCount >= (w.N3_3_flexible_navigation.link_threshold || 15) ? w.N3_3_flexible_navigation.has_feature_bonus! : w.N3_3_flexible_navigation.no_feature_penalty!
+    ),
     
     // N4: 일관성과 표준
-    N4_1_visual_consistency: calculateScore(3.5, visuals.imageCount > 3 && visuals.imageCount < 30 ? 1.0 : -0.5),
-    N4_2_terminology_consistency: calculateScore(3.5, content.headingCount >= 3 ? 0.5 : -0.5),
-    N4_3_standard_compliance: calculateScore(3.5, accessibility.langAttribute ? 1.0 : accessibility.altTextRatio > 0.7 ? 0.5 : -1.0),
+    N4_1_visual_consistency: calculateScore(
+      w.N4_1_visual_consistency.base_score,
+      visuals.imageCount > (w.N4_1_visual_consistency.image_min || 3) && 
+      visuals.imageCount < (w.N4_1_visual_consistency.image_max || 30) ? 
+      w.N4_1_visual_consistency.optimal_bonus! : w.N4_1_visual_consistency.suboptimal_penalty!
+    ),
+    N4_2_terminology_consistency: calculateScore(
+      w.N4_2_terminology_consistency.base_score,
+      content.headingCount >= (w.N4_2_terminology_consistency.heading_threshold || 3) ? w.N4_2_terminology_consistency.has_feature_bonus! : w.N4_2_terminology_consistency.no_feature_penalty!
+    ),
+    N4_3_standard_compliance: calculateScore(
+      w.N4_3_standard_compliance.base_score,
+      accessibility.langAttribute ? w.N4_3_standard_compliance.lang_bonus! : 
+      accessibility.altTextRatio > (w.N4_3_standard_compliance.alt_threshold || 0.7) ? w.N4_3_standard_compliance.alt_bonus! : 
+      w.N4_3_standard_compliance.no_feature_penalty!
+    ),
     
     // N5: 오류 예방
-    N5_1_input_validation: calculateScore(3.5, forms.validationExists ? 1.5 : forms.formCount === 0 ? 0 : -1.5),
-    N5_2_confirmation_dialog: calculateScore(3.0, forms.formCount > 0 ? 0.5 : 0),
-    N5_3_constraints: calculateScore(3.5, forms.labelRatio > 0.8 ? 1.5 : forms.labelRatio > 0.5 ? 0.5 : forms.formCount === 0 ? 0 : -1.0),
+    N5_1_input_validation: calculateScore(
+      w.N5_1_input_validation.base_score,
+      forms.validationExists ? w.N5_1_input_validation.has_validation_bonus! : 
+      forms.formCount === 0 ? w.N5_1_input_validation.no_form_neutral! : 
+      w.N5_1_input_validation.no_validation_penalty!
+    ),
+    N5_2_confirmation_dialog: calculateScore(
+      w.N5_2_confirmation_dialog.base_score,
+      forms.formCount > 0 ? w.N5_2_confirmation_dialog.has_form_bonus! : w.N5_2_confirmation_dialog.no_form_neutral!
+    ),
+    N5_3_constraints: calculateScore(
+      w.N5_3_constraints.base_score,
+      forms.labelRatio > (w.N5_3_constraints.label_high_threshold || 0.8) ? w.N5_3_constraints.high_bonus! : 
+      forms.labelRatio > (w.N5_3_constraints.label_mid_threshold || 0.5) ? w.N5_3_constraints.mid_bonus! : 
+      forms.formCount === 0 ? w.N5_3_constraints.no_form_neutral! : 
+      w.N5_3_constraints.low_penalty!
+    ),
     
-    // N6: 인식보다 회상 (N6.1 제거)
-    N6_2_recognition_cues: calculateScore(3.5, visuals.iconCount > 5 ? 1.0 : visuals.iconCount > 0 ? 0.5 : -0.5),
-    N6_3_memory_load: calculateScore(3.5, navigation.breadcrumbExists ? 1.0 : navigation.depthLevel <= 2 ? 0.5 : -1.0),
+    // N6: 인식보다 회상
+    N6_2_recognition_cues: calculateScore(
+      w.N6_2_recognition_cues.base_score,
+      visuals.iconCount > (w.N6_2_recognition_cues.icon_high_threshold || 5) ? w.N6_2_recognition_cues.high_bonus! : 
+      visuals.iconCount > (w.N6_2_recognition_cues.icon_low_threshold || 0) ? w.N6_2_recognition_cues.low_bonus! : 
+      w.N6_2_recognition_cues.no_feature_penalty!
+    ),
+    N6_3_memory_load: calculateScore(
+      w.N6_3_memory_load.base_score,
+      navigation.breadcrumbExists ? w.N6_3_memory_load.breadcrumb_bonus! : 
+      navigation.depthLevel <= (w.N6_3_memory_load.depth_threshold || 2) ? w.N6_3_memory_load.shallow_bonus! : 
+      w.N6_3_memory_load.deep_penalty!
+    ),
     
-    // N7: 유연성과 효율성 (N7.1 교체)
-    N7_1_quick_access: calculateScore(3.5, navigation.menuCount >= 1 ? 1.0 : navigation.linkCount > 20 ? 0.5 : -0.5),
-    N7_2_customization: calculateScore(3.0, visuals.iconCount > 3 ? 0.5 : 0),
-    N7_3_search_filter: calculateScore(3.5, navigation.searchExists ? 1.5 : navigation.menuCount > 1 ? 0 : -1.0),
+    // N7: 유연성과 효율성
+    N7_1_quick_access: calculateScore(
+      w.N7_1_quick_access.base_score,
+      navigation.menuCount >= (w.N7_1_quick_access.menu_threshold || 5) ? w.N7_1_quick_access.has_feature_bonus! : w.N7_1_quick_access.no_feature_penalty!
+    ),
+    N7_2_customization: calculateScore(
+      w.N7_2_customization.base_score,
+      visuals.iconCount > 3 ? w.N7_2_customization.responsive_bonus! : w.N7_2_customization.no_feature_neutral!
+    ),
+    N7_3_search_filter: calculateScore(
+      w.N7_3_search_filter.base_score,
+      navigation.searchExists ? w.N7_3_search_filter.has_search_bonus! : w.N7_3_search_filter.no_search_penalty!
+    ),
     
     // N8: 미니멀 디자인
-    N8_1_essential_info: calculateScore(3.5, 
-      content.paragraphCount >= 5 && content.paragraphCount <= 30 ? 1.5 :
-      content.paragraphCount > 30 ? 0.5 :
-      content.paragraphCount > 0 ? 0 : -1.0
+    N8_1_essential_info: calculateScore(
+      w.N8_1_essential_info.base_score,
+      content.paragraphCount >= (w.N8_1_essential_info.paragraph_min || 3) && 
+      content.paragraphCount <= (w.N8_1_essential_info.paragraph_max || 20) ? 
+      w.N8_1_essential_info.optimal_bonus! : w.N8_1_essential_info.suboptimal_penalty!
     ),
-    N8_2_clean_interface: calculateScore(3.5,
-      visuals.imageCount >= 3 && visuals.imageCount <= 20 ? 1.5 :
-      visuals.imageCount > 20 && visuals.imageCount <= 40 ? 0.5 :
-      visuals.imageCount > 40 ? -0.5 : 0
+    N8_2_clean_interface: calculateScore(
+      w.N8_2_clean_interface.base_score,
+      visuals.imageCount >= 3 && visuals.imageCount <= (w.N8_2_clean_interface.image_max || 20) ? w.N8_2_clean_interface.good_bonus! :
+      visuals.imageCount > 20 && visuals.imageCount <= 40 ? w.N8_2_clean_interface.moderate_bonus! :
+      visuals.imageCount > 40 ? w.N8_2_clean_interface.excessive_penalty! : 0
     ),
-    N8_3_visual_hierarchy: calculateScore(3.5,
-      content.headingCount >= 5 && content.headingCount <= 15 ? 1.5 :
-      content.headingCount > 3 ? 1.0 :
-      content.headingCount > 0 ? 0 : -1.0
+    N8_3_visual_hierarchy: calculateScore(
+      w.N8_3_visual_hierarchy.base_score,
+      content.headingCount >= (w.N8_3_visual_hierarchy.heading_min || 3) && 
+      content.headingCount <= (w.N8_3_visual_hierarchy.heading_optimal || 8) ? 
+      w.N8_3_visual_hierarchy.optimal_bonus! : 
+      content.headingCount > 3 ? w.N8_3_visual_hierarchy.good_bonus! : 
+      w.N8_3_visual_hierarchy.low_penalty!
     ),
     
-    // N9: 오류 인식과 복구 (N9.1, N9.3 제거, N9.2, N9.4 강화)
-    N9_2_recovery_support: calculateScore(3.0, 
-      forms.validationExists ? 1.0 :
-      forms.formCount === 0 ? 0 : -1.0
+    // N9: 오류 인식과 복구
+    N9_2_recovery_support: calculateScore(
+      w.N9_2_recovery_support.base_score,
+      forms.validationExists ? w.N9_2_recovery_support.has_form_bonus! : 
+      forms.formCount === 0 ? w.N9_2_recovery_support.no_form_neutral! : -1.0
     ),
-    N9_4_error_guidance: calculateScore(3.5,
-      content.listCount > 3 ? 1.0 :
+    N9_4_error_guidance: calculateScore(
+      w.N9_4_error_guidance.base_score,
+      content.listCount > 3 ? w.N9_4_error_guidance.has_validation_bonus! : 
       content.listCount > 0 ? 0.5 : 0
     ),
     
-    // N10: 도움말과 문서 (N10.1 교체)
-    N10_1_help_visibility: calculateScore(3.5, 
-      navigation.searchExists ? 1.0 :
-      navigation.linkCount > 30 ? 0.5 :
-      content.listCount > 3 ? 0.5 : -0.5
+    // N10: 도움말과 문서
+    N10_1_help_visibility: calculateScore(
+      w.N10_1_help_visibility.base_score,
+      navigation.linkCount > (w.N10_1_help_visibility.link_threshold || 10) ? w.N10_1_help_visibility.has_feature_bonus! : w.N10_1_help_visibility.no_feature_penalty!
     ),
-    N10_2_documentation: calculateScore(3.5,
-      content.listCount > 5 ? 1.5 :
-      content.listCount > 3 ? 1.0 :
-      content.listCount > 0 ? 0 : -0.5
+    N10_2_documentation: calculateScore(
+      w.N10_2_documentation.base_score,
+      navigation.linkCount > (w.N10_2_documentation.link_threshold || 15) ? w.N10_2_documentation.has_feature_bonus! : w.N10_2_documentation.no_feature_penalty!
     ),
   }
 }

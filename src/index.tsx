@@ -5,6 +5,7 @@ import { findSimilarSites, calculatePredictedScore } from './analyzer/similarity
 import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
 import { nielsenDescriptions, getItemDescription } from './analyzer/nielsenDescriptions'
 import { evaluateItemRelevance } from './analyzer/itemRelevance'
+import { loadWeights, getWeightsVersion, getWeightsLastUpdated, loadReferenceStatistics } from './config/weightsLoader'
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
@@ -605,10 +606,41 @@ function generateImprovedRecommendations(structure: any, scores: any): string[] 
   return recommendations.slice(0, 8) // 최대 8개 반환
 }
 
+/**
+ * 가중치 정보 조회 API
+ */
+app.get('/api/weights', (c) => {
+  return c.json({
+    version: getWeightsVersion(),
+    last_updated: getWeightsLastUpdated(),
+    reference_statistics: loadReferenceStatistics(),
+    weights: loadWeights(),
+    usage_guide: {
+      description: "가중치 조정 방법: config/weights.json 파일을 수정한 후 서비스를 재시작하세요.",
+      example: "N1_1_current_location.has_feature_bonus를 1.5에서 2.0으로 변경하면 Breadcrumb의 중요도가 높아집니다."
+    }
+  })
+})
+
+/**
+ * 참고 데이터 통계 조회 API
+ */
+app.get('/api/reference-stats', (c) => {
+  return c.json({
+    statistics: referenceData.statistics,
+    agencies_count: referenceData.agencies.length,
+    sample_agencies: referenceData.agencies.slice(0, 5).map(a => ({
+      site_name: a.site_name,
+      score: a.final_nielsen_score
+    })),
+    usage_note: "새로운 국민평가 데이터가 나오면 analysis/output/final_integrated_scores.json 파일을 교체하고 서비스를 재시작하세요."
+  })
+})
+
 // Catch-all route - wrangler will serve static files from dist/
 // This is just a fallback
 app.get('/', (c) => {
-  return c.text('AutoAnalyzer API v3.0 - Improved Nielsen System', 200)
+  return c.text('MGINE AutoAnalyzer API v3.0 - Improved Nielsen System with Dynamic Weights', 200)
 })
 
 app.notFound((c) => {
