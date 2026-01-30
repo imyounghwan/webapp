@@ -165,7 +165,13 @@ function displayResults(data, resultElement) {
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
                         <button 
-                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}', \`${(item.diagnosis || '').replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)"
+                            class="edit-score-btn"
+                            data-item-id="${itemId}"
+                            data-item-id-value="${item.item_id}"
+                            data-item-name="${item.item}"
+                            data-original-score="${item.score}"
+                            data-url="${url}"
+                            data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
                             style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
                             onmouseover="this.style.background='#2563eb'"
                             onmouseout="this.style.background='#3b82f6'"
@@ -233,7 +239,13 @@ function displayResults(data, resultElement) {
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
                         <button 
-                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}', \`${(item.diagnosis || '').replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)"
+                            class="edit-score-btn"
+                            data-item-id="${itemId}"
+                            data-item-id-value="${item.item_id}"
+                            data-item-name="${item.item}"
+                            data-original-score="${item.score}"
+                            data-url="${url}"
+                            data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
                             style="background:#7c3aed;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
                             onmouseover="this.style.background='#6d28d9'"
                             onmouseout="this.style.background='#7c3aed'"
@@ -294,6 +306,20 @@ function displayResults(data, resultElement) {
             ${designHTML}
         </div>
     `;
+    
+    // 수정 버튼에 이벤트 리스너 추가
+    document.querySelectorAll('.edit-score-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const itemIdValue = this.getAttribute('data-item-id-value');
+            const itemName = this.getAttribute('data-item-name');
+            const originalScore = parseFloat(this.getAttribute('data-original-score'));
+            const url = this.getAttribute('data-url');
+            const diagnosis = this.getAttribute('data-diagnosis').replace(/&quot;/g, '"');
+            
+            editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
+        });
+    });
 }
 
 /**
@@ -423,19 +449,44 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
         
         // 점수 복원
+        const isConvenienceItem = itemId.includes('conv');
+        const buttonBgColor = isConvenienceItem ? '#3b82f6' : '#7c3aed';
+        const buttonHoverColor = isConvenienceItem ? '#2563eb' : '#6d28d9';
+        
         scoreElement.parentElement.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;">
                 <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${correctedScore.toFixed(1)}</div>
                 <button 
-                    onclick="editScore('${itemId}', '${itemIdValue}', '${itemName}', ${correctedScore}, '${url}', \`${(correctedDiagnosis || '').replace(/`/g, '\\`')}\`)"
-                    style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
-                    onmouseover="this.style.background='#2563eb'"
-                    onmouseout="this.style.background='#3b82f6'"
+                    class="edit-score-btn"
+                    data-item-id="${itemId}"
+                    data-item-id-value="${itemIdValue}"
+                    data-item-name="${itemName}"
+                    data-original-score="${correctedScore}"
+                    data-url="${url}"
+                    data-diagnosis="${(correctedDiagnosis || '').replace(/"/g, '&quot;')}"
+                    style="background:${buttonBgColor};color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
+                    onmouseover="this.style.background='${buttonHoverColor}'"
+                    onmouseout="this.style.background='${buttonBgColor}'"
                 >
                     ✏️ 수정
                 </button>
             </div>
         `;
+        
+        // 새로 생성된 버튼에 이벤트 리스너 추가
+        const newBtn = scoreElement.parentElement.querySelector('.edit-score-btn');
+        if (newBtn) {
+            newBtn.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const itemIdValue = this.getAttribute('data-item-id-value');
+                const itemName = this.getAttribute('data-item-name');
+                const originalScore = parseFloat(this.getAttribute('data-original-score'));
+                const url = this.getAttribute('data-url');
+                const diagnosis = this.getAttribute('data-diagnosis').replace(/&quot;/g, '"');
+                
+                editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
+            });
+        }
         
         // 진단 복원 (수정된 텍스트로)
         if (diagnosisElement && correctedDiagnosis) {
@@ -485,17 +536,45 @@ window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
     const scoreElement = document.getElementById(`${itemId}-score`);
     const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
     
+    const isConvenienceItem = itemId.includes('conv');
+    const buttonBgColor = isConvenienceItem ? '#3b82f6' : '#7c3aed';
+    const buttonHoverColor = isConvenienceItem ? '#2563eb' : '#6d28d9';
+    
     // 원래 상태로 복원
     scoreElement.parentElement.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;">
             <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${originalScore.toFixed(1)}</div>
             <button 
-                onclick="editScore('${itemId}', '', '', ${originalScore}, '', \`${(originalDiagnosis || '').replace(/`/g, '\\`')}\`)"
-                style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
-                onmouseover="this.style.background='#2563eb'"
-                onmouseout="this.style.background='#3b82f6'"
+                class="edit-score-btn"
+                data-item-id="${itemId}"
+                data-item-id-value=""
+                data-item-name=""
+                data-original-score="${originalScore}"
+                data-url=""
+                data-diagnosis="${(originalDiagnosis || '').replace(/"/g, '&quot;')}"
+                style="background:${buttonBgColor};color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
+                onmouseover="this.style.background='${buttonHoverColor}'"
+                onmouseout="this.style.background='${buttonBgColor}'"
             >
                 ✏️ 수정
+            </button>
+        </div>
+    `;
+    
+    // 새로 생성된 버튼에 이벤트 리스너 추가
+    const newBtn = scoreElement.parentElement.querySelector('.edit-score-btn');
+    if (newBtn) {
+        newBtn.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const itemIdValue = this.getAttribute('data-item-id-value');
+            const itemName = this.getAttribute('data-item-name');
+            const originalScore = parseFloat(this.getAttribute('data-original-score'));
+            const url = this.getAttribute('data-url');
+            const diagnosis = this.getAttribute('data-diagnosis').replace(/&quot;/g, '"');
+            
+            editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
+        });
+    }
             </button>
         </div>
     `;
