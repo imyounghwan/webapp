@@ -141,7 +141,13 @@ function displayResults(data, resultElement) {
                 </div>
                 
                 <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">
-                    🔗 평가 페이지: <a href="${item.evaluated_url}" target="_blank" style="color:#2563eb;text-decoration:none;">${item.evaluated_url}</a>
+                    🔗 <strong>평가 페이지 (${item.evaluated_pages ? item.evaluated_pages.length : 1}개):</strong><br>
+                    ${item.evaluated_pages ? 
+                        item.evaluated_pages.map((page, idx) => 
+                            `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;">${page}</a>`
+                        ).join('<br>') 
+                        : `<a href="${item.evaluated_url}" target="_blank" style="color:#2563eb;text-decoration:none;">${item.evaluated_url}</a>`
+                    }
                 </div>
                 
                 <div style="margin-top:12px;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
@@ -192,7 +198,13 @@ function displayResults(data, resultElement) {
                 </div>
                 
                 <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">
-                    🔗 평가 페이지: <a href="${item.evaluated_url}" target="_blank" style="color:#2563eb;text-decoration:none;">${item.evaluated_url}</a>
+                    🔗 <strong>평가 페이지 (${item.evaluated_pages ? item.evaluated_pages.length : 1}개):</strong><br>
+                    ${item.evaluated_pages ? 
+                        item.evaluated_pages.map((page, idx) => 
+                            `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;">${page}</a>`
+                        ).join('<br>') 
+                        : `<a href="${item.evaluated_url}" target="_blank" style="color:#2563eb;text-decoration:none;">${item.evaluated_url}</a>`
+                    }
                 </div>
                 
                 <div style="margin-top:12px;height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">

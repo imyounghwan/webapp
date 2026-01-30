@@ -184,6 +184,9 @@ app.post('/api/analyze', async (c) => {
     
     // 2. 결과 종합
     const structure = aggregateResults(pageResults)
+    
+    // 2.5. 분석된 페이지 URL 목록 생성
+    const analyzedPageUrls = pageResults.map(p => p.url)
 
     // 3. 개선된 Nielsen 평가 (22개 독립 항목)
     const improvedScores = calculateImprovedNielsen(structure)
@@ -270,7 +273,8 @@ app.post('/api/analyze', async (c) => {
         principle: desc?.principle || '',
         why_important: desc?.why_important || '',
         evaluation_criteria: desc?.evaluation_criteria || '',
-        evaluated_url: url
+        evaluated_pages: analyzedPageUrls,  // 평가한 모든 페이지
+        evaluated_url: url  // 메인 URL (하위 호환성)
       })
     })
     
@@ -314,7 +318,8 @@ app.post('/api/analyze', async (c) => {
         principle: desc?.principle || '',
         why_important: desc?.why_important || '',
         evaluation_criteria: desc?.evaluation_criteria || '',
-        evaluated_url: url
+        evaluated_pages: analyzedPageUrls,  // 평가한 모든 페이지
+        evaluated_url: url  // 메인 URL (하위 호환성)
       })
     })
     
