@@ -326,8 +326,35 @@ function displayResults(data, resultElement) {
  * 점수 수정 함수 (인라인 편집)
  */
 window.editScore = async function(itemId, itemIdValue, itemName, originalScore, url, originalDiagnosis) {
-    const scoreElement = document.getElementById(`${itemId}-score`);
-    const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
+    console.log('🔍 editScore called with itemId:', itemId);
+    console.log('🔍 itemIdValue:', itemIdValue);
+    console.log('🔍 itemName:', itemName);
+    
+    const scoreElementId = `${itemId}-score`;
+    const diagnosisElementId = `${itemId}-diagnosis`;
+    
+    console.log('🔍 Looking for scoreElement with ID:', scoreElementId);
+    console.log('🔍 Looking for diagnosisElement with ID:', diagnosisElementId);
+    
+    const scoreElement = document.getElementById(scoreElementId);
+    const diagnosisElement = document.getElementById(diagnosisElementId);
+    
+    console.log('📍 scoreElement:', scoreElement);
+    console.log('📍 diagnosisElement:', diagnosisElement);
+    
+    if (!scoreElement) {
+        console.error('❌ scoreElement is NULL!');
+        console.error('❌ Tried to find ID:', scoreElementId);
+        console.error('❌ All elements with class edit-score-btn:', document.querySelectorAll('.edit-score-btn').length);
+        alert(`오류: 점수 요소를 찾을 수 없습니다.\nID: ${scoreElementId}\n\n페이지를 새로고침 후 다시 시도해주세요.`);
+        return;
+    }
+    
+    if (!scoreElement.parentElement) {
+        console.error('❌ scoreElement.parentElement is NULL!');
+        alert('오류: 점수 요소의 부모 요소를 찾을 수 없습니다.');
+        return;
+    }
     
     // 현재 점수를 입력 필드로 변경
     const currentScore = parseFloat(scoreElement.textContent);
@@ -413,8 +440,13 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         return;
     }
     
+    // 원본 요소들을 미리 저장
+    const scoreElement = document.getElementById(`${itemId}-score`);
+    const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
+    const scoreContainer = scoreElement.parentElement;
+    
     // 로딩 표시
-    inputElement.parentElement.parentElement.innerHTML = '<div style="color:#3b82f6;text-align:center;padding:20px;">저장 중...</div>';
+    scoreContainer.innerHTML = '<div style="color:#3b82f6;text-align:center;padding:20px;">저장 중...</div>';
     
     try {
         // API 호출
@@ -445,15 +477,13 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         
         // 성공 메시지
         const scoreColor = correctedScore >= 4.5 ? '#059669' : correctedScore >= 3.5 ? '#3b82f6' : correctedScore >= 2.5 ? '#f59e0b' : '#ef4444';
-        const scoreElement = document.getElementById(`${itemId}-score`);
-        const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
         
         // 점수 복원
         const isConvenienceItem = itemId.includes('conv');
         const buttonBgColor = isConvenienceItem ? '#3b82f6' : '#7c3aed';
         const buttonHoverColor = isConvenienceItem ? '#2563eb' : '#6d28d9';
         
-        scoreElement.parentElement.innerHTML = `
+        scoreContainer.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;">
                 <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${correctedScore.toFixed(1)}</div>
                 <button 
@@ -474,7 +504,7 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         `;
         
         // 새로 생성된 버튼에 이벤트 리스너 추가
-        const newBtn = scoreElement.parentElement.querySelector('.edit-score-btn');
+        const newBtn = scoreContainer.querySelector('.edit-score-btn');
         if (newBtn) {
             newBtn.addEventListener('click', function() {
                 const itemId = this.getAttribute('data-item-id');
@@ -489,15 +519,18 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         }
         
         // 진단 복원 (수정된 텍스트로)
-        if (diagnosisElement && correctedDiagnosis) {
-            const bgColor = correctedScore >= 4.0 ? 'dcfce7' : correctedScore >= 3.0 ? 'dbeafe' : 'fee2e2';
-            const textColor = correctedScore >= 4.0 ? '166534' : correctedScore >= 3.0 ? '1e40af' : 'dc2626';
-            diagnosisElement.innerHTML = `
-                <div style="font-size:13px;color:#${textColor};line-height:1.6;">
-                    📊 <strong>진단 결과 (관리자 수정):</strong> ${correctedDiagnosis}
-                </div>
-            `;
-            diagnosisElement.setAttribute('data-original', correctedDiagnosis);
+        if (correctedDiagnosis) {
+            const diagElement = document.getElementById(`${itemId}-diagnosis`);
+            if (diagElement) {
+                const bgColor = correctedScore >= 4.0 ? 'dcfce7' : correctedScore >= 3.0 ? 'dbeafe' : 'fee2e2';
+                const textColor = correctedScore >= 4.0 ? '166534' : correctedScore >= 3.0 ? '1e40af' : 'dc2626';
+                diagElement.innerHTML = `
+                    <div style="font-size:13px;color:#${textColor};line-height:1.6;">
+                        📊 <strong>진단 결과 (관리자 수정):</strong> ${correctedDiagnosis}
+                    </div>
+                `;
+                diagElement.setAttribute('data-original', correctedDiagnosis);
+            }
         }
         
         // 수정 완료 알림
