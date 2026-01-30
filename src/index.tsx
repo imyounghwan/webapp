@@ -130,7 +130,47 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
   const subPagesFromMain = await extractSubPages(mainUrl, mainHtml, 20)
   subPagesFromMain.forEach(page => allFoundPages.add(page))
   
-  // 3. 서브 페이지 분석 및 추가 링크 수집 (최대 9개 = 총 10페이지)
+  // 3. 일반적인 페이지 패턴 체크 (링크되지 않은 페이지 발견)
+  const baseUrlObj = new URL(mainUrl)
+  const baseUrl = baseUrlObj.origin
+  const basePath = baseUrlObj.pathname.substring(0, baseUrlObj.pathname.lastIndexOf('/') + 1)
+  
+  const commonPages = [
+    '_about.html',
+    '_contact.html', 
+    '_portfolio.html',
+    '_consulting.html',
+    '_service.html',
+    '_news.html',
+    'about.html',
+    'contact.html',
+    'portfolio.html',
+    'consulting.html',
+    'service.html',
+    'news.html'
+  ]
+  
+  for (const pageName of commonPages) {
+    const pageUrl = baseUrl + basePath + pageName
+    if (!allFoundPages.has(pageUrl)) {
+      try {
+        const response = await fetch(pageUrl, {
+          method: 'GET',
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          signal: AbortSignal.timeout(3000)
+        })
+        if (response.ok && response.status === 200) {
+          allFoundPages.add(pageUrl)
+          console.log(`✅ Found additional page by pattern: ${pageUrl}`)
+        }
+      } catch (error) {
+        // 페이지 없음 - 무시
+        console.log(`❌ Page not found: ${pageUrl}`)
+      }
+    }
+  }
+  
+  // 4. 서브 페이지 분석 및 추가 링크 수집 (최대 9개 = 총 10페이지)
   const pagesToAnalyze = Array.from(allFoundPages).slice(1, 10) // 메인 제외, 최대 9개
   
   for (const subUrl of pagesToAnalyze) {
@@ -160,7 +200,7 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
     }
   }
   
-  // 4. 아직 부족하면 추가로 수집된 페이지들 분석
+  // 5. 아직 부족하면 추가로 수집된 페이지들 분석
   if (results.length < 10) {
     const remainingPages = Array.from(allFoundPages).slice(results.length, 10)
     for (const pageUrl of remainingPages) {
