@@ -223,11 +223,6 @@ function generateEvaluationSummary(
 **2️⃣ 데이터 기반 상대 평가 (비교 대상: 49개 한국 공공기관)**
    ${relativeGrade} - 백분위 ${percentile}%
    ${relativeDescription}
-   
-   📊 참고 데이터:
-   - 평균 점수: ${referenceAverage}점
-   - 최고 점수: ${referenceMax}점 (국무조정실)
-   - 최저 점수: ${referenceMin}점
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

@@ -21,8 +21,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         console.log('🔍 Analyzing:', url);
-        analyzeResult.innerHTML = '<div style="text-align:center;padding:30px;color:#666;">🔍 분석 중...</div>';
+        
+        // 로딩 프로그레스 바 표시
+        let progress = 0;
+        analyzeResult.innerHTML = `
+            <div style="text-align:center;padding:40px;">
+                <div style="font-size:20px;font-weight:bold;color:#2563eb;margin-bottom:20px;">
+                    🔍 분석 중...
+                </div>
+                <div style="max-width:500px;margin:0 auto;">
+                    <div style="background:#e5e7eb;height:30px;border-radius:15px;overflow:hidden;position:relative;">
+                        <div id="progressBar" style="background:linear-gradient(90deg, #3b82f6, #2563eb);height:100%;width:0%;transition:width 0.3s;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:14px;"></div>
+                    </div>
+                    <div id="progressText" style="margin-top:15px;color:#6b7280;font-size:14px;">페이지 분석 중...</div>
+                </div>
+            </div>
+        `;
         analyzeResult.style.display = 'block';
+        
+        // 프로그레스 바 애니메이션
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        const progressSteps = [
+            { progress: 10, text: '페이지 접속 중...' },
+            { progress: 25, text: '메인 페이지 분석 중...' },
+            { progress: 45, text: '서브 페이지 수집 중...' },
+            { progress: 65, text: 'HTML 구조 분석 중...' },
+            { progress: 80, text: 'Nielsen 평가 수행 중...' },
+            { progress: 95, text: '종합 평가 중...' }
+        ];
+        
+        let stepIndex = 0;
+        const progressInterval = setInterval(() => {
+            if (stepIndex < progressSteps.length) {
+                const step = progressSteps[stepIndex];
+                progressBar.style.width = step.progress + '%';
+                progressBar.textContent = step.progress + '%';
+                progressText.textContent = step.text;
+                stepIndex++;
+            }
+        }, 800);
         
         try {
             const response = await fetch('/api/analyze', {
@@ -31,11 +70,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ url })
             });
             
+            clearInterval(progressInterval);
+            
             if (!response.ok) throw new Error('분석 실패');
+            
+            // 완료 애니메이션
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            progressText.textContent = '분석 완료! ✅';
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
             
             const data = await response.json();
             displayResults(data, analyzeResult);
         } catch (error) {
+            clearInterval(progressInterval);
             console.error('❌ Error:', error);
             analyzeResult.innerHTML = `
                 <div style="background:#fee;border:1px solid #fcc;border-radius:8px;padding:20px;margin:20px 0;">
