@@ -15,17 +15,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // 페이지 로드 시 localStorage에서 이전 분석 결과 복원
     const savedResult = localStorage.getItem('lastAnalysisResult');
     const savedUrl = localStorage.getItem('lastAnalysisUrl');
+    console.log('🔍 Checking saved result...', { 
+        hasSavedResult: !!savedResult, 
+        hasSavedUrl: !!savedUrl,
+        savedUrlValue: savedUrl
+    });
+    
     if (savedResult && savedUrl) {
         console.log('📦 Restoring saved analysis result...');
         try {
             const data = JSON.parse(savedResult);
+            console.log('✅ Parsed data successfully:', {
+                url: data.url,
+                hasScore: !!data.predicted_score,
+                version: data.version
+            });
             analyzeUrl.value = savedUrl;
             displayResults(data, analyzeResult);
+            console.log('✅ Results displayed successfully');
         } catch (e) {
-            console.error('Failed to restore saved result:', e);
+            console.error('❌ Failed to restore saved result:', e);
             localStorage.removeItem('lastAnalysisResult');
             localStorage.removeItem('lastAnalysisUrl');
         }
+    } else {
+        console.log('ℹ️ No saved result found');
     }
     
     analyzeBtn.addEventListener('click', async () => {
@@ -113,6 +127,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function displayResults(data, resultElement) {
+    console.log('🎨 displayResults called with:', {
+        hasData: !!data,
+        hasResultElement: !!resultElement,
+        url: data?.url
+    });
+    
+    if (!resultElement) {
+        console.error('❌ resultElement is null!');
+        resultElement = document.getElementById('analyzeResult');
+        if (!resultElement) {
+            console.error('❌ Cannot find analyzeResult element!');
+            return;
+        }
+    }
+    
     const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary } = data;
     
     // localStorage에 분석 결과 저장 (새로고침 시 복원용)
