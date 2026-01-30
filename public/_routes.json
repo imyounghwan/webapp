@@ -3,8 +3,10 @@
   "include": [
     "/",
     "/analyzer",
-    "/static/*",
     "/api/*"
   ],
-  "exclude": []
+  "exclude": [
+    "/static/*",
+    "/css/*"
+  ]
 }
