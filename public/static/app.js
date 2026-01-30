@@ -144,6 +144,30 @@ function displayResults(data, resultElement) {
     
     const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary } = data;
     
+    // 전체 점수 재계산 (수정된 항목이 있을 경우)
+    if (predicted_score) {
+        const convenienceItems = predicted_score.convenience_items || [];
+        const designItems = predicted_score.design_items || [];
+        
+        // 편의성 평균 계산
+        if (convenienceItems.length > 0) {
+            const convenienceSum = convenienceItems.reduce((sum, item) => sum + (item.score || 0), 0);
+            predicted_score.convenience = convenienceSum / convenienceItems.length;
+            console.log('🔄 Recalculated convenience score:', predicted_score.convenience.toFixed(2));
+        }
+        
+        // 디자인 평균 계산
+        if (designItems.length > 0) {
+            const designSum = designItems.reduce((sum, item) => sum + (item.score || 0), 0);
+            predicted_score.design = designSum / designItems.length;
+            console.log('🔄 Recalculated design score:', predicted_score.design.toFixed(2));
+        }
+        
+        // 전체 평균 계산
+        predicted_score.overall = (predicted_score.convenience + predicted_score.design) / 2;
+        console.log('🔄 Recalculated overall score:', predicted_score.overall.toFixed(2));
+    }
+    
     // localStorage에 분석 결과 저장 (새로고침 시 복원용)
     try {
         localStorage.setItem('lastAnalysisResult', JSON.stringify(data));
