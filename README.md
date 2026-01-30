@@ -60,6 +60,40 @@
 
 ---
 
+## 📧 문의하기 기능 설정
+
+### 이메일 발송 설정 (Resend API)
+
+문의하기 폼에서 **ceo@mgine.co.kr**로 자동 이메일 발송이 가능합니다.
+
+#### 설정 방법:
+1. **Resend 회원가입** (무료): https://resend.com
+2. **API 키 발급**: Dashboard → API Keys → Create API Key
+3. **로컬 환경 설정**:
+   ```bash
+   # .dev.vars 파일 수정
+   RESEND_API_KEY=re_YOUR_ACTUAL_API_KEY
+   
+   # 재시작
+   npm run build
+   pm2 restart autoanalyzer
+   ```
+
+4. **프로덕션 설정**:
+   ```bash
+   npx wrangler secret put RESEND_API_KEY --project-name webapp
+   npm run deploy
+   ```
+
+#### 무료 플랜:
+- ✅ 월 3,000통 무료
+- ✅ 일일 100통 제한
+- ✅ 충분한 용량 (예상 월 150~300건)
+
+**상세 설정 가이드**: [EMAIL_SETUP.md](./EMAIL_SETUP.md) 참조
+
+---
+
 ## 🔧 실시간 분석 작동 원리
 
 ### 1단계: HTML 구조 파싱
