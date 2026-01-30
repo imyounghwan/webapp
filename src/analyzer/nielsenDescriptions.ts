@@ -19,7 +19,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     name: '내가 어디있는지 알려주기',
     category: '편의성',
     principle: 'N1: 시스템 상태 가시성',
-    description: '홈 > 회사소개 > 연혁 처럼 현재 페이지의 위치를 보여주는 경로(빵 부스러기) 표시',
+    description: '홈 > 회사소개 > 연혁 처럼 현재 페이지의 위치를 보여주는 경로(브레드크럼) 표시',
     why_important: '큰 쇼핑몰에서 길을 잃으면 원하는 매장을 찾기 어렵듯이, 웹사이트에서도 내 위치를 모르면 헤매게 됩니다.',
     evaluation_criteria: '상단에 "홈 > 카테고리 > 현재페이지" 같은 경로 표시가 있는지 확인'
   },
@@ -74,7 +74,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '편의성',
     principle: 'N3: 사용자 제어와 자유',
     description: '긴 폼 작성 중 "초기화" 버튼이나, 잘못 입력한 내용을 "취소" 할 수 있는 기능 제공',
-    why_important: '실수를 고칠 방법이 없으면 처음부터 다시 해야 해서 짜증납니다.',
+    why_important: '실수를 고칠 방법이 없으면 처음부터 다시 해야 합니다.',
     evaluation_criteria: '폼에 "초기화" 버튼이나 뒤로가기가 잘 작동하는지 확인'
   },
   'N3_3': {
@@ -101,7 +101,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '편의성',
     principle: 'N4: 일관성과 표준',
     description: '"로그인"을 어떤 페이지에선 "로그인", 다른 페이지에선 "Sign In"으로 부르지 않고 하나로 통일',
-    why_important: '같은 기능을 다르게 부르면 "이게 다른 건가?" 하고 헷갈립니다.',
+    why_important: '같은 기능을 다르게 부르면 "이게 다른 건가?" 하고 사용자는 혼란스럽습니다.',
     evaluation_criteria: '같은 개념을 여러 이름으로 부르지 않는지 확인'
   },
   'N4_3': {
@@ -119,7 +119,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '편의성',
     principle: 'N5: 오류 예방',
     description: '이메일 입력란에 숫자만 입력하면 "올바른 이메일이 아닙니다" 즉시 표시, 필수항목 빈칸 제출 차단',
-    why_important: '잘못 입력하고 제출한 뒤 오류 보는 것보다, 입력 중에 미리 알려주는 게 편합니다.',
+    why_important: '잘못 입력하고 제출한 뒤 오류를 확인하는 것보다, 입력 중에 미리 알려주는 게 편합니다.',
     evaluation_criteria: '입력란에 형식 검사(이메일, 숫자, 필수 등)가 있는지 확인'
   },
   'N5_2': {
@@ -128,7 +128,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '편의성',
     principle: 'N5: 오류 예방',
     description: '삭제, 결제 같은 중요한 버튼 누르면 "정말 삭제하시겠습니까?" 재확인 팝업 표시',
-    why_important: '실수로 눌러서 돌이킬 수 없는 일이 생기면 큰일입니다.',
+    why_important: '실수로 눌러서 돌이킬 수 없는 일이 생길 수 있습니다.',
     evaluation_criteria: '중요한 작업 전에 확인 메시지가 나오는지 확인'
   },
   'N5_3': {
@@ -137,7 +137,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '편의성',
     principle: 'N5: 오류 예방',
     description: '비밀번호 입력란 옆에 "8자 이상, 영문+숫자 조합" 같은 조건을 미리 표시',
-    why_important: '규칙을 모르고 입력했다가 오류 나면 다시 입력해야 해서 귀찮습니다.',
+    why_important: '규칙을 모르고 입력했다가 오류가 나면 다시 입력해야 해서 번거롭습니다.',
     evaluation_criteria: '입력란마다 무엇을 입력해야 하는지 설명이 있는지 확인'
   },
   'N6_2': {
@@ -155,7 +155,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '편의성',
     principle: 'N6: 인식보다 회상',
     description: '여러 단계 작업 시 이전 단계 정보를 화면에 계속 보여줘서 기억하지 않아도 되게 하기',
-    why_important: '머릿속으로 기억하면서 작업하면 실수하기 쉽고 피곤합니다.',
+    why_important: '머릿속으로 기억하면서 사용하면 실수하기 쉽고 피곤합니다.',
     evaluation_criteria: '페이지 경로나 이전 선택이 계속 보이는지 확인'
   },
   'N7_1': {
@@ -191,7 +191,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '디자인',
     principle: 'N8: 미니멀 디자인',
     description: '한 페이지에 너무 많은 내용을 담지 않고, 핵심만 간결하게 표시',
-    why_important: '정보가 너무 많으면 정작 중요한 걸 못 찾고 압도당합니다.',
+    why_important: '정보가 너무 많으면 정작 중요한 걸 못 찾고 포기합니다.',
     evaluation_criteria: '한 페이지 글자 수가 적당한지, 군더더기가 없는지 확인'
   },
   'N8_2': {
@@ -218,7 +218,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     category: '편의성',
     principle: 'N9: 오류 인식과 복구',
     description: '오류 나도 입력한 내용이 그대로 남아있어서 처음부터 다시 안 해도 됨',
-    why_important: '오류 나서 다 날아가면 화가 나서 아예 그만두게 됩니다.',
+    why_important: '오류 발생시 데이터가 사라지면 사용자는 아예 사용을 그만하게 됩니다.',
     evaluation_criteria: '폼 제출 실패해도 입력 내용이 유지되는지 확인'
   },
   'N9_4': {
