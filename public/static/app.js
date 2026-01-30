@@ -68,17 +68,8 @@ function displayResults(data, resultElement) {
         </div>
     ` : '';
     
-    // 버전 및 개선사항 정보
-    const improvementsHTML = improvements ? `
-        <div style="background:#e0f2fe;border-left:4px solid #0ea5e9;padding:15px;margin-bottom:20px;border-radius:8px;">
-            <div style="font-weight:bold;color:#075985;margin-bottom:10px;">📊 평가 체계 v${version || '3.0'} 개선사항</div>
-            <div style="font-size:13px;color:#0c4a6e;line-height:1.8;">
-                ✅ 총 ${improvements.total_items}개 평가 항목 (편의성 ${predicted_score.convenience_items.length}개 + 디자인 ${predicted_score.design_items.length}개)<br>
-                ✅ ${improvements.score_levels}단계 점수 체계 (2단계→7단계)<br>
-                ✅ 중복 ${improvements.removed_duplicates}개 제거 및 ${improvements.new_items}개 항목 강화
-            </div>
-        </div>
-    ` : '';
+    // 버전 및 개선사항 정보 제거
+    const improvementsHTML = '';
     
     // 종합 점수
     const scoreHTML = `
