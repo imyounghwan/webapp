@@ -1,6 +1,9 @@
 {
   "version": 1,
   "include": [
+    "/",
+    "/analyzer",
+    "/static/*",
     "/api/*"
   ],
   "exclude": []
