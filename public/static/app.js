@@ -214,6 +214,16 @@ function displayResults(data, resultElement) {
                         <div style="font-size:24px;font-weight:bold;color:#7c3aed;">${predicted_score.design.toFixed(2)}</div>
                     </div>
                 </div>
+                
+                <!-- 다운로드 버튼 추가 -->
+                <div style="margin-top:20px;display:flex;justify-content:center;gap:10px;">
+                    <button id="downloadPdfBtn" style="background:#ef4444;color:white;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                        <span>📄</span> PDF 다운로드
+                    </button>
+                    <button id="downloadPptBtn" style="background:#f59e0b;color:white;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+                        <span>📊</span> PPT 다운로드
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -402,6 +412,22 @@ function displayResults(data, resultElement) {
             editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
         });
     });
+    
+    // 다운로드 버튼에 이벤트 리스너 추가
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+    const downloadPptBtn = document.getElementById('downloadPptBtn');
+    
+    if (downloadPdfBtn) {
+        downloadPdfBtn.addEventListener('click', () => {
+            downloadPDF(data);
+        });
+    }
+    
+    if (downloadPptBtn) {
+        downloadPptBtn.addEventListener('click', () => {
+            downloadPPT(data);
+        });
+    }
 }
 
 /**
@@ -665,5 +691,240 @@ window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
                 📊 <strong>진단 결과:</strong> ${originalDiagnosis}
             </div>
         `;
+    }
+}
+
+/**
+ * PDF 다운로드 함수
+ */
+async function downloadPDF(data) {
+    try {
+        const btn = document.getElementById('downloadPdfBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> PDF 생성 중...';
+        
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const { predicted_score, url, analysis_date } = data;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        let yPos = 20;
+        
+        // 제목
+        pdf.setFontSize(20);
+        pdf.setTextColor(37, 99, 235);
+        pdf.text('MGINE AutoAnalyzer', pageWidth / 2, yPos, { align: 'center' });
+        
+        yPos += 10;
+        pdf.setFontSize(16);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text('UI/UX 분석 보고서', pageWidth / 2, yPos, { align: 'center' });
+        
+        yPos += 15;
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`분석 URL: ${url}`, 20, yPos);
+        yPos += 7;
+        pdf.text(`분석 일시: ${new Date(analysis_date).toLocaleString('ko-KR')}`, 20, yPos);
+        
+        // 종합 점수
+        yPos += 15;
+        pdf.setFontSize(14);
+        pdf.setTextColor(37, 99, 235);
+        pdf.text('종합 점수', 20, yPos);
+        
+        yPos += 10;
+        pdf.setFontSize(24);
+        pdf.text(predicted_score.overall.toFixed(2), pageWidth / 2, yPos, { align: 'center' });
+        
+        yPos += 10;
+        pdf.setFontSize(12);
+        pdf.text(`편의성: ${predicted_score.convenience.toFixed(2)}`, pageWidth / 2 - 30, yPos);
+        pdf.text(`디자인: ${predicted_score.design.toFixed(2)}`, pageWidth / 2 + 10, yPos);
+        
+        // 새 페이지 - 편의성 항목
+        pdf.addPage();
+        yPos = 20;
+        pdf.setFontSize(14);
+        pdf.setTextColor(5, 150, 105);
+        pdf.text('편의성 항목 (21개)', 20, yPos);
+        
+        yPos += 10;
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        
+        (predicted_score.convenience_items || []).forEach((item, idx) => {
+            if (yPos > pageHeight - 20) {
+                pdf.addPage();
+                yPos = 20;
+            }
+            
+            pdf.setFont(undefined, 'bold');
+            pdf.text(`${idx + 1}. ${item.item}`, 20, yPos);
+            yPos += 6;
+            
+            pdf.setFont(undefined, 'normal');
+            pdf.text(`점수: ${item.score.toFixed(1)} / 5.0`, 25, yPos);
+            yPos += 6;
+            
+            const diagnosis = item.diagnosis || '진단 없음';
+            const lines = pdf.splitTextToSize(`진단: ${diagnosis}`, pageWidth - 50);
+            pdf.text(lines, 25, yPos);
+            yPos += lines.length * 5 + 5;
+        });
+        
+        // 새 페이지 - 디자인 항목
+        pdf.addPage();
+        yPos = 20;
+        pdf.setFontSize(14);
+        pdf.setTextColor(124, 58, 237);
+        pdf.text('디자인 항목 (5개)', 20, yPos);
+        
+        yPos += 10;
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        
+        (predicted_score.design_items || []).forEach((item, idx) => {
+            if (yPos > pageHeight - 20) {
+                pdf.addPage();
+                yPos = 20;
+            }
+            
+            pdf.setFont(undefined, 'bold');
+            pdf.text(`${idx + 1}. ${item.item}`, 20, yPos);
+            yPos += 6;
+            
+            pdf.setFont(undefined, 'normal');
+            pdf.text(`점수: ${item.score.toFixed(1)} / 5.0`, 25, yPos);
+            yPos += 6;
+            
+            const diagnosis = item.diagnosis || '진단 없음';
+            const lines = pdf.splitTextToSize(`진단: ${diagnosis}`, pageWidth - 50);
+            pdf.text(lines, 25, yPos);
+            yPos += lines.length * 5 + 5;
+        });
+        
+        // PDF 저장
+        const filename = `UIUX_분석보고서_${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(filename);
+        
+        btn.disabled = false;
+        btn.innerHTML = '<span>📄</span> PDF 다운로드';
+        alert('✅ PDF 다운로드 완료!');
+        
+    } catch (error) {
+        console.error('PDF 생성 오류:', error);
+        alert('❌ PDF 생성 실패: ' + error.message);
+        const btn = document.getElementById('downloadPdfBtn');
+        btn.disabled = false;
+        btn.innerHTML = '<span>📄</span> PDF 다운로드';
+    }
+}
+
+/**
+ * PPT 다운로드 함수
+ */
+async function downloadPPT(data) {
+    try {
+        const btn = document.getElementById('downloadPptBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> PPT 생성 중...';
+        
+        const pptx = new PptxGenJS();
+        const { predicted_score, url, analysis_date } = data;
+        
+        // 슬라이드 1: 표지
+        let slide = pptx.addSlide();
+        slide.background = { color: '2563eb' };
+        slide.addText('MGINE AutoAnalyzer', {
+            x: 0.5, y: 1.5, w: 9, h: 1,
+            fontSize: 44, bold: true, color: 'FFFFFF', align: 'center'
+        });
+        slide.addText('UI/UX 분석 보고서', {
+            x: 0.5, y: 2.7, w: 9, h: 0.7,
+            fontSize: 28, color: 'E5E7EB', align: 'center'
+        });
+        slide.addText(`분석 일시: ${new Date(analysis_date).toLocaleString('ko-KR')}`, {
+            x: 0.5, y: 5, w: 9, h: 0.5,
+            fontSize: 14, color: 'D1D5DB', align: 'center'
+        });
+        
+        // 슬라이드 2: 종합 점수
+        slide = pptx.addSlide();
+        slide.addText('종합 점수', {
+            x: 0.5, y: 0.5, w: 9, h: 0.7,
+            fontSize: 32, bold: true, color: '1F2937'
+        });
+        slide.addText(predicted_score.overall.toFixed(2), {
+            x: 0.5, y: 1.5, w: 9, h: 1.5,
+            fontSize: 72, bold: true, color: '2563eb', align: 'center'
+        });
+        slide.addText(`편의성: ${predicted_score.convenience.toFixed(2)}  |  디자인: ${predicted_score.design.toFixed(2)}`, {
+            x: 0.5, y: 3.5, w: 9, h: 0.7,
+            fontSize: 24, color: '6B7280', align: 'center'
+        });
+        slide.addText(`분석 URL: ${url}`, {
+            x: 0.5, y: 5, w: 9, h: 0.5,
+            fontSize: 12, color: '9CA3AF', align: 'center'
+        });
+        
+        // 슬라이드 3-4: 편의성 항목 (상위 10개)
+        const convItems = (predicted_score.convenience_items || []).slice(0, 10);
+        for (let i = 0; i < convItems.length; i += 5) {
+            slide = pptx.addSlide();
+            slide.addText(`편의성 항목 (${i + 1}-${Math.min(i + 5, convItems.length)})`, {
+                x: 0.5, y: 0.3, w: 9, h: 0.5,
+                fontSize: 24, bold: true, color: '059669'
+            });
+            
+            let yPos = 1;
+            convItems.slice(i, i + 5).forEach((item, idx) => {
+                slide.addText(`${i + idx + 1}. ${item.item}`, {
+                    x: 0.7, y: yPos, w: 8.6, h: 0.4,
+                    fontSize: 14, bold: true, color: '1F2937'
+                });
+                slide.addText(`점수: ${item.score.toFixed(1)} / 5.0`, {
+                    x: 1, y: yPos + 0.4, w: 8.3, h: 0.3,
+                    fontSize: 12, color: '059669'
+                });
+                yPos += 1;
+            });
+        }
+        
+        // 슬라이드 5: 디자인 항목
+        slide = pptx.addSlide();
+        slide.addText('디자인 항목', {
+            x: 0.5, y: 0.3, w: 9, h: 0.5,
+            fontSize: 24, bold: true, color: '7c3aed'
+        });
+        
+        let yPos = 1;
+        (predicted_score.design_items || []).forEach((item, idx) => {
+            slide.addText(`${idx + 1}. ${item.item}`, {
+                x: 0.7, y: yPos, w: 8.6, h: 0.4,
+                fontSize: 14, bold: true, color: '1F2937'
+            });
+            slide.addText(`점수: ${item.score.toFixed(1)} / 5.0`, {
+                x: 1, y: yPos + 0.4, w: 8.3, h: 0.3,
+                fontSize: 12, color: '7c3aed'
+            });
+            yPos += 1;
+        });
+        
+        // PPT 저장
+        const filename = `UIUX_분석보고서_${new Date().toISOString().split('T')[0]}.pptx`;
+        await pptx.writeFile({ fileName: filename });
+        
+        btn.disabled = false;
+        btn.innerHTML = '<span>📊</span> PPT 다운로드';
+        alert('✅ PPT 다운로드 완료!');
+        
+    } catch (error) {
+        console.error('PPT 생성 오류:', error);
+        alert('❌ PPT 생성 실패: ' + error.message);
+        const btn = document.getElementById('downloadPptBtn');
+        btn.disabled = false;
+        btn.innerHTML = '<span>📊</span> PPT 다운로드';
     }
 }
