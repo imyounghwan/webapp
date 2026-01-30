@@ -1,4 +1,4 @@
-console.log('🚀 AutoAnalyzer v3.0 - 상세 정보 포함');
+console.log('🚀 MGINE AutoAnalyzer v3.0 - 상세 정보 포함');
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ DOM loaded');
