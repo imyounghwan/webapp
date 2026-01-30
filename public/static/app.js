@@ -94,13 +94,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 800);
         
         try {
+            const sessionId = localStorage.getItem('session_id');
+            if (!sessionId) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/login';
+                return;
+            }
+            
             const response = await fetch('/api/analyze', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Session-ID': sessionId
+                },
                 body: JSON.stringify({ url })
             });
             
             clearInterval(progressInterval);
+            
+            if (response.status === 401) {
+                alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+                localStorage.removeItem('session_id');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                return;
+            }
             
             if (!response.ok) throw new Error('분석 실패');
             

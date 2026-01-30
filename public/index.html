@@ -603,6 +603,48 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/static/app.js?v=20260130d"></script>
+    <script src="/static/app.js?v=20260130e"></script>
+    <script>
+        // 로그인 체크
+        const sessionId = localStorage.getItem('session_id');
+        if (!sessionId) {
+            window.location.href = '/login';
+        } else {
+            // 세션 유효성 검증
+            fetch('/api/auth/me', {
+                headers: { 'X-Session-ID': sessionId }
+            }).then(res => res.json()).then(data => {
+                if (!data.success) {
+                    localStorage.removeItem('session_id');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                } else {
+                    // 사용자 정보 표시
+                    const user = data.user;
+                    const userInfo = document.createElement('div');
+                    userInfo.style.cssText = 'position: fixed; top: 20px; right: 20px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 10px; color: white; z-index: 1000;';
+                    userInfo.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span>${user.name} (${user.role})</span>
+                            <button onclick="logout()" style="background: rgba(255,255,255,0.2); border: none; padding: 5px 10px; border-radius: 5px; color: white; cursor: pointer;">로그아웃</button>
+                        </div>
+                    `;
+                    document.body.appendChild(userInfo);
+                }
+            });
+        }
+
+        function logout() {
+            const sessionId = localStorage.getItem('session_id');
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'X-Session-ID': sessionId }
+            }).then(() => {
+                localStorage.removeItem('session_id');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            });
+        }
+    </script>
 </body>
 </html>

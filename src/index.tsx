@@ -8,11 +8,14 @@ import { evaluateItemRelevance } from './analyzer/itemRelevance'
 import { loadWeights, getWeightsVersion, getWeightsLastUpdated, loadReferenceStatistics } from './config/weightsLoader'
 import { generateWeightAdjustments, applyWeightAdjustments } from './config/weightAdjuster'
 import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } from './types/database'
+import { hashPassword, verifyPassword, generateSessionId, authMiddleware, adminMiddleware, validateEmail, validatePassword } from './auth'
+import type { SignupRequest, LoginRequest } from './types'
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
 import indexHTML from '../public/index.html?raw'
 import landingHTML from '../public/landing.html?raw'
+import loginHTML from '../public/login.html?raw'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -450,7 +453,7 @@ function aggregateResults(pageResults: any[]): any {
 }
 
 // 실시간 URL 분석 API
-app.post('/api/analyze', async (c) => {
+app.post('/api/analyze', authMiddleware, async (c) => {
   try {
     const { url } = await c.req.json()
 
@@ -1140,9 +1143,175 @@ app.post('/api/weight-suggestions/apply', async (c) => {
   })
 })
 
+// ==================== 인증 API ====================
+
+/**
+ * 회원가입 API
+ * POST /api/auth/signup
+ */
+app.post('/api/auth/signup', async (c) => {
+  try {
+    const { DB } = c.env
+    const { email, password, name } = await c.req.json() as SignupRequest
+
+    // 입력 검증
+    if (!validateEmail(email)) {
+      return c.json({ success: false, error: '유효하지 않은 이메일 형식입니다.' }, 400)
+    }
+
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
+      return c.json({ success: false, error: passwordValidation.message }, 400)
+    }
+
+    if (!name || name.trim().length < 2) {
+      return c.json({ success: false, error: '이름은 최소 2자 이상이어야 합니다.' }, 400)
+    }
+
+    // 이메일 중복 체크
+    const existingUser = await DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first()
+    if (existingUser) {
+      return c.json({ success: false, error: '이미 사용 중인 이메일입니다.' }, 400)
+    }
+
+    // 비밀번호 해시
+    const passwordHash = await hashPassword(password)
+
+    // 사용자 생성
+    const result = await DB.prepare(
+      'INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)'
+    ).bind(email, passwordHash, name.trim(), 'user').run()
+
+    return c.json({
+      success: true,
+      message: '회원가입이 완료되었습니다.',
+      user_id: result.meta.last_row_id
+    })
+  } catch (error) {
+    console.error('Signup error:', error)
+    return c.json({ success: false, error: '회원가입 처리 중 오류가 발생했습니다.' }, 500)
+  }
+})
+
+/**
+ * 로그인 API
+ * POST /api/auth/login
+ */
+app.post('/api/auth/login', async (c) => {
+  try {
+    const { DB } = c.env
+    const { email, password } = await c.req.json() as LoginRequest
+
+    // 사용자 조회
+    const user = await DB.prepare(
+      'SELECT * FROM users WHERE email = ? AND is_active = 1'
+    ).bind(email).first() as any
+
+    if (!user) {
+      return c.json({ success: false, error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, 401)
+    }
+
+    // 비밀번호 검증
+    const isValid = await verifyPassword(password, user.password_hash)
+    if (!isValid) {
+      return c.json({ success: false, error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, 401)
+    }
+
+    // 세션 생성 (24시간 유효)
+    const sessionId = generateSessionId()
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
+    await DB.prepare(
+      'INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)'
+    ).bind(sessionId, user.id, expiresAt).run()
+
+    // 마지막 로그인 시간 업데이트
+    await DB.prepare(
+      'UPDATE users SET last_login_at = datetime("now") WHERE id = ?'
+    ).bind(user.id).run()
+
+    return c.json({
+      success: true,
+      session_id: sessionId,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    })
+  } catch (error) {
+    console.error('Login error:', error)
+    return c.json({ success: false, error: '로그인 처리 중 오류가 발생했습니다.' }, 500)
+  }
+})
+
+/**
+ * 로그아웃 API
+ * POST /api/auth/logout
+ */
+app.post('/api/auth/logout', authMiddleware, async (c) => {
+  try {
+    const { DB } = c.env
+    const sessionId = c.req.header('X-Session-ID') || c.req.query('session_id')
+
+    if (sessionId) {
+      await DB.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run()
+    }
+
+    return c.json({ success: true, message: '로그아웃되었습니다.' })
+  } catch (error) {
+    console.error('Logout error:', error)
+    return c.json({ success: false, error: '로그아웃 처리 중 오류가 발생했습니다.' }, 500)
+  }
+})
+
+/**
+ * 세션 검증 API
+ * GET /api/auth/me
+ */
+app.get('/api/auth/me', authMiddleware, async (c) => {
+  const user = c.get('user')
+  return c.json({
+    success: true,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    }
+  })
+})
+
+/**
+ * 관리자 전용 - 모든 사용자 조회 API
+ * GET /api/admin/users
+ */
+app.get('/api/admin/users', authMiddleware, adminMiddleware, async (c) => {
+  try {
+    const { DB } = c.env
+    const result = await DB.prepare(
+      'SELECT id, email, name, role, created_at, last_login_at, is_active FROM users ORDER BY created_at DESC'
+    ).all()
+
+    return c.json({
+      success: true,
+      users: result.results
+    })
+  } catch (error) {
+    console.error('Get users error:', error)
+    return c.json({ success: false, error: '사용자 목록 조회 중 오류가 발생했습니다.' }, 500)
+  }
+})
+
 // Serve landing page for root path
 app.get('/', (c) => {
   return c.html(landingHTML)
+})
+
+// Serve login page
+app.get('/login', (c) => {
+  return c.html(loginHTML)
 })
 
 // Serve analyzer page
