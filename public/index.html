@@ -352,17 +352,43 @@
         .edit-score-btn {
             background: rgba(0, 102, 255, 0.1);
             color: var(--primary);
-            border: 1px solid var(--primary);
+            border: 1px solid rgba(0, 102, 255, 0.3);
             padding: 6px 16px;
             border-radius: 8px;
             font-size: 0.85rem;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
         }
         
         .edit-score-btn:hover {
-            background: var(--primary);
-            color: white;
+            background: rgba(0, 102, 255, 0.2);
+            border-color: var(--primary);
+        }
+        
+        /* Score colors - 톤다운 */
+        .score-high {
+            background: rgba(0, 201, 167, 0.1);
+            color: #00C9A7;
+            border: 1px solid rgba(0, 201, 167, 0.3);
+        }
+        
+        .score-medium {
+            background: rgba(0, 102, 255, 0.1);
+            color: #0066FF;
+            border: 1px solid rgba(0, 102, 255, 0.3);
+        }
+        
+        .score-low {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        .score-very-low {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
         @media (max-width: 768px) {
@@ -392,7 +418,7 @@
                 <div>
                     <h1 class="logo">
                         <i class="fas fa-chart-line"></i>
-                        AutoAnalyzer
+                        <span style="font-weight: 900;">MGINE</span> AutoAnalyzer
                     </h1>
                     <p class="tagline">AI-Powered UI/UX Analysis</p>
                 </div>

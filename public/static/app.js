@@ -239,7 +239,7 @@ function displayResults(data, resultElement) {
     // 편의성 항목
     let convenienceHTML = '<h3 style="color:#059669;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #059669;">📊 편의성 항목 (21개)</h3>';
     predicted_score.convenience_items.forEach((item, itemIndex) => {
-        const scoreColor = item.score >= 4.5 ? '#059669' : item.score >= 3.5 ? '#3b82f6' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
+        const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-conv-${itemIndex}`;
         convenienceHTML += `
             <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -313,7 +313,7 @@ function displayResults(data, resultElement) {
     // 디자인 항목
     let designHTML = '<h3 style="color:#7c3aed;margin-bottom:15px;margin-top:40px;padding-bottom:10px;border-bottom:2px solid #7c3aed;">🎨 디자인 항목 (5개)</h3>';
     predicted_score.design_items.forEach((item, itemIndex) => {
-        const scoreColor = item.score >= 4.5 ? '#059669' : item.score >= 3.5 ? '#3b82f6' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
+        const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-design-${itemIndex}`;
         designHTML += `
             <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -638,7 +638,7 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
  * 편집 취소 함수
  */
 window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
-    const scoreColor = originalScore >= 4.5 ? '#059669' : originalScore >= 3.5 ? '#3b82f6' : originalScore >= 2.5 ? '#f59e0b' : '#ef4444';
+    const scoreColor = originalScore >= 4.5 ? '#00C9A7' : originalScore >= 3.5 ? '#0066FF' : originalScore >= 2.5 ? '#f59e0b' : '#ef4444';
     const scoreElement = document.getElementById(`${itemId}-score`);
     const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
     
