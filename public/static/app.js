@@ -575,9 +575,6 @@ window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
             editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
         });
     }
-            </button>
-        </div>
-    `;
     
     // 진단 텍스트 복원
     if (diagnosisElement && originalDiagnosis) {
