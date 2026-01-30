@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { Resend } from 'resend'
 import { analyzeHTML } from './analyzer/htmlAnalyzer'
 import { findSimilarSites, calculatePredictedScore } from './analyzer/similarityCalculator'
 import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
@@ -724,54 +725,117 @@ app.post('/api/contact', async (c) => {
       schedule
     } = body
     
-    // 이메일 본문 생성
-    const emailBody = `
-=== MGINE AutoAnalyzer 프로젝트 문의 ===
-
-[의뢰인 정보]
-회사명: ${company}
-직위: ${position || '-'}
-이름: ${name}
-연락처: ${phone}
-이메일: ${email}
-URL: ${url || '-'}
-
-[프로젝트 정보]
-희망 프로젝트 형태: ${project_types?.join(', ') || '-'}
-프로젝트 예산: ${budget || '-'}
-프로젝트 일정: ${schedule || '-'}
-
-[의뢰 내용]
-${message}
-
----
-이 메일은 MGINE AutoAnalyzer 홈페이지에서 발송되었습니다.
-발신 시간: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
+    // 이메일 제목
+    const emailSubject = `[AutoAnalyzer] ${company} - 프로젝트 문의`
+    
+    // 이메일 본문 생성 (HTML)
+    const emailHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #0066FF 0%, #00C9A7 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    .section { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+    .section-title { font-weight: bold; color: #0066FF; margin-bottom: 10px; border-bottom: 2px solid #0066FF; padding-bottom: 5px; }
+    .info-row { margin: 8px 0; }
+    .label { display: inline-block; width: 140px; font-weight: 600; color: #555; }
+    .value { color: #333; }
+    .message-box { background: white; padding: 15px; border-left: 4px solid #00C9A7; border-radius: 4px; }
+    .footer { text-align: center; color: #888; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2 style="margin: 0;">🚀 MGINE AutoAnalyzer 프로젝트 문의</h2>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">👤 의뢰인 정보</div>
+      <div class="info-row"><span class="label">회사명</span><span class="value">${company}</span></div>
+      <div class="info-row"><span class="label">직위</span><span class="value">${position || '-'}</span></div>
+      <div class="info-row"><span class="label">이름</span><span class="value">${name}</span></div>
+      <div class="info-row"><span class="label">연락처</span><span class="value">${phone}</span></div>
+      <div class="info-row"><span class="label">이메일</span><span class="value"><a href="mailto:${email}">${email}</a></span></div>
+      <div class="info-row"><span class="label">웹사이트</span><span class="value">${url || '-'}</span></div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📋 프로젝트 정보</div>
+      <div class="info-row"><span class="label">희망 프로젝트 형태</span><span class="value">${project_types?.join(', ') || '-'}</span></div>
+      <div class="info-row"><span class="label">프로젝트 예산</span><span class="value">${budget || '-'}</span></div>
+      <div class="info-row"><span class="label">프로젝트 일정</span><span class="value">${schedule || '-'}</span></div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">💬 의뢰 내용</div>
+      <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
+    </div>
+    
+    <div class="footer">
+      이 메일은 MGINE AutoAnalyzer 홈페이지(https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai)에서 자동 발송되었습니다.<br>
+      발신 시간: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}<br>
+      © 2026 MGINE Interactive. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
     `.trim()
     
-    // Cloudflare Email Workers API 사용
-    // 실제 환경에서는 c.env.EMAIL_SERVICE 등을 통해 이메일 발송
-    // 현재는 성공 응답만 반환 (실제 이메일 발송은 추후 설정 필요)
+    // Resend API를 사용하여 실제 이메일 발송
+    const resendApiKey = c.env.RESEND_API_KEY || 're_123456789' // 환경변수에서 가져오기
     
-    console.log('Contact form submitted:', {
-      company,
-      name,
-      email,
-      timestamp: new Date().toISOString()
-    })
-    
-    console.log('Email content:', emailBody)
-    
-    return c.json({
-      success: true,
-      message: '문의가 접수되었습니다. 빠른 시일 내에 연락드리겠습니다.',
-      data: {
+    try {
+      const resend = new Resend(resendApiKey)
+      
+      const emailResponse = await resend.emails.send({
+        from: 'AutoAnalyzer <onboarding@resend.dev>', // Resend 기본 발신 주소
+        to: ['ceo@mgine.co.kr'],
+        reply_to: email, // 답장 주소를 문의자 이메일로 설정
+        subject: emailSubject,
+        html: emailHTML,
+      })
+      
+      console.log('Email sent successfully:', emailResponse)
+      
+      return c.json({
+        success: true,
+        message: '문의가 성공적으로 접수되었습니다. 빠른 시일 내에 담당자가 연락드리겠습니다.',
+        data: {
+          company,
+          name,
+          email,
+          timestamp: new Date().toISOString(),
+          emailId: emailResponse.data?.id
+        }
+      })
+      
+    } catch (emailError) {
+      console.error('Resend email error:', emailError)
+      
+      // 이메일 발송 실패 시에도 폼 제출은 성공으로 처리 (로그는 남김)
+      console.log('Contact form data saved to logs:', {
         company,
         name,
         email,
         timestamp: new Date().toISOString()
-      }
-    })
+      })
+      
+      return c.json({
+        success: true,
+        message: '문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다.',
+        data: {
+          company,
+          name,
+          email,
+          timestamp: new Date().toISOString()
+        },
+        warning: '이메일 발송에 일시적인 문제가 있을 수 있습니다.'
+      })
+    }
     
   } catch (error) {
     console.error('Error processing contact form:', error)

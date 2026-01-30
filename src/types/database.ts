@@ -46,4 +46,5 @@ export interface CorrectionRequest {
 // Cloudflare Bindings
 export interface Env {
   DB: D1Database;
+  RESEND_API_KEY?: string; // Resend API 키 (이메일 발송용)
 }
