@@ -28,6 +28,8 @@ app.get('/api/hello', (c) => {
  */
 async function extractSubPages(mainUrl: string, html: string, limit: number = 10): Promise<string[]> {
   const baseUrl = new URL(mainUrl).origin
+  const mainUrlObj = new URL(mainUrl)
+  const basePath = mainUrlObj.pathname.substring(0, mainUrlObj.pathname.lastIndexOf('/') + 1)
   const subPages: string[] = []
   
   // 내부 링크 찾기 (상대 경로 및 같은 도메인)
@@ -35,19 +37,27 @@ async function extractSubPages(mainUrl: string, html: string, limit: number = 10
   let match
   
   console.log(`Extracting sub-pages from ${mainUrl}...`)
+  console.log(`Base URL: ${baseUrl}, Base Path: ${basePath}`)
   
   while ((match = linkRegex.exec(html)) !== null && subPages.length < limit) {
     let href = match[1]
     
-    // 상대 경로를 절대 경로로 변환
+    // 절대 경로로 변환
     if (href.startsWith('/')) {
+      // /로 시작하는 절대 경로
       href = baseUrl + href
-    } else if (!href.startsWith('http')) {
+    } else if (href.startsWith('http://') || href.startsWith('https://')) {
+      // 이미 완전한 URL
+      // 그대로 사용
+    } else if (!href.startsWith('#') && !href.startsWith('javascript:') && !href.startsWith('mailto:')) {
+      // 상대 경로 (예: _about.html, sub/page.html)
+      href = baseUrl + basePath + href
+    } else {
+      // #, javascript:, mailto: 등은 스킵
       continue
     }
     
     // 같은 도메인만, 메인 페이지 제외
-    // 더 넓은 필터링 조건으로 변경
     if (href.startsWith(baseUrl) && 
         href !== mainUrl && 
         href !== mainUrl + '/' &&
@@ -58,6 +68,11 @@ async function extractSubPages(mainUrl: string, html: string, limit: number = 10
         !href.includes('join') &&
         !href.includes('member') &&
         !href.includes('mypage') &&
+        !href.endsWith('.pdf') &&
+        !href.endsWith('.zip') &&
+        !href.endsWith('.jpg') &&
+        !href.endsWith('.png') &&
+        !href.endsWith('.gif') &&
         href.length < 200) {  // 너무 긴 URL 제외
       if (!subPages.includes(href)) {
         subPages.push(href)
