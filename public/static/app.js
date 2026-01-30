@@ -48,7 +48,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function displayResults(data, resultElement) {
-    const { predicted_score, url, analysis_date, version, improvements } = data;
+    const { predicted_score, url, analysis_date, version, improvements, analyzed_pages } = data;
+    
+    // 분석된 페이지 정보
+    const analyzedPagesHTML = analyzed_pages ? `
+        <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;margin-bottom:20px;border-radius:8px;">
+            <div style="font-weight:bold;color:#92400e;margin-bottom:10px;">📄 분석된 페이지 (총 ${analyzed_pages.total_count}개)</div>
+            <div style="font-size:13px;color:#78350f;line-height:1.8;">
+                <strong>메인 페이지:</strong> <a href="${analyzed_pages.main_page}" target="_blank" style="color:#2563eb;text-decoration:none;">${analyzed_pages.main_page}</a><br>
+                ${analyzed_pages.sub_pages.length > 0 ? `
+                <strong>서브 페이지 (${analyzed_pages.sub_pages.length}개):</strong><br>
+                ${analyzed_pages.sub_pages.map((page, idx) => 
+                    `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;">${page}</a>`
+                ).join('<br>')}
+                ` : ''}
+                <br><br>
+                ℹ️ ${analyzed_pages.note}
+            </div>
+        </div>
+    ` : '';
     
     // 버전 및 개선사항 정보
     const improvementsHTML = improvements ? `
@@ -186,6 +204,7 @@ function displayResults(data, resultElement) {
     
     resultElement.innerHTML = `
         <div style="max-width:1200px;margin:0 auto;padding:20px;">
+            ${analyzedPagesHTML}
             ${improvementsHTML}
             ${scoreHTML}
             ${convenienceHTML}

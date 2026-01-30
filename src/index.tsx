@@ -18,15 +18,17 @@ app.get('/api/hello', (c) => {
 })
 
 /**
- * 서브 페이지 URL 추출 (메인 페이지에서)
+ * 서브 페이지 URL 추출 (메인 페이지에서) - 10개까지 확장
  */
-async function extractSubPages(mainUrl: string, html: string, limit: number = 3): Promise<string[]> {
+async function extractSubPages(mainUrl: string, html: string, limit: number = 10): Promise<string[]> {
   const baseUrl = new URL(mainUrl).origin
   const subPages: string[] = []
   
   // 내부 링크 찾기 (상대 경로 및 같은 도메인)
   const linkRegex = /<a\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*>/gi
   let match
+  
+  console.log(`Extracting sub-pages from ${mainUrl}...`)
   
   while ((match = linkRegex.exec(html)) !== null && subPages.length < limit) {
     let href = match[1]
@@ -39,20 +41,26 @@ async function extractSubPages(mainUrl: string, html: string, limit: number = 3)
     }
     
     // 같은 도메인만, 메인 페이지 제외
+    // 더 넓은 필터링 조건으로 변경
     if (href.startsWith(baseUrl) && 
         href !== mainUrl && 
         href !== mainUrl + '/' &&
         !href.includes('#') && 
         !href.includes('javascript:') &&
+        !href.includes('void(0)') &&
         !href.includes('login') &&
         !href.includes('join') &&
-        (href.includes('.do') || href.includes('/sub') || href.includes('/kor/') || href.includes('/eng/'))) {
+        !href.includes('member') &&
+        !href.includes('mypage') &&
+        href.length < 200) {  // 너무 긴 URL 제외
       if (!subPages.includes(href)) {
         subPages.push(href)
+        console.log(`Found sub-page: ${href}`)
       }
     }
   }
   
+  console.log(`Total ${subPages.length} sub-pages found`)
   return subPages.slice(0, limit)
 }
 
@@ -75,8 +83,8 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
   const mainStructure = analyzeHTML(mainHtml, mainUrl)
   results.push({ url: mainUrl, structure: mainStructure, isMainPage: true })
   
-  // 2. 서브 페이지 추출 및 분석
-  const subPages = await extractSubPages(mainUrl, mainHtml, 3)
+  // 2. 서브 페이지 추출 및 분석 (최대 9개 = 총 10페이지)
+  const subPages = await extractSubPages(mainUrl, mainHtml, 9)
   
   for (const subUrl of subPages) {
     try {
@@ -99,29 +107,67 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
 }
 
 /**
- * 여러 페이지 결과를 종합
+ * 여러 페이지 결과를 종합 (10페이지 평균)
  */
 function aggregateResults(pageResults: any[]): any {
-  // 서브 페이지들만 필터링 (Breadcrumb 평가용)
-  const subPages = pageResults.filter(p => !p.isMainPage)
+  if (pageResults.length === 0) return null
+  
   const mainPage = pageResults.find(p => p.isMainPage)
+  const subPages = pageResults.filter(p => !p.isMainPage)
   
   if (!mainPage) return null
   
-  // 메인 구조 기반으로 시작
-  const aggregated = JSON.parse(JSON.stringify(mainPage.structure))
+  // 모든 페이지의 구조를 평균화
+  const allPages = pageResults.map(p => p.structure)
   
-  // 서브 페이지가 있으면 Breadcrumb 존재 여부 확인
-  if (subPages.length > 0) {
-    const hasBreadcrumbInSub = subPages.some(p => p.structure.navigation.breadcrumbExists)
-    
-    // 서브 페이지에 Breadcrumb이 있으면 전체적으로 있다고 판단
-    if (hasBreadcrumbInSub) {
-      aggregated.navigation.breadcrumbExists = true
-    }
+  // Navigation 종합 (평균 + 특수 처리)
+  const avgNavigation = {
+    menuCount: Math.round(allPages.reduce((sum, s) => sum + s.navigation.menuCount, 0) / allPages.length),
+    linkCount: Math.round(allPages.reduce((sum, s) => sum + s.navigation.linkCount, 0) / allPages.length),
+    breadcrumbExists: subPages.some(p => p.structure.navigation.breadcrumbExists) || mainPage.structure.navigation.breadcrumbExists,
+    searchExists: allPages.some(s => s.navigation.searchExists),
+    depthLevel: Math.round(allPages.reduce((sum, s) => sum + s.navigation.depthLevel, 0) / allPages.length)
   }
   
-  return aggregated
+  // Accessibility 종합 (평균)
+  const avgAccessibility = {
+    altTextRatio: allPages.reduce((sum, s) => sum + s.accessibility.altTextRatio, 0) / allPages.length,
+    ariaLabelCount: Math.round(allPages.reduce((sum, s) => sum + s.accessibility.ariaLabelCount, 0) / allPages.length),
+    headingStructure: allPages.filter(s => s.accessibility.headingStructure).length > allPages.length / 2,
+    langAttribute: allPages.some(s => s.accessibility.langAttribute),
+    skipLinkExists: allPages.some(s => s.accessibility.skipLinkExists)
+  }
+  
+  // Content 종합 (평균)
+  const avgContent = {
+    headingCount: Math.round(allPages.reduce((sum, s) => sum + s.content.headingCount, 0) / allPages.length),
+    paragraphCount: Math.round(allPages.reduce((sum, s) => sum + s.content.paragraphCount, 0) / allPages.length),
+    listCount: Math.round(allPages.reduce((sum, s) => sum + s.content.listCount, 0) / allPages.length),
+    tableCount: Math.round(allPages.reduce((sum, s) => sum + s.content.tableCount, 0) / allPages.length)
+  }
+  
+  // Forms 종합 (평균)
+  const avgForms = {
+    formCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.formCount, 0) / allPages.length),
+    inputCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.inputCount, 0) / allPages.length),
+    labelRatio: allPages.reduce((sum, s) => sum + s.forms.labelRatio, 0) / allPages.length,
+    validationExists: allPages.filter(s => s.forms.validationExists).length > allPages.length / 3
+  }
+  
+  // Visuals 종합 (평균)
+  const avgVisuals = {
+    imageCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.imageCount, 0) / allPages.length),
+    videoCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.videoCount, 0) / allPages.length),
+    iconCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.iconCount, 0) / allPages.length)
+  }
+  
+  return {
+    navigation: avgNavigation,
+    accessibility: avgAccessibility,
+    content: avgContent,
+    forms: avgForms,
+    visuals: avgVisuals
+  }
 }
 
 // 실시간 URL 분석 API
@@ -280,6 +326,12 @@ app.post('/api/analyze', async (c) => {
       url,
       analysis_date: new Date().toISOString(),
       version: '3.0-improved',
+      analyzed_pages: {
+        total_count: pageResults.length,
+        main_page: pageResults.find(p => p.isMainPage)?.url || url,
+        sub_pages: pageResults.filter(p => !p.isMainPage).map(p => p.url),
+        note: `${pageResults.length}개 페이지를 종합 분석하여 평가했습니다.`
+      },
       structure: {
         navigation: structure.navigation,
         accessibility: structure.accessibility,
