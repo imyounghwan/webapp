@@ -43,7 +43,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
   'N2_1': {
     id: 'N2.1',
     name: '친숙한 용어',
-    category: '디자인',
+    category: '편의성',
     principle: 'N2: 현실 세계 일치',
     description: '사용자가 이해하기 쉬운 일상 언어와 표현을 사용합니다.',
     why_important: '전문 용어나 시스템 중심 언어는 사용자를 혼란스럽게 합니다.',
@@ -52,7 +52,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
   'N2_2': {
     id: 'N2.2',
     name: '자연스러운 흐름',
-    category: '디자인',
+    category: '편의성',
     principle: 'N2: 현실 세계 일치',
     description: '정보가 논리적이고 예측 가능한 순서로 배치되어 있습니다.',
     why_important: '예상치 못한 순서는 사용자의 멘탈 모델과 충돌합니다.',
