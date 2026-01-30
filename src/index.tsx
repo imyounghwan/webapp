@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { Resend } from 'resend'
 import { analyzeHTML } from './analyzer/htmlAnalyzer'
 import { findSimilarSites, calculatePredictedScore } from './analyzer/similarityCalculator'
 import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
@@ -785,21 +784,58 @@ app.post('/api/contact', async (c) => {
 </html>
     `.trim()
     
-    // Resend API를 사용하여 실제 이메일 발송
-    const resendApiKey = c.env.RESEND_API_KEY || 're_123456789' // 환경변수에서 가져오기
+    // Resend API를 fetch로 직접 호출 (Cloudflare Workers 호환)
+    const resendApiKey = c.env.RESEND_API_KEY
     
-    try {
-      const resend = new Resend(resendApiKey)
-      
-      const emailResponse = await resend.emails.send({
-        from: 'AutoAnalyzer <onboarding@resend.dev>', // Resend 기본 발신 주소
-        to: ['ceo@mgine.co.kr'],
-        reply_to: email, // 답장 주소를 문의자 이메일로 설정
-        subject: emailSubject,
-        html: emailHTML,
+    // API 키가 없으면 로그만 남기고 성공 응답
+    if (!resendApiKey || resendApiKey === 're_YOUR_API_KEY_HERE') {
+      console.log('⚠️ Resend API key not configured. Email not sent.')
+      console.log('Contact form data:', {
+        company,
+        name,
+        email,
+        phone,
+        message,
+        timestamp: new Date().toISOString()
       })
       
-      console.log('Email sent successfully:', emailResponse)
+      return c.json({
+        success: true,
+        message: '문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다.',
+        data: {
+          company,
+          name,
+          email,
+          timestamp: new Date().toISOString()
+        },
+        warning: 'Email API key not configured. Contact saved to logs.'
+      })
+    }
+    
+    try {
+      // Resend API 호출 (fetch 사용)
+      const emailResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'AutoAnalyzer <onboarding@resend.dev>',
+          to: ['ceo@mgine.co.kr'],
+          reply_to: email,
+          subject: emailSubject,
+          html: emailHTML
+        })
+      })
+      
+      const result = await emailResponse.json()
+      
+      if (!emailResponse.ok) {
+        throw new Error(`Resend API error: ${JSON.stringify(result)}`)
+      }
+      
+      console.log('✅ Email sent successfully:', result)
       
       return c.json({
         success: true,
@@ -809,12 +845,12 @@ app.post('/api/contact', async (c) => {
           name,
           email,
           timestamp: new Date().toISOString(),
-          emailId: emailResponse.data?.id
+          emailId: result.id
         }
       })
       
     } catch (emailError) {
-      console.error('Resend email error:', emailError)
+      console.error('❌ Resend email error:', emailError)
       
       // 이메일 발송 실패 시에도 폼 제출은 성공으로 처리 (로그는 남김)
       console.log('Contact form data saved to logs:', {

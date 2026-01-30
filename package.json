@@ -11,8 +11,7 @@
     "clean-port": "fuser -k 3000/tcp 2>/dev/null || true"
   },
   "dependencies": {
-    "hono": "^4.11.7",
-    "resend": "^6.9.1"
+    "hono": "^4.11.7"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
