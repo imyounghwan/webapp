@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div style="max-width:500px;margin:0 auto;">
                     <div style="background:#e5e7eb;height:30px;border-radius:15px;overflow:hidden;position:relative;">
-                        <div id="progressBar" style="background:linear-gradient(90deg, #3b82f6, #2563eb);height:100%;width:0%;transition:width 0.3s;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:14px;"></div>
+                        <div id="progressBar" style="background:linear-gradient(90deg, #0066FF, #00C9A7);height:100%;width:0%;transition:width 0.3s;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:14px;"></div>
                     </div>
                     <div id="progressText" style="margin-top:15px;color:#6b7280;font-size:14px;">페이지 분석 중...</div>
                 </div>
@@ -207,7 +207,7 @@ function displayResults(data, resultElement) {
                 <div style="display:flex;justify-content:center;gap:30px;margin-top:15px;">
                     <div>
                         <div style="font-size:12px;color:#6b7280;">편의성</div>
-                        <div style="font-size:24px;font-weight:bold;color:#059669;">${predicted_score.convenience.toFixed(2)}</div>
+                        <div style="font-size:24px;font-weight:bold;color:#00C9A7;">${predicted_score.convenience.toFixed(2)}</div>
                     </div>
                     <div>
                         <div style="font-size:12px;color:#6b7280;">디자인</div>
@@ -237,7 +237,7 @@ function displayResults(data, resultElement) {
     ` : '';
     
     // 편의성 항목
-    let convenienceHTML = '<h3 style="color:#059669;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #059669;">📊 편의성 항목 (21개)</h3>';
+    let convenienceHTML = '<h3 style="color:#00C9A7;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
     predicted_score.convenience_items.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-conv-${itemIndex}`;
@@ -248,7 +248,7 @@ function displayResults(data, resultElement) {
                         <div style="font-weight:bold;color:#1f2937;font-size:16px;margin-bottom:5px;">
                             ${item.item}
                         </div>
-                        <div style="font-size:11px;color:#3b82f6;font-weight:600;">${item.principle || ''}</div>
+                        <div style="font-size:11px;color:#0066FF;font-weight:600;">${item.principle || ''}</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
@@ -260,9 +260,9 @@ function displayResults(data, resultElement) {
                             data-original-score="${item.score}"
                             data-url="${url}"
                             data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
-                            style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
-                            onmouseover="this.style.background='#2563eb'"
-                            onmouseout="this.style.background='#3b82f6'"
+                            style="background:#0066FF;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
+                            onmouseover="this.style.background='#00C9A7'"
+                            onmouseout="this.style.background='#0066FF'"
                         >
                             ✏️ 수정
                         </button>
@@ -480,7 +480,7 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
                     max="5.0" 
                     step="0.5" 
                     value="${currentScore}"
-                    style="width:80px;font-size:24px;font-weight:bold;padding:4px 8px;border:2px solid #3b82f6;border-radius:6px;text-align:center;"
+                    style="width:80px;font-size:24px;font-weight:bold;padding:4px 8px;border:2px solid #0066FF;border-radius:6px;text-align:center;"
                 />
             </div>
             <div style="display:flex;gap:4px;">
@@ -523,7 +523,7 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
             <textarea 
                 id="${itemId}-diagnosis-input" 
                 placeholder="진단 결과를 입력하세요"
-                style="width:100%;min-height:80px;font-size:13px;padding:8px;border:2px solid #3b82f6;border-radius:4px;resize:vertical;font-family:inherit;line-height:1.6;"
+                style="width:100%;min-height:80px;font-size:13px;padding:8px;border:2px solid #0066FF;border-radius:4px;resize:vertical;font-family:inherit;line-height:1.6;"
             >${currentDiagnosis}</textarea>
         `;
     }
@@ -643,7 +643,7 @@ window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
     const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
     
     const isConvenienceItem = itemId.includes('conv');
-    const buttonBgColor = isConvenienceItem ? '#3b82f6' : '#7c3aed';
+    const buttonBgColor = isConvenienceItem ? '#0066FF' : '#9333EA';
     const buttonHoverColor = isConvenienceItem ? '#2563eb' : '#6d28d9';
     
     // 원래 상태로 복원
