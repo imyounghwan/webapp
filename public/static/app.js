@@ -450,10 +450,21 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         return;
     }
     
-    // 원본 요소들을 미리 저장
-    const scoreElement = document.getElementById(`${itemId}-score`);
-    const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
-    const scoreContainer = scoreElement.parentElement;
+    // 카드 전체 요소 찾기
+    const itemCard = document.getElementById(itemId);
+    if (!itemCard) {
+        console.error('❌ itemCard not found:', itemId);
+        alert('오류: 항목을 찾을 수 없습니다.');
+        return;
+    }
+    
+    // 점수 영역 찾기 (카드 내부에서 검색)
+    const scoreContainer = itemCard.querySelector(`#${itemId}-score`)?.parentElement;
+    if (!scoreContainer) {
+        console.error('❌ scoreContainer not found for itemId:', itemId);
+        alert('오류: 점수 영역을 찾을 수 없습니다.');
+        return;
+    }
     
     // 로딩 표시
     scoreContainer.innerHTML = '<div style="color:#3b82f6;text-align:center;padding:20px;">저장 중...</div>';
