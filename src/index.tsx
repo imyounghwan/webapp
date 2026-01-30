@@ -41,27 +41,44 @@ async function extractSubPages(mainUrl: string, html: string, limit: number = 10
   
   while ((match = linkRegex.exec(html)) !== null && subPages.length < limit) {
     let href = match[1]
+    const originalHref = href
+    
+    // #으로 시작하는 순수 앵커는 스킵
+    if (href.startsWith('#')) {
+      continue
+    }
+    
+    // #이 있으면 제거 (예: _about.html#section → _about.html)
+    if (href.includes('#')) {
+      href = href.split('#')[0]
+    }
+    
+    // javascript:, mailto: 등은 스킵
+    if (href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+      continue
+    }
     
     // 절대 경로로 변환
     if (href.startsWith('/')) {
       // /로 시작하는 절대 경로
       href = baseUrl + href
     } else if (href.startsWith('http://') || href.startsWith('https://')) {
-      // 이미 완전한 URL
-      // 그대로 사용
-    } else if (!href.startsWith('#') && !href.startsWith('javascript:') && !href.startsWith('mailto:')) {
+      // 이미 완전한 URL - 같은 도메인만 허용
+      if (!href.startsWith(baseUrl)) {
+        continue
+      }
+    } else if (href && !href.startsWith('void(')) {
       // 상대 경로 (예: _about.html, sub/page.html)
       href = baseUrl + basePath + href
     } else {
-      // #, javascript:, mailto: 등은 스킵
       continue
     }
     
-    // 같은 도메인만, 메인 페이지 제외
-    if (href.startsWith(baseUrl) && 
+    // 필터링
+    if (href && 
+        href.startsWith(baseUrl) && 
         href !== mainUrl && 
         href !== mainUrl + '/' &&
-        !href.includes('#') && 
         !href.includes('javascript:') &&
         !href.includes('void(0)') &&
         !href.includes('login') &&
@@ -71,8 +88,11 @@ async function extractSubPages(mainUrl: string, html: string, limit: number = 10
         !href.endsWith('.pdf') &&
         !href.endsWith('.zip') &&
         !href.endsWith('.jpg') &&
+        !href.endsWith('.jpeg') &&
         !href.endsWith('.png') &&
         !href.endsWith('.gif') &&
+        !href.endsWith('.css') &&
+        !href.endsWith('.js') &&
         href.length < 200) {  // 너무 긴 URL 제외
       if (!subPages.includes(href)) {
         subPages.push(href)
@@ -90,6 +110,7 @@ async function extractSubPages(mainUrl: string, html: string, limit: number = 10
  */
 async function analyzeMultiplePages(mainUrl: string): Promise<any> {
   const results = []
+  const allFoundPages = new Set<string>()
   
   // 1. 메인 페이지 분석
   const mainResponse = await fetch(mainUrl, {
@@ -103,11 +124,16 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
   const mainHtml = await mainResponse.text()
   const mainStructure = analyzeHTML(mainHtml, mainUrl)
   results.push({ url: mainUrl, structure: mainStructure, isMainPage: true })
+  allFoundPages.add(mainUrl)
   
-  // 2. 서브 페이지 추출 및 분석 (최대 9개 = 총 10페이지)
-  const subPages = await extractSubPages(mainUrl, mainHtml, 9)
+  // 2. 메인 페이지에서 서브 페이지 추출
+  const subPagesFromMain = await extractSubPages(mainUrl, mainHtml, 20)
+  subPagesFromMain.forEach(page => allFoundPages.add(page))
   
-  for (const subUrl of subPages) {
+  // 3. 서브 페이지 분석 및 추가 링크 수집 (최대 9개 = 총 10페이지)
+  const pagesToAnalyze = Array.from(allFoundPages).slice(1, 10) // 메인 제외, 최대 9개
+  
+  for (const subUrl of pagesToAnalyze) {
     try {
       const subResponse = await fetch(subUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
@@ -118,12 +144,44 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
         const subHtml = await subResponse.text()
         const subStructure = analyzeHTML(subHtml, subUrl)
         results.push({ url: subUrl, structure: subStructure, isMainPage: false })
+        
+        // 이 서브 페이지에서도 추가 링크 찾기 (부족하면)
+        if (results.length < 10) {
+          const morePagesFromSub = await extractSubPages(subUrl, subHtml, 5)
+          morePagesFromSub.forEach(page => {
+            if (!allFoundPages.has(page) && allFoundPages.size < 20) {
+              allFoundPages.add(page)
+            }
+          })
+        }
       }
     } catch (error) {
       console.log(`Failed to analyze ${subUrl}:`, error)
     }
   }
   
+  // 4. 아직 부족하면 추가로 수집된 페이지들 분석
+  if (results.length < 10) {
+    const remainingPages = Array.from(allFoundPages).slice(results.length, 10)
+    for (const pageUrl of remainingPages) {
+      try {
+        const response = await fetch(pageUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          signal: AbortSignal.timeout(5000)
+        })
+        
+        if (response.ok) {
+          const html = await response.text()
+          const structure = analyzeHTML(html, pageUrl)
+          results.push({ url: pageUrl, structure, isMainPage: false })
+        }
+      } catch (error) {
+        console.log(`Failed to analyze additional page ${pageUrl}:`, error)
+      }
+    }
+  }
+  
+  console.log(`Total analyzed pages: ${results.length}`)
   return results
 }
 
