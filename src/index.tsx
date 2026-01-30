@@ -136,16 +136,25 @@ function generateEvaluationSummary(
     .map(item => item.item)
     .slice(0, 3)
   
-  // 전체 평가 등급
+  // 전체 평가 등급 (점수 + 분포 종합 고려)
   let grade = ''
   let gradeSummary = ''
-  if (overall >= 4.5) {
+  
+  // 우수 항목 비율
+  const excellentRatio = excellent / totalItems
+  
+  // A등급: 평균 4.0+ 이고 우수 항목 50% 이상
+  // B등급: 평균 3.5+ 이거나 우수 항목 40% 이상
+  // C등급: 평균 2.5+ 이거나 보통 이상 항목 70% 이상
+  // D등급: 그 외
+  
+  if (overall >= 4.0 && excellentRatio >= 0.5) {
     grade = 'A등급 (우수)'
-    gradeSummary = '전반적으로 매우 우수한 사용성과 디자인을 보여주고 있습니다.'
-  } else if (overall >= 3.5) {
+    gradeSummary = `전반적으로 매우 우수한 사용성과 디자인을 보여주고 있습니다. (우수 항목 ${Math.round(excellentRatio*100)}%)`
+  } else if (overall >= 3.5 || excellentRatio >= 0.4) {
     grade = 'B등급 (양호)'
     gradeSummary = '전반적으로 양호한 수준이지만, 일부 개선이 필요합니다.'
-  } else if (overall >= 2.5) {
+  } else if (overall >= 2.5 || (excellent + good) / totalItems >= 0.7) {
     grade = 'C등급 (보통)'
     gradeSummary = '기본적인 수준은 갖추었으나 여러 항목에서 개선이 필요합니다.'
   } else {
