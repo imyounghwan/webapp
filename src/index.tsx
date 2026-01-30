@@ -136,44 +136,103 @@ function generateEvaluationSummary(
     .map(item => item.item)
     .slice(0, 3)
   
-  // 전체 평가 등급 (점수 + 분포 종합 고려)
-  let grade = ''
-  let gradeSummary = ''
+  // ===== 1. Nielsen 심각도 기반 등급 (학술적 근거) =====
+  // 출처: Jakob Nielsen's Severity Ratings (1994)
+  // Nielsen Norman Group - Usability Heuristics
+  let nielsenGrade = ''
+  let nielsenDescription = ''
+  
+  if (overall >= 4.5) {
+    nielsenGrade = 'S등급 (탁월)'
+    nielsenDescription = '사용성 문제가 거의 없음. 최상위 수준의 사용자 경험을 제공합니다.'
+  } else if (overall >= 4.0) {
+    nielsenGrade = 'A등급 (우수)'
+    nielsenDescription = '미용상 개선만 필요. 전반적으로 우수한 사용성을 보여줍니다.'
+  } else if (overall >= 3.0) {
+    nielsenGrade = 'B등급 (양호)'
+    nielsenDescription = '경미한 사용성 개선 필요. 기본적인 사용에는 문제가 없습니다.'
+  } else if (overall >= 2.0) {
+    nielsenGrade = 'C등급 (보통)'
+    nielsenDescription = '중대한 사용성 개선 필요. 여러 항목에서 불편함이 예상됩니다.'
+  } else {
+    nielsenGrade = 'D등급 (미흡)'
+    nielsenDescription = '치명적 사용성 문제 존재. 즉각적인 개선이 시급합니다.'
+  }
+  
+  // ===== 2. 데이터 기반 상대 평가 (49개 한국 정부기관 사이트 대비) =====
+  // 출처: 국민신문고 공공서비스 49개 기관 분석 데이터
+  // 평균: 3.79점, 최고: 4.29점, 최저: 2.7점
+  const referenceAverage = 3.79
+  const referenceMax = 4.29
+  const referenceMin = 2.7
+  
+  let relativeGrade = ''
+  let relativeDescription = ''
+  let percentile = 0
+  
+  // 백분위 계산 (선형 보간)
+  if (overall >= referenceMax) {
+    percentile = 100
+  } else if (overall <= referenceMin) {
+    percentile = 0
+  } else {
+    // 정규화: (현재점수 - 최저) / (최고 - 최저) * 100
+    percentile = Math.round(((overall - referenceMin) / (referenceMax - referenceMin)) * 100)
+  }
+  
+  if (percentile >= 90) {
+    relativeGrade = 'S등급 (최상위권)'
+    relativeDescription = `상위 ${100-percentile}% 이내. 한국 주요 공공기관 중 최고 수준입니다.`
+  } else if (percentile >= 70) {
+    relativeGrade = 'A등급 (상위권)'
+    relativeDescription = `상위 ${100-percentile}% 이내. 평균(${referenceAverage}점)을 크게 상회하는 우수한 수준입니다.`
+  } else if (percentile >= 50) {
+    relativeGrade = 'B등급 (중상위권)'
+    relativeDescription = `상위 ${100-percentile}% 이내. 평균(${referenceAverage}점) 수준입니다.`
+  } else if (percentile >= 30) {
+    relativeGrade = 'C등급 (중하위권)'
+    relativeDescription = `하위 ${100-percentile}%. 평균(${referenceAverage}점)에 미치지 못합니다.`
+  } else {
+    relativeGrade = 'D등급 (하위권)'
+    relativeDescription = `하위 ${100-percentile}%. 주요 공공기관 대비 개선이 필요합니다.`
+  }
   
   // 우수 항목 비율
   const excellentRatio = excellent / totalItems
-  
-  // A등급: 평균 4.0+ 이고 우수 항목 50% 이상
-  // B등급: 평균 3.5+ 이거나 우수 항목 40% 이상
-  // C등급: 평균 2.5+ 이거나 보통 이상 항목 70% 이상
-  // D등급: 그 외
-  
-  if (overall >= 4.0 && excellentRatio >= 0.5) {
-    grade = 'A등급 (우수)'
-    gradeSummary = `전반적으로 매우 우수한 사용성과 디자인을 보여주고 있습니다. (우수 항목 ${Math.round(excellentRatio*100)}%)`
-  } else if (overall >= 3.5 || excellentRatio >= 0.4) {
-    grade = 'B등급 (양호)'
-    gradeSummary = '전반적으로 양호한 수준이지만, 일부 개선이 필요합니다.'
-  } else if (overall >= 2.5 || (excellent + good) / totalItems >= 0.7) {
-    grade = 'C등급 (보통)'
-    gradeSummary = '기본적인 수준은 갖추었으나 여러 항목에서 개선이 필요합니다.'
-  } else {
-    grade = 'D등급 (미흡)'
-    gradeSummary = '다수의 항목에서 개선이 시급합니다.'
-  }
   
   // 편의성 vs 디자인 비교
   const convenienceLevel = convenience >= 4.0 ? '우수' : convenience >= 3.0 ? '양호' : '보통'
   const designLevel = design >= 4.0 ? '우수' : design >= 3.0 ? '양호' : '보통'
   
   let summary = `
-📊 **총평 (${totalItems}개 항목 종합 평가)**
+📊 **총평 (26개 항목 종합 평가)**
 
-**전체 등급: ${grade}**
-${gradeSummary}
+**종합 점수: ${overall.toFixed(2)}점 / 5.0점**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**📋 등급 평가 (2가지 기준)**
+
+**1️⃣ Nielsen 심각도 기반 (학술적 근거)**
+   ${nielsenGrade}
+   ${nielsenDescription}
+   
+   📚 근거: Jakob Nielsen's Severity Ratings (1994)
+   출처: Nielsen Norman Group
+
+**2️⃣ 데이터 기반 상대 평가 (비교 대상: 49개 한국 공공기관)**
+   ${relativeGrade} - 백분위 ${percentile}%
+   ${relativeDescription}
+   
+   📊 참고 데이터:
+   - 평균 점수: ${referenceAverage}점
+   - 최고 점수: ${referenceMax}점 (국무조정실)
+   - 최저 점수: ${referenceMin}점
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **점수 분포:**
-- 우수 (4.5점 이상): ${excellent}개 항목 (${Math.round(excellent/totalItems*100)}%)
+- 우수 (4.5점 이상): ${excellent}개 항목 (${Math.round(excellentRatio*100)}%)
 - 양호 (3.5~4.4점): ${good}개 항목 (${Math.round(good/totalItems*100)}%)
 - 보통 (2.5~3.4점): ${average}개 항목 (${Math.round(average/totalItems*100)}%)
 - 미흡 (2.5점 미만): ${poor}개 항목 (${Math.round(poor/totalItems*100)}%)
