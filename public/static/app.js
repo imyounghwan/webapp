@@ -12,6 +12,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
+    // 페이지 로드 시 localStorage에서 이전 분석 결과 복원
+    const savedResult = localStorage.getItem('lastAnalysisResult');
+    const savedUrl = localStorage.getItem('lastAnalysisUrl');
+    if (savedResult && savedUrl) {
+        console.log('📦 Restoring saved analysis result...');
+        try {
+            const data = JSON.parse(savedResult);
+            analyzeUrl.value = savedUrl;
+            displayResults(data, analyzeResult);
+        } catch (e) {
+            console.error('Failed to restore saved result:', e);
+            localStorage.removeItem('lastAnalysisResult');
+            localStorage.removeItem('lastAnalysisUrl');
+        }
+    }
+    
     analyzeBtn.addEventListener('click', async () => {
         const url = analyzeUrl.value;
         
@@ -98,6 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function displayResults(data, resultElement) {
     const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary } = data;
+    
+    // localStorage에 분석 결과 저장 (새로고침 시 복원용)
+    try {
+        localStorage.setItem('lastAnalysisResult', JSON.stringify(data));
+        localStorage.setItem('lastAnalysisUrl', url);
+        console.log('💾 Analysis result saved to localStorage');
+    } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+    }
     
     // 분석된 페이지 정보
     const analyzedPagesHTML = analyzed_pages ? `
@@ -485,10 +510,38 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         
         const result = await response.json();
         
-        // 성공! 페이지 새로고침으로 간단하게 처리
-        alert(`✅ 저장 완료!\n\n원본: ${originalScore.toFixed(1)}점 → 수정: ${correctedScore.toFixed(1)}점\n\n페이지를 새로고침하여 결과를 확인하세요.`);
+        // 성공! localStorage 업데이트
+        const savedResult = localStorage.getItem('lastAnalysisResult');
+        if (savedResult) {
+            try {
+                const data = JSON.parse(savedResult);
+                // 수정된 점수를 반영하여 다시 저장
+                if (data.predicted_score) {
+                    // 편의성/디자인 항목 찾아서 업데이트
+                    const items = data.predicted_score.convenience_items || [];
+                    const designItems = data.predicted_score.design_items || [];
+                    const allItems = [...items, ...designItems];
+                    
+                    for (let item of allItems) {
+                        if (item.item_id === itemIdValue) {
+                            item.score = correctedScore;
+                            if (correctedDiagnosis) {
+                                item.diagnosis = correctedDiagnosis;
+                            }
+                            break;
+                        }
+                    }
+                    
+                    // 업데이트된 데이터 저장
+                    localStorage.setItem('lastAnalysisResult', JSON.stringify(data));
+                }
+            } catch (e) {
+                console.error('Failed to update localStorage:', e);
+            }
+        }
         
-        // 페이지 새로고침
+        // 성공 메시지 및 새로고침
+        alert(`✅ 저장 완료!\n\n항목: ${itemName}\n원본: ${originalScore.toFixed(1)}점 → 수정: ${correctedScore.toFixed(1)}점\n\n페이지를 새로고침하여 결과를 확인하세요.`);
         location.reload();
         
     } catch (error) {
