@@ -123,18 +123,116 @@
         .hero::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, rgba(0, 102, 255, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(10, 14, 39, 0.7) 100%),
+                url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI4MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6IzAwNjZGRjtzdG9wLW9wYWNpdHk6MC4zIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMDBDOUE3O3N0b3Atb3BhY2l0eTowLjEiLz48L2xpbmVhckdyYWRpZW50PjxyYWRpYWxHcmFkaWVudCBpZD0iZzIiPjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMwMDY2RkY7c3RvcC1vcGFjaXR5OjAuMiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzAwNjZGRjtzdG9wLW9wYWNpdHk6MCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxNjAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0idXJsKCNnMSkiLz48Y2lyY2xlIGN4PSIxMjAwIiBjeT0iMjAwIiByPSI0MDAiIGZpbGw9InVybCgjZzIpIiBvcGFjaXR5PSIwLjUiLz48Y2lyY2xlIGN4PSI0MDAiIGN5PSI2MDAiIHI9IjMwMCIgZmlsbD0idXJsKCNnMikiIG9wYWNpdHk9IjAuMyIvPjwhLS0gQW5hbHl0aWNzIERhc2hib2FyZCAtLT48cmVjdCB4PSIyMDAiIHk9IjE1MCIgd2lkdGg9IjEyMDAiIGhlaWdodD0iNTAwIiByeD0iMjAiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjIiLz48IS0tIFRvcCBiYXIgLS0+PHJlY3QgeD0iMjAwIiB5PSIxNTAiIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjUwIiByeD0iMjAiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48Y2lyY2xlIGN4PSIyMzUiIGN5PSIxNzUiIHI9IjgiIGZpbGw9IiNGRjVGNTciLz48Y2lyY2xlIGN4PSIyNjAiIGN5PSIxNzUiIHI9IjgiIGZpbGw9IiNGRkJENEQiLz48Y2lyY2xlIGN4PSIyODUiIGN5PSIxNzUiIHI9IjgiIGZpbGw9IiMwMEM5QTciLz48IS0tIFNjb3JlIENhcmRzIC0tPjxyZWN0IHg9IjI1MCIgeT0iMjQwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE1MCIgcng9IjE1IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2U9InJnYmEoMCwxMDIsMjU1LDAuMykiIHN0cm9rZS13aWR0aD0iMiIvPjx0ZXh0IHg9IjQwMCIgeT0iMjkwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjMDA2NkZGIj40LjU8L3RleHQ+PHRleHQgeD0iNDAwIiB5PSIzMzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC41KSI+7Ke466qF7ISxPC90ZXh0PjxyZWN0IHg9IjYwMCIgeT0iMjQwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE1MCIgcng9IjE1IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2U9InJnYmEoMCwyMDEsMTY3LDAuMykiIHN0cm9rZS13aWR0aD0iMiIvPjx0ZXh0IHg9Ijc1MCIgeT0iMjkwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjMDBDOUE3Ij40LjI8L3RleHQ+PHRleHQgeD0iNzUwIiB5PSIzMzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC41KSI+65SU7J6Q7J28PC90ZXh0PjxyZWN0IHg9Ijk1MCIgeT0iMjQwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE1MCIgcng9IjE1IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2U9InJnYmEoMTQ3LDUxLDIzNCwwLjMpIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSIxMTAwIiB5PSIyOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNDgiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiM5MzMzRUEiPjQuMzwvdGV4dD48dGV4dCB4PSIxMTAwIiB5PSIzMzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC41KSI+7KKF7ZWpPC90ZXh0PjwhLS0gQ2hhcnQgQXJlYSAtLT48cGF0aCBkPSJNIDI4MCA1MDAgTCAzNTAgNDcwIEwgNDIwIDQ5MCBMIDQ5MCA0NDAgTCA1NjAgNDYwIEwgNjMwIDQyMCBMIDcwMCA0NTAgTCA3NzAgNDMwIEwgODQwIDQ3MCBMIDKXMCA0NDAMBMSA5ODAgNDkwIEwgMTA1MCA0NjAgTCAxMTIwIDQ4MCBMIDE5MCA0NTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwNjZGRiIgc3Ryb2tlLXdpZHRoPSIzIiBvcGFjaXR5PSIwLjgiLz48cGF0aCBkPSJNIDI4MCA1MDAgTCAzNTAgNDcwIEwgNDIwIDQ5MCBMIDQ5MCA0NDAgTCA1NjAgNDYwIEwgNjMwIDQyMCBMIDcwMCA0NTAgTCA3NzAgNDMwIEwgODQwIDQ3MCBMIDKXMCA0NDAMBMSA5ODAgNDkwIEwgMTA1MCA0NjAgTCAxMTIwIDQ4MCBMIDE5MCA0NTAgTCAxOTAgNjIwIEwgMjgwIDYyMCBaIiBmaWxsPSJ1cmwoI2cxKSIgb3BhY2l0eT0iMC4yIi8+PC9zdmc+');
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+        }
+        
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 102, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(0, 201, 167, 0.1) 0%, transparent 50%);
             animation: pulse 8s ease-in-out infinite;
+            z-index: 1;
         }
         
         @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+        
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 102, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 102, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+        
+        .floating-elements {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 1400px;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        .floating-card {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 102, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px rgba(0, 102, 255, 0.2);
+        }
+        
+        .floating-card.card-1 {
+            top: 10%;
+            right: 5%;
+            animation: float-1 6s ease-in-out infinite;
+        }
+        
+        .floating-card.card-2 {
+            top: 60%;
+            left: 5%;
+            animation: float-2 7s ease-in-out infinite;
+        }
+        
+        .floating-card.card-3 {
+            bottom: 15%;
+            right: 10%;
+            animation: float-3 8s ease-in-out infinite;
+        }
+        
+        @keyframes float-1 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        
+        @keyframes float-2 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(-2deg); }
+        }
+        
+        @keyframes float-3 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(3deg); }
+        }
+        
+        .mini-chart {
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            height: 30px;
+        }
+        
+        .bar {
+            width: 4px;
+            background: linear-gradient(180deg, #0066FF, #00C9A7);
+            border-radius: 2px;
         }
         
         .hero-container {
@@ -564,6 +662,36 @@
 
     <!-- Hero -->
     <section class="hero">
+        <div class="grid-overlay"></div>
+        
+        <!-- Floating Analytics Elements -->
+        <div class="floating-elements">
+            <div class="floating-card card-1">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">편의성 점수</div>
+                <div style="font-size: 1.8rem; font-weight: 900; color: #0066FF;">4.5</div>
+                <div class="mini-chart" style="margin-top: 12px;">
+                    <div class="bar" style="height: 60%;"></div>
+                    <div class="bar" style="height: 80%;"></div>
+                    <div class="bar" style="height: 90%;"></div>
+                    <div class="bar" style="height: 75%;"></div>
+                    <div class="bar" style="height: 95%;"></div>
+                    <div class="bar" style="height: 85%;"></div>
+                </div>
+            </div>
+            
+            <div class="floating-card card-2">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">분석 완료</div>
+                <div style="font-size: 1.8rem; font-weight: 900; color: #00C9A7;">347건</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px;">↑ 23% from last month</div>
+            </div>
+            
+            <div class="floating-card card-3">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">처리 시간</div>
+                <div style="font-size: 1.8rem; font-weight: 900; color: #9333EA;">10.2s</div>
+                <div style="font-size: 0.7rem; color: #00C9A7; margin-top: 8px;">✓ Real-time</div>
+            </div>
+        </div>
+        
         <div class="hero-container">
             <div class="hero-badge">✨ AI-Powered UI/UX Analysis</div>
             <h1>
