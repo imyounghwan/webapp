@@ -16,6 +16,7 @@ import referenceData from '../analysis/output/final_integrated_scores.json'
 import indexHTML from '../public/index.html?raw'
 import landingHTML from '../public/landing.html?raw'
 import loginHTML from '../public/login.html?raw'
+import adminHTML from '../public/admin.html?raw'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -1031,6 +1032,166 @@ app.get('/api/corrections/:url', async (c) => {
 })
 
 /**
+ * 관리자 평가 수정 저장 API
+ * POST /api/admin/corrections
+ */
+app.post('/api/admin/corrections', authMiddleware, adminMiddleware, async (c) => {
+  const { DB } = c.env
+  const user = c.get('user')
+  
+  try {
+    const correction: CorrectionRequest = await c.req.json()
+    
+    // 검증
+    if (!correction.url || !correction.item_id || !correction.item_name) {
+      return c.json({ success: false, error: '필수 정보가 누락되었습니다.' }, 400)
+    }
+    
+    if (correction.corrected_score < 0 || correction.corrected_score > 5) {
+      return c.json({ success: false, error: '점수는 0~5 사이여야 합니다.' }, 400)
+    }
+    
+    const score_diff = correction.corrected_score - correction.original_score
+    
+    // 보정 데이터 저장
+    const result = await DB.prepare(`
+      INSERT INTO admin_corrections (
+        url, evaluated_at, item_id, item_name,
+        original_score, corrected_score, score_diff,
+        html_structure, correction_reason, admin_comment,
+        corrected_diagnosis, corrected_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      correction.url,
+      correction.evaluated_at,
+      correction.item_id,
+      correction.item_name,
+      correction.original_score,
+      correction.corrected_score,
+      score_diff,
+      correction.html_structure || null,
+      correction.correction_reason || null,
+      correction.admin_comment || null,
+      correction.corrected_diagnosis || null,
+      user.id
+    ).run()
+    
+    // 학습 데이터 요약 업데이트
+    await updateLearningDataSummary(DB, correction.item_id, correction.item_name)
+    
+    return c.json({
+      success: true,
+      message: '평가 수정이 저장되었습니다.',
+      correction_id: result.meta.last_row_id
+    })
+  } catch (error) {
+    console.error('Error saving correction:', error)
+    return c.json({ success: false, error: '평가 수정 저장 중 오류가 발생했습니다.' }, 500)
+  }
+})
+
+/**
+ * 학습 데이터 요약 업데이트 함수
+ */
+async function updateLearningDataSummary(db: D1Database, itemId: string, itemName: string) {
+  try {
+    // 해당 항목의 모든 보정 데이터 집계
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as correction_count,
+        AVG(score_diff) as avg_score_diff,
+        AVG(original_score) as avg_original_score,
+        AVG(corrected_score) as avg_corrected_score
+      FROM admin_corrections
+      WHERE item_id = ?
+    `).bind(itemId).first() as any
+    
+    if (!stats || stats.correction_count === 0) return
+    
+    // learning_data_summary 업데이트 또는 삽입
+    await db.prepare(`
+      INSERT INTO learning_data_summary (
+        item_id, item_name, correction_count,
+        avg_score_diff, avg_original_score, avg_corrected_score,
+        last_updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(item_id) DO UPDATE SET
+        correction_count = excluded.correction_count,
+        avg_score_diff = excluded.avg_score_diff,
+        avg_original_score = excluded.avg_original_score,
+        avg_corrected_score = excluded.avg_corrected_score,
+        last_updated_at = datetime('now')
+    `).bind(
+      itemId,
+      itemName,
+      stats.correction_count,
+      stats.avg_score_diff,
+      stats.avg_original_score,
+      stats.avg_corrected_score
+    ).run()
+    
+  } catch (error) {
+    console.error('Error updating learning data summary:', error)
+  }
+}
+
+/**
+ * 관리자 - 모든 보정 데이터 조회 API
+ * GET /api/admin/corrections
+ */
+app.get('/api/admin/corrections', authMiddleware, adminMiddleware, async (c) => {
+  const { DB } = c.env
+  const limit = parseInt(c.req.query('limit') || '50')
+  const offset = parseInt(c.req.query('offset') || '0')
+  
+  try {
+    const results = await DB.prepare(`
+      SELECT ac.*, u.name as admin_name, u.email as admin_email
+      FROM admin_corrections ac
+      LEFT JOIN users u ON ac.corrected_by = u.id
+      ORDER BY ac.corrected_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all()
+    
+    const countResult = await DB.prepare(`
+      SELECT COUNT(*) as total FROM admin_corrections
+    `).first() as any
+    
+    return c.json({
+      success: true,
+      corrections: results.results,
+      total: countResult?.total || 0,
+      limit,
+      offset
+    })
+  } catch (error) {
+    console.error('Error fetching corrections:', error)
+    return c.json({ success: false, error: '보정 데이터 조회 중 오류가 발생했습니다.' }, 500)
+  }
+})
+
+/**
+ * 관리자 - 특정 보정 데이터 삭제 API
+ * DELETE /api/admin/corrections/:id
+ */
+app.delete('/api/admin/corrections/:id', authMiddleware, adminMiddleware, async (c) => {
+  const { DB } = c.env
+  const id = parseInt(c.req.param('id'))
+  
+  try {
+    await DB.prepare('DELETE FROM admin_corrections WHERE id = ?').bind(id).run()
+    
+    return c.json({
+      success: true,
+      message: '보정 데이터가 삭제되었습니다.'
+    })
+  } catch (error) {
+    console.error('Error deleting correction:', error)
+    return c.json({ success: false, error: '보정 데이터 삭제 중 오류가 발생했습니다.' }, 500)
+  }
+})
+
+/**
  * 학습 데이터 인사이트 조회 API
  * GET /api/learning-insights
  */
@@ -1312,6 +1473,11 @@ app.get('/', (c) => {
 // Serve login page
 app.get('/login', (c) => {
   return c.html(loginHTML)
+})
+
+// Serve admin dashboard
+app.get('/admin', (c) => {
+  return c.html(adminHTML)
 })
 
 // Serve analyzer page

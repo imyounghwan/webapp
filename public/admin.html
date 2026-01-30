@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGINE AutoAnalyzer - 관리자 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 min-h-screen">
+    <!-- 헤더 -->
+    <header class="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3">
+                <h1 class="text-2xl font-bold">
+                    <span class="bg-gradient-to-r from-blue-400 to-cyan-300 text-transparent bg-clip-text">MGINE</span>
+                    <span class="text-white"> AutoAnalyzer</span>
+                </h1>
+            </a>
+            <div class="flex items-center gap-4">
+                <div id="userInfo" class="text-white"></div>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-white mb-2">관리자 대시보드</h2>
+            <p class="text-gray-400">평가 보정 데이터 관리 및 학습 데이터 현황</p>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-300 text-sm">총 보정 건수</h3>
+                    <i class="fas fa-edit text-blue-400 text-2xl"></i>
+                </div>
+                <p id="totalCorrections" class="text-4xl font-bold text-white">-</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-300 text-sm">평균 점수 변화</h3>
+                    <i class="fas fa-chart-line text-cyan-400 text-2xl"></i>
+                </div>
+                <p id="avgScoreDiff" class="text-4xl font-bold text-white">-</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-300 text-sm">학습 데이터 항목</h3>
+                    <i class="fas fa-database text-green-400 text-2xl"></i>
+                </div>
+                <p id="totalItems" class="text-4xl font-bold text-white">-</p>
+            </div>
+        </div>
+
+        <!-- 보정 데이터 목록 -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">최근 보정 데이터</h3>
+                <button onclick="refreshData()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>새로고침
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-white/20">
+                            <th class="pb-3 text-gray-300 font-semibold">날짜</th>
+                            <th class="pb-3 text-gray-300 font-semibold">URL</th>
+                            <th class="pb-3 text-gray-300 font-semibold">항목</th>
+                            <th class="pb-3 text-gray-300 font-semibold">원래 점수</th>
+                            <th class="pb-3 text-gray-300 font-semibold">수정 점수</th>
+                            <th class="pb-3 text-gray-300 font-semibold">차이</th>
+                            <th class="pb-3 text-gray-300 font-semibold">관리자</th>
+                        </tr>
+                    </thead>
+                    <tbody id="correctionsTable">
+                        <tr>
+                            <td colspan="7" class="text-center text-gray-400 py-8">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>데이터를 불러오는 중...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 학습 데이터 인사이트 -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mt-6">
+            <h3 class="text-xl font-bold text-white mb-6">학습 데이터 인사이트</h3>
+            <div id="learningInsights">
+                <p class="text-center text-gray-400 py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>
+                    인사이트를 분석하는 중...
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentUser = null;
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            await loadDashboardData();
+        });
+
+        // 인증 체크
+        async function checkAuth() {
+            const sessionId = localStorage.getItem('session_id');
+            if (!sessionId) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+
+                const data = await response.json();
+                
+                if (!data.success) {
+                    localStorage.removeItem('session_id');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                currentUser = data.user;
+
+                // 관리자 권한 체크
+                if (currentUser.role !== 'admin') {
+                    alert('관리자 권한이 필요합니다.');
+                    window.location.href = '/analyzer';
+                    return;
+                }
+
+                // 사용자 정보 표시
+                document.getElementById('userInfo').innerHTML = `
+                    <span class="text-sm">${currentUser.name} (${currentUser.role})</span>
+                `;
+            } catch (error) {
+                console.error('Auth check error:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // 대시보드 데이터 로드
+        async function loadDashboardData() {
+            const sessionId = localStorage.getItem('session_id');
+            
+            try {
+                // 보정 데이터 조회
+                const correctionsResponse = await fetch('/api/admin/corrections?limit=20', {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                const correctionsData = await correctionsResponse.json();
+
+                // 학습 인사이트 조회
+                const insightsResponse = await fetch('/api/learning-insights', {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                const insightsData = await insightsResponse.json();
+
+                // 통계 업데이트
+                document.getElementById('totalCorrections').textContent = correctionsData.total || 0;
+                
+                if (insightsData.stats) {
+                    const avgDiff = parseFloat(insightsData.stats.avg_score_diff || 0).toFixed(2);
+                    document.getElementById('avgScoreDiff').textContent = avgDiff > 0 ? `+${avgDiff}` : avgDiff;
+                }
+                
+                document.getElementById('totalItems').textContent = insightsData.summary?.length || 0;
+
+                // 보정 데이터 테이블 렌더링
+                renderCorrectionsTable(correctionsData.corrections || []);
+
+                // 학습 인사이트 렌더링
+                renderLearningInsights(insightsData.summary || []);
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                alert('데이터를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 보정 데이터 테이블 렌더링
+        function renderCorrectionsTable(corrections) {
+            const tbody = document.getElementById('correctionsTable');
+            
+            if (corrections.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-gray-400 py-8">보정 데이터가 없습니다.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = corrections.map(c => {
+                const date = new Date(c.corrected_at).toLocaleString('ko-KR');
+                const scoreDiff = (c.corrected_score - c.original_score).toFixed(1);
+                const diffColor = scoreDiff > 0 ? 'text-green-400' : scoreDiff < 0 ? 'text-red-400' : 'text-gray-400';
+                
+                return `
+                    <tr class="border-b border-white/10 hover:bg-white/5">
+                        <td class="py-3 text-gray-300 text-sm">${date}</td>
+                        <td class="py-3 text-gray-300 text-sm max-w-xs truncate" title="${c.url}">${c.url}</td>
+                        <td class="py-3 text-white font-medium">${c.item_name}</td>
+                        <td class="py-3 text-gray-400">${c.original_score.toFixed(1)}</td>
+                        <td class="py-3 text-cyan-400 font-bold">${c.corrected_score.toFixed(1)}</td>
+                        <td class="py-3 ${diffColor} font-bold">${scoreDiff > 0 ? '+' : ''}${scoreDiff}</td>
+                        <td class="py-3 text-gray-300 text-sm">${c.admin_name || 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 학습 인사이트 렌더링
+        function renderLearningInsights(summary) {
+            const container = document.getElementById('learningInsights');
+            
+            if (summary.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400">학습 데이터가 충분하지 않습니다.</p>';
+                return;
+            }
+
+            // 수정 횟수가 많은 순으로 정렬
+            const sorted = [...summary].sort((a, b) => b.correction_count - a.correction_count).slice(0, 10);
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${sorted.map(item => `
+                        <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <h4 class="text-white font-semibold mb-2">${item.item_name}</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <span class="text-gray-400">보정 횟수:</span>
+                                    <span class="text-white font-bold ml-1">${item.correction_count}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400">평균 변화:</span>
+                                    <span class="text-cyan-400 font-bold ml-1">${(item.avg_score_diff || 0).toFixed(2)}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400">원래 평균:</span>
+                                    <span class="text-white ml-1">${(item.avg_original_score || 0).toFixed(2)}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400">수정 평균:</span>
+                                    <span class="text-white ml-1">${(item.avg_corrected_score || 0).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 새로고침
+        async function refreshData() {
+            await loadDashboardData();
+        }
+
+        // 로그아웃
+        function logout() {
+            const sessionId = localStorage.getItem('session_id');
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'X-Session-ID': sessionId }
+            }).then(() => {
+                localStorage.removeItem('session_id');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            });
+        }
+    </script>
+</body>
+</html>

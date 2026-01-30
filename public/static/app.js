@@ -602,11 +602,20 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
     }
     
     try {
+        // 세션 ID 확인
+        const sessionId = localStorage.getItem('session_id');
+        if (!sessionId) {
+            alert('로그인이 필요합니다.');
+            window.location.href = '/login';
+            return;
+        }
+        
         // API 호출
-        const response = await fetch('/api/corrections', {
+        const response = await fetch('/api/admin/corrections', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Session-ID': sessionId
             },
             body: JSON.stringify({
                 url: url,
@@ -618,9 +627,14 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
                 correction_reason: reason || null,
                 admin_comment: reason || null,
                 corrected_diagnosis: correctedDiagnosis || null,
-                corrected_by: 'admin'
+                corrected_by: 1 // user_id from session
             })
         });
+        
+        if (response.status === 401 || response.status === 403) {
+            alert('관리자 권한이 필요합니다.');
+            return;
+        }
         
         if (!response.ok) {
             throw new Error('저장 실패');
