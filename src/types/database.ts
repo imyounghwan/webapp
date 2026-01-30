@@ -12,6 +12,7 @@ export interface AdminCorrection {
   html_structure: string | null;
   correction_reason: string | null;
   admin_comment: string | null;
+  corrected_diagnosis: string | null; // 수정된 진단 텍스트
   corrected_by: string | null;
   corrected_at: string;
   used_for_learning: number; // SQLite boolean (0 or 1)
@@ -38,6 +39,7 @@ export interface CorrectionRequest {
   html_structure?: string;
   correction_reason?: string;
   admin_comment?: string;
+  corrected_diagnosis?: string; // 수정된 진단 텍스트
   corrected_by?: string;
 }
 

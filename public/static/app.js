@@ -165,7 +165,7 @@ function displayResults(data, resultElement) {
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
                         <button 
-                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}')"
+                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}', \`${(item.diagnosis || '').replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)"
                             style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
                             onmouseover="this.style.background='#2563eb'"
                             onmouseout="this.style.background='#3b82f6'"
@@ -193,7 +193,7 @@ function displayResults(data, resultElement) {
                     </div>
                 </div>
                 
-                <div style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
+                <div id="${itemId}-diagnosis" data-original="${(item.diagnosis || '').replace(/"/g, '&quot;')}" style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
                     <div style="font-size:13px;color:#${item.score >= 4.0 ? '166534' : item.score >= 3.0 ? '1e40af' : 'dc2626'};line-height:1.6;">
                         📊 <strong>진단 결과:</strong> ${item.diagnosis || '진단 정보 없음'}
                     </div>
@@ -233,7 +233,7 @@ function displayResults(data, resultElement) {
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
                         <button 
-                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}')"
+                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}', \`${(item.diagnosis || '').replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)"
                             style="background:#7c3aed;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
                             onmouseover="this.style.background='#6d28d9'"
                             onmouseout="this.style.background='#7c3aed'"
@@ -261,7 +261,7 @@ function displayResults(data, resultElement) {
                     </div>
                 </div>
                 
-                <div style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
+                <div id="${itemId}-diagnosis" data-original="${(item.diagnosis || '').replace(/"/g, '&quot;')}" style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
                     <div style="font-size:13px;color:#${item.score >= 4.0 ? '166534' : item.score >= 3.0 ? '1e40af' : 'dc2626'};line-height:1.6;">
                         📊 <strong>진단 결과:</strong> ${item.diagnosis || '진단 정보 없음'}
                     </div>
@@ -299,24 +299,29 @@ function displayResults(data, resultElement) {
 /**
  * 점수 수정 함수 (인라인 편집)
  */
-window.editScore = async function(itemId, itemIdValue, itemName, originalScore, url) {
+window.editScore = async function(itemId, itemIdValue, itemName, originalScore, url, originalDiagnosis) {
     const scoreElement = document.getElementById(`${itemId}-score`);
+    const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
     
     // 현재 점수를 입력 필드로 변경
     const currentScore = parseFloat(scoreElement.textContent);
+    const currentDiagnosis = diagnosisElement ? diagnosisElement.textContent.replace('📊 진단 결과: ', '') : '';
     
     // 수정 UI 생성
     const editHTML = `
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
-            <input 
-                type="number" 
-                id="${itemId}-input" 
-                min="2.0" 
-                max="5.0" 
-                step="0.5" 
-                value="${currentScore}"
-                style="width:80px;font-size:24px;font-weight:bold;padding:4px 8px;border:2px solid #3b82f6;border-radius:6px;text-align:center;"
-            />
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:14px;color:#6b7280;">점수:</span>
+                <input 
+                    type="number" 
+                    id="${itemId}-input" 
+                    min="2.0" 
+                    max="5.0" 
+                    step="0.5" 
+                    value="${currentScore}"
+                    style="width:80px;font-size:24px;font-weight:bold;padding:4px 8px;border:2px solid #3b82f6;border-radius:6px;text-align:center;"
+                />
+            </div>
             <div style="display:flex;gap:4px;">
                 <button 
                     onclick="saveScore('${itemId}', '${itemIdValue}', '${itemName}', ${originalScore}, '${url}')"
@@ -325,7 +330,7 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
                     ✓ 저장
                 </button>
                 <button 
-                    onclick="cancelEdit('${itemId}', ${currentScore})"
+                    onclick="cancelEdit('${itemId}', ${currentScore}, \`${currentDiagnosis.replace(/`/g, '\\`')}\`)"
                     style="background:#ef4444;color:white;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;"
                 >
                     ✗ 취소
@@ -334,12 +339,23 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
             <textarea 
                 id="${itemId}-reason" 
                 placeholder="수정 사유 (선택사항)"
-                style="width:200px;height:60px;font-size:11px;padding:6px;border:1px solid #d1d5db;border-radius:4px;resize:none;"
+                style="width:300px;height:50px;font-size:11px;padding:6px;border:1px solid #d1d5db;border-radius:4px;resize:vertical;"
             ></textarea>
         </div>
     `;
     
     scoreElement.parentElement.innerHTML = editHTML;
+    
+    // 진단 텍스트도 편집 가능하게 변경
+    if (diagnosisElement) {
+        diagnosisElement.innerHTML = `
+            <textarea 
+                id="${itemId}-diagnosis-input" 
+                placeholder="진단 결과를 입력하세요"
+                style="width:100%;min-height:80px;font-size:13px;padding:8px;border:2px solid #3b82f6;border-radius:4px;resize:vertical;font-family:inherit;line-height:1.6;"
+            >${currentDiagnosis}</textarea>
+        `;
+    }
     
     // 입력 필드에 포커스
     document.getElementById(`${itemId}-input`).focus();
@@ -351,9 +367,11 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
 window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, url) {
     const inputElement = document.getElementById(`${itemId}-input`);
     const reasonElement = document.getElementById(`${itemId}-reason`);
+    const diagnosisInputElement = document.getElementById(`${itemId}-diagnosis-input`);
     
     const correctedScore = parseFloat(inputElement.value);
     const reason = reasonElement.value.trim();
+    const correctedDiagnosis = diagnosisInputElement ? diagnosisInputElement.value.trim() : null;
     
     // 유효성 검사
     if (correctedScore < 2.0 || correctedScore > 5.0) {
@@ -362,13 +380,15 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
     }
     
     // 변경사항 없으면 취소
-    if (correctedScore === originalScore) {
-        cancelEdit(itemId, originalScore);
+    if (correctedScore === originalScore && !correctedDiagnosis) {
+        const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
+        const originalDiagnosis = diagnosisElement ? diagnosisElement.getAttribute('data-original') : '';
+        cancelEdit(itemId, originalScore, originalDiagnosis);
         return;
     }
     
     // 로딩 표시
-    inputElement.parentElement.innerHTML = '<div style="color:#3b82f6;">저장 중...</div>';
+    inputElement.parentElement.parentElement.innerHTML = '<div style="color:#3b82f6;text-align:center;padding:20px;">저장 중...</div>';
     
     try {
         // API 호출
@@ -386,6 +406,7 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
                 corrected_score: correctedScore,
                 correction_reason: reason || null,
                 admin_comment: reason || null,
+                corrected_diagnosis: correctedDiagnosis || null,
                 corrected_by: 'admin'
             })
         });
@@ -399,11 +420,14 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         // 성공 메시지
         const scoreColor = correctedScore >= 4.5 ? '#059669' : correctedScore >= 3.5 ? '#3b82f6' : correctedScore >= 2.5 ? '#f59e0b' : '#ef4444';
         const scoreElement = document.getElementById(`${itemId}-score`);
+        const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
+        
+        // 점수 복원
         scoreElement.parentElement.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;">
                 <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${correctedScore.toFixed(1)}</div>
                 <button 
-                    onclick="editScore('${itemId}', '${itemIdValue}', '${itemName}', ${correctedScore}, '${url}')"
+                    onclick="editScore('${itemId}', '${itemIdValue}', '${itemName}', ${correctedScore}, '${url}', \`${(correctedDiagnosis || '').replace(/`/g, '\\`')}\`)"
                     style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
                     onmouseover="this.style.background='#2563eb'"
                     onmouseout="this.style.background='#3b82f6'"
@@ -412,6 +436,18 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
                 </button>
             </div>
         `;
+        
+        // 진단 복원 (수정된 텍스트로)
+        if (diagnosisElement && correctedDiagnosis) {
+            const bgColor = correctedScore >= 4.0 ? 'dcfce7' : correctedScore >= 3.0 ? 'dbeafe' : 'fee2e2';
+            const textColor = correctedScore >= 4.0 ? '166534' : correctedScore >= 3.0 ? '1e40af' : 'dc2626';
+            diagnosisElement.innerHTML = `
+                <div style="font-size:13px;color:#${textColor};line-height:1.6;">
+                    📊 <strong>진단 결과 (관리자 수정):</strong> ${correctedDiagnosis}
+                </div>
+            `;
+            diagnosisElement.setAttribute('data-original', correctedDiagnosis);
+        }
         
         // 수정 완료 알림
         const itemElement = document.getElementById(itemId);
@@ -444,16 +480,17 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
 /**
  * 편집 취소 함수
  */
-window.cancelEdit = function(itemId, originalScore) {
+window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
     const scoreColor = originalScore >= 4.5 ? '#059669' : originalScore >= 3.5 ? '#3b82f6' : originalScore >= 2.5 ? '#f59e0b' : '#ef4444';
     const scoreElement = document.getElementById(`${itemId}-score`);
+    const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
     
     // 원래 상태로 복원
     scoreElement.parentElement.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;">
             <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${originalScore.toFixed(1)}</div>
             <button 
-                onclick="editScore('${itemId}', '', '', ${originalScore}, '')"
+                onclick="editScore('${itemId}', '', '', ${originalScore}, '', \`${(originalDiagnosis || '').replace(/`/g, '\\`')}\`)"
                 style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
                 onmouseover="this.style.background='#2563eb'"
                 onmouseout="this.style.background='#3b82f6'"
@@ -462,4 +499,15 @@ window.cancelEdit = function(itemId, originalScore) {
             </button>
         </div>
     `;
+    
+    // 진단 텍스트 복원
+    if (diagnosisElement && originalDiagnosis) {
+        const bgColor = originalScore >= 4.0 ? 'dcfce7' : originalScore >= 3.0 ? 'dbeafe' : 'fee2e2';
+        const textColor = originalScore >= 4.0 ? '166534' : originalScore >= 3.0 ? '1e40af' : 'dc2626';
+        diagnosisElement.innerHTML = `
+            <div style="font-size:13px;color:#${textColor};line-height:1.6;">
+                📊 <strong>진단 결과:</strong> ${originalDiagnosis}
+            </div>
+        `;
+    }
 }

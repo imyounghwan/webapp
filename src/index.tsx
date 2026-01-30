@@ -671,8 +671,8 @@ app.post('/api/corrections', async (c) => {
       INSERT INTO admin_corrections (
         url, evaluated_at, item_id, item_name,
         original_score, corrected_score, score_diff,
-        html_structure, correction_reason, admin_comment, corrected_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        html_structure, correction_reason, admin_comment, corrected_diagnosis, corrected_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       body.url,
       body.evaluated_at,
@@ -684,6 +684,7 @@ app.post('/api/corrections', async (c) => {
       body.html_structure || null,
       body.correction_reason || null,
       body.admin_comment || null,
+      body.corrected_diagnosis || null,
       body.corrected_by || 'admin'
     ).run()
     
