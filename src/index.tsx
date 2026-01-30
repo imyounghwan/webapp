@@ -108,6 +108,103 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
 }
 
 /**
+ * 26개 항목 평가를 기반으로 총평 생성
+ */
+function generateEvaluationSummary(
+  convenienceItems: any[], 
+  designItems: any[], 
+  overall: number, 
+  convenience: number, 
+  design: number
+): string {
+  const allItems = [...convenienceItems, ...designItems]
+  const totalItems = allItems.length
+  
+  // 점수대별 개수
+  const excellent = allItems.filter(item => item.score >= 4.5).length
+  const good = allItems.filter(item => item.score >= 3.5 && item.score < 4.5).length
+  const average = allItems.filter(item => item.score >= 2.5 && item.score < 3.5).length
+  const poor = allItems.filter(item => item.score < 2.5).length
+  
+  // 강점 찾기 (4.5점 이상)
+  const strengths = allItems.filter(item => item.score >= 4.5)
+    .map(item => item.item)
+    .slice(0, 3)
+  
+  // 개선 필요 항목 (3.0점 미만)
+  const weaknesses = allItems.filter(item => item.score < 3.0)
+    .map(item => item.item)
+    .slice(0, 3)
+  
+  // 전체 평가 등급
+  let grade = ''
+  let gradeSummary = ''
+  if (overall >= 4.5) {
+    grade = 'A등급 (우수)'
+    gradeSummary = '전반적으로 매우 우수한 사용성과 디자인을 보여주고 있습니다.'
+  } else if (overall >= 3.5) {
+    grade = 'B등급 (양호)'
+    gradeSummary = '전반적으로 양호한 수준이지만, 일부 개선이 필요합니다.'
+  } else if (overall >= 2.5) {
+    grade = 'C등급 (보통)'
+    gradeSummary = '기본적인 수준은 갖추었으나 여러 항목에서 개선이 필요합니다.'
+  } else {
+    grade = 'D등급 (미흡)'
+    gradeSummary = '다수의 항목에서 개선이 시급합니다.'
+  }
+  
+  // 편의성 vs 디자인 비교
+  const convenienceLevel = convenience >= 4.0 ? '우수' : convenience >= 3.0 ? '양호' : '보통'
+  const designLevel = design >= 4.0 ? '우수' : design >= 3.0 ? '양호' : '보통'
+  
+  let summary = `
+📊 **총평 (${totalItems}개 항목 종합 평가)**
+
+**전체 등급: ${grade}**
+${gradeSummary}
+
+**점수 분포:**
+- 우수 (4.5점 이상): ${excellent}개 항목 (${Math.round(excellent/totalItems*100)}%)
+- 양호 (3.5~4.4점): ${good}개 항목 (${Math.round(good/totalItems*100)}%)
+- 보통 (2.5~3.4점): ${average}개 항목 (${Math.round(average/totalItems*100)}%)
+- 미흡 (2.5점 미만): ${poor}개 항목 (${Math.round(poor/totalItems*100)}%)
+
+**편의성 평가: ${convenienceLevel} (${convenience.toFixed(1)}점)**
+- 총 ${convenienceItems.length}개 항목 평가
+- 사용자가 목표를 얼마나 쉽고 효율적으로 달성할 수 있는지를 평가합니다.
+
+**디자인 평가: ${designLevel} (${design.toFixed(1)}점)**
+- 총 ${designItems.length}개 항목 평가
+- 시각적 일관성, 미니멀 디자인, 정보 계층 구조를 평가합니다.
+`
+
+  if (strengths.length > 0) {
+    summary += `\n**✅ 주요 강점:**\n`
+    strengths.forEach(s => summary += `- ${s}\n`)
+  }
+  
+  if (weaknesses.length > 0) {
+    summary += `\n**⚠️ 개선 필요:**\n`
+    weaknesses.forEach(w => summary += `- ${w}\n`)
+  }
+  
+  summary += `\n**💡 권고사항:**\n`
+  if (poor > 0) {
+    summary += `- 미흡 항목 ${poor}개에 대한 즉각적인 개선이 필요합니다.\n`
+  }
+  if (average > totalItems / 2) {
+    summary += `- 보통 수준 항목들을 우선적으로 개선하여 전체 품질을 향상시키세요.\n`
+  }
+  if (convenience < design) {
+    summary += `- 편의성 항목이 디자인보다 낮습니다. 사용자 경험 개선에 집중하세요.\n`
+  } else if (design < convenience) {
+    summary += `- 디자인 항목이 편의성보다 낮습니다. 시각적 일관성과 정보 구조 개선이 필요합니다.\n`
+  }
+  
+  return summary
+}
+
+/**
  * 여러 페이지 결과를 종합 (10페이지 평균)
  */
 function aggregateResults(pageResults: any[]): any {
@@ -228,7 +325,10 @@ app.post('/api/analyze', async (c) => {
     
     const convenience = convenienceItems.reduce((sum, s) => sum + s, 0) / convenienceItems.length
     const design = designItems.reduce((sum, s) => sum + s, 0) / designItems.length
-    const overall = (convenience + design) / 2
+    
+    // 전체 점수 = 26개 항목의 평균
+    const allItems = [...convenienceItems, ...designItems]
+    const overall = allItems.reduce((sum, s) => sum + s, 0) / allItems.length
     
     // 5. 응답 포맷 (convenience_items, design_items 포함)
     const convenience_items_detail: any[] = []
@@ -359,12 +459,12 @@ app.post('/api/analyze', async (c) => {
         nielsen_diagnoses: improvedDiagnoses
       },
       improvements: {
-        total_items: 22,  // 개선: 25 → 22개 독립 항목
+        total_items: 26,  // 총 26개 평가 항목 (편의성 21개 + 디자인 5개)
         removed_duplicates: 3,  // N3.2, N9.1, N9.3 제거
         new_items: 3,  // N7.3, N9.2, N9.4 추가/강화
-        score_levels: 7,  // 2단계 → 7단계 세밀화
-        search_detection: 'improved'  // 검색 탐지 개선
+        score_levels: 7  // 2단계 → 7단계 세밀화
       },
+      summary: generateEvaluationSummary(convenience_items_detail, design_items_detail, overall, convenience, design),
       recommendations
     })
 

@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function displayResults(data, resultElement) {
-    const { predicted_score, url, analysis_date, version, improvements, analyzed_pages } = data;
+    const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary } = data;
     
     // 분석된 페이지 정보
     const analyzedPagesHTML = analyzed_pages ? `
@@ -73,9 +73,9 @@ function displayResults(data, resultElement) {
         <div style="background:#e0f2fe;border-left:4px solid #0ea5e9;padding:15px;margin-bottom:20px;border-radius:8px;">
             <div style="font-weight:bold;color:#075985;margin-bottom:10px;">📊 평가 체계 v${version || '3.0'} 개선사항</div>
             <div style="font-size:13px;color:#0c4a6e;line-height:1.8;">
-                ✅ 총 ${improvements.total_items}개 독립 항목 (중복 ${improvements.removed_duplicates}개 제거)<br>
+                ✅ 총 ${improvements.total_items}개 평가 항목 (편의성 ${predicted_score.convenience_items.length}개 + 디자인 ${predicted_score.design_items.length}개)<br>
                 ✅ ${improvements.score_levels}단계 점수 체계 (2단계→7단계)<br>
-                ✅ 검색 탐지 개선: ${improvements.search_detection}
+                ✅ 중복 ${improvements.removed_duplicates}개 제거 및 ${improvements.new_items}개 항목 강화
             </div>
         </div>
     ` : '';
@@ -99,6 +99,14 @@ function displayResults(data, resultElement) {
             </div>
         </div>
     `;
+    
+    // 총평
+    const summaryHTML = summary ? `
+        <div style="background:#fefce8;border:2px solid #eab308;border-radius:12px;padding:20px;margin-bottom:20px;">
+            <div style="font-size:18px;font-weight:bold;color:#854d0e;margin-bottom:15px;">📋 종합 평가 총평</div>
+            <div style="font-size:14px;color:#713f12;line-height:1.8;white-space:pre-line;">${summary}</div>
+        </div>
+    ` : '';
     
     // 편의성 항목
     let convenienceHTML = '<h3 style="color:#059669;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #059669;">📊 편의성 항목 (21개)</h3>';
@@ -219,6 +227,7 @@ function displayResults(data, resultElement) {
             ${analyzedPagesHTML}
             ${improvementsHTML}
             ${scoreHTML}
+            ${summaryHTML}
             ${convenienceHTML}
             ${designHTML}
         </div>
