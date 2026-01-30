@@ -377,13 +377,13 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
             </div>
             <div style="display:flex;gap:4px;">
                 <button 
-                    onclick="saveScore('${itemId}', '${itemIdValue}', '${itemName}', ${originalScore}, '${url}')"
+                    id="${itemId}-save-btn"
                     style="background:#10b981;color:white;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;"
                 >
                     ✓ 저장
                 </button>
                 <button 
-                    onclick="cancelEdit('${itemId}', ${currentScore}, \`${currentDiagnosis.replace(/`/g, '\\`')}\`)"
+                    id="${itemId}-cancel-btn"
                     style="background:#ef4444;color:white;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;"
                 >
                     ✗ 취소
@@ -398,6 +398,16 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
     `;
     
     scoreElement.parentElement.innerHTML = editHTML;
+    
+    // 저장 버튼에 이벤트 리스너 추가
+    document.getElementById(`${itemId}-save-btn`).addEventListener('click', () => {
+        saveScore(itemId, itemIdValue, itemName, originalScore, url);
+    });
+    
+    // 취소 버튼에 이벤트 리스너 추가
+    document.getElementById(`${itemId}-cancel-btn`).addEventListener('click', () => {
+        cancelEdit(itemId, currentScore, currentDiagnosis);
+    });
     
     // 진단 텍스트도 편집 가능하게 변경
     if (diagnosisElement) {
