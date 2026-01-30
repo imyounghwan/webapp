@@ -97,7 +97,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
   'N4_2': {
     id: 'N4.2',
     name: '용어 일관성',
-    category: '디자인',
+    category: '편의성',
     principle: 'N4: 일관성과 표준',
     description: '같은 개념을 같은 단어로 일관되게 표현합니다.',
     why_important: '같은 것을 다르게 부르면 사용자가 혼란스럽습니다.',
@@ -106,7 +106,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
   'N4_3': {
     id: 'N4.3',
     name: '표준 준수',
-    category: '디자인',
+    category: '편의성',
     principle: 'N4: 일관성과 표준',
     description: 'HTML, 접근성 등 웹 표준을 따릅니다 (lang, alt, ARIA 등).',
     why_important: '표준을 따르지 않으면 보조 기술이 제대로 작동하지 않습니다.',

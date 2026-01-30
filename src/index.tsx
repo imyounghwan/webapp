@@ -198,10 +198,12 @@ app.post('/api/analyze', async (c) => {
       improvedScores.N1_1_current_location,
       improvedScores.N1_2_loading_status,
       improvedScores.N1_3_action_feedback,
-      improvedScores.N2_1_familiar_terms,      // N2.1 편의성으로 이동
-      improvedScores.N2_2_natural_flow,        // N2.2 편의성으로 이동
+      improvedScores.N2_1_familiar_terms,
+      improvedScores.N2_2_natural_flow,
       improvedScores.N3_1_undo_redo,
       improvedScores.N3_3_flexible_navigation,
+      improvedScores.N4_2_terminology_consistency,  // N4.2 편의성으로 이동
+      improvedScores.N4_3_standard_compliance,      // N4.3 편의성으로 이동
       improvedScores.N5_1_input_validation,
       improvedScores.N5_2_confirmation_dialog,
       improvedScores.N5_3_constraints,
@@ -210,17 +212,15 @@ app.post('/api/analyze', async (c) => {
       improvedScores.N7_1_quick_access,
       improvedScores.N7_2_customization,
       improvedScores.N7_3_search_filter,
-      improvedScores.N9_2_recovery_support,    // N9.2 편의성으로 이동
-      improvedScores.N9_4_error_guidance,      // N9.4 편의성으로 이동
-      improvedScores.N10_1_help_visibility,    // N10.1 편의성으로 이동
-      improvedScores.N10_2_documentation,      // N10.2 편의성으로 이동
+      improvedScores.N9_2_recovery_support,
+      improvedScores.N9_4_error_guidance,
+      improvedScores.N10_1_help_visibility,
+      improvedScores.N10_2_documentation,
     ]
     
     const designItems = [
       improvedScores.N2_3_real_world_metaphor,
       improvedScores.N4_1_visual_consistency,
-      improvedScores.N4_2_terminology_consistency,
-      improvedScores.N4_3_standard_compliance,
       improvedScores.N8_1_essential_info,
       improvedScores.N8_2_clean_interface,
       improvedScores.N8_3_visual_hierarchy,
@@ -243,6 +243,8 @@ app.post('/api/analyze', async (c) => {
       { key: 'N2.2_자연스러운_흐름', id: 'N2_2' },
       { key: 'N3.1_실행_취소', id: 'N3_1' },
       { key: 'N3.3_유연한_네비게이션', id: 'N3_3' },
+      { key: 'N4.2_용어_일관성', id: 'N4_2' },
+      { key: 'N4.3_표준_준수', id: 'N4_3' },
       { key: 'N5.1_입력_검증', id: 'N5_1' },
       { key: 'N5.2_확인_대화상자', id: 'N5_2' },
       { key: 'N5.3_제약_조건_표시', id: 'N5_3' },
@@ -261,6 +263,7 @@ app.post('/api/analyze', async (c) => {
       'N1_1_current_location', 'N1_2_loading_status', 'N1_3_action_feedback',
       'N2_1_familiar_terms', 'N2_2_natural_flow',
       'N3_1_undo_redo', 'N3_3_flexible_navigation',
+      'N4_2_terminology_consistency', 'N4_3_standard_compliance',
       'N5_1_input_validation', 'N5_2_confirmation_dialog', 'N5_3_constraints',
       'N6_2_recognition_cues', 'N6_3_memory_load',
       'N7_1_quick_access', 'N7_2_customization', 'N7_3_search_filter',
@@ -293,8 +296,6 @@ app.post('/api/analyze', async (c) => {
     const designMapping = [
       { key: 'N2.3_현실_세계_은유', id: 'N2_3' },
       { key: 'N4.1_시각적_일관성', id: 'N4_1' },
-      { key: 'N4.2_용어_일관성', id: 'N4_2' },
-      { key: 'N4.3_표준_준수', id: 'N4_3' },
       { key: 'N8.1_핵심_정보', id: 'N8_1' },
       { key: 'N8.2_깔끔한_인터페이스', id: 'N8_2' },
       { key: 'N8.3_시각적_계층', id: 'N8_3' },
@@ -302,7 +303,7 @@ app.post('/api/analyze', async (c) => {
     
     const designDiagnosisKeys = [
       'N2_3_real_world_metaphor',
-      'N4_1_visual_consistency', 'N4_2_terminology_consistency', 'N4_3_standard_compliance',
+      'N4_1_visual_consistency',
       'N8_1_essential_info', 'N8_2_clean_interface', 'N8_3_visual_hierarchy',
     ]
     
