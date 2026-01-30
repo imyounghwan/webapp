@@ -3,11 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MGINE AutoAnalyzer - AI 기반 웹사이트 UI/UX 자동 평가 시스템</title>
+    <title>MGINE AutoAnalyzer - AI 기반 웹사이트 UI/UX 자동 평가</title>
     <meta name="description" content="10초만에 웹사이트의 UI/UX를 자동으로 평가하고 개선점을 제안하는 AI 기반 분석 시스템">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #0066FF;
+            --primary-dark: #0052CC;
+            --secondary: #00C9A7;
+            --dark: #0A0E27;
+            --dark-light: #151A30;
+            --text: #E5E7EB;
+            --text-muted: #9CA3AF;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -15,11 +25,11 @@
         }
         
         body {
-            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            line-height: 1.8;
-            color: #333;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
             overflow-x: hidden;
-            background: #fff;
         }
         
         /* Header */
@@ -28,65 +38,84 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             z-index: 1000;
-            padding: 20px 0;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
         }
         
         .header-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 40px;
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .logo {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #2563eb;
-            letter-spacing: -1px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0066FF, #00C9A7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
         }
         
         .nav {
             display: flex;
-            gap: 40px;
+            gap: 50px;
             align-items: center;
         }
         
         .nav a {
-            color: #333;
+            color: var(--text);
             text-decoration: none;
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: color 0.3s;
+            position: relative;
         }
         
         .nav a:hover {
-            color: #2563eb;
+            color: var(--primary);
+        }
+        
+        .nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .nav a:hover::after {
+            width: 100%;
         }
         
         .btn-demo {
-            background: #2563eb;
+            background: var(--primary);
             color: white;
-            padding: 12px 30px;
-            border-radius: 30px;
+            padding: 12px 28px;
+            border-radius: 10px;
             font-weight: 600;
             transition: all 0.3s;
+            font-size: 0.95rem;
         }
         
         .btn-demo:hover {
-            background: #1d4ed8;
+            background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
         }
         
-        /* Hero Section */
+        /* Hero */
         .hero {
-            padding: 180px 40px 120px;
-            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            padding: 160px 40px 100px;
             position: relative;
             overflow: hidden;
         }
@@ -95,231 +124,246 @@
             content: '';
             position: absolute;
             top: -50%;
-            right: -20%;
-            width: 100%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
-            animation: float 15s ease-in-out infinite;
+            right: -10%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0, 102, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 8s ease-in-out infinite;
         }
         
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(-50px, 50px) rotate(5deg); }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
         }
         
         .hero-container {
             max-width: 1400px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 80px;
-            align-items: center;
+            text-align: center;
             position: relative;
             z-index: 1;
         }
         
-        .hero-content h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            line-height: 1.2;
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(0, 102, 255, 0.1);
+            border: 1px solid rgba(0, 102, 255, 0.3);
+            border-radius: 50px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
             margin-bottom: 30px;
-            color: #1e293b;
-            letter-spacing: -2px;
         }
         
-        .hero-content .highlight {
-            color: #2563eb;
+        .hero h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 30px;
+            letter-spacing: -3px;
         }
         
-        .hero-content p {
-            font-size: 1.3rem;
-            color: #64748b;
-            margin-bottom: 40px;
+        .gradient-text {
+            background: linear-gradient(135deg, #0066FF 0%, #00C9A7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1.35rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 50px;
             line-height: 1.8;
-            font-weight: 400;
         }
         
         .hero-buttons {
             display: flex;
             gap: 20px;
+            justify-content: center;
+            margin-bottom: 80px;
         }
         
         .btn {
-            padding: 16px 40px;
-            border-radius: 50px;
-            font-size: 1.1rem;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.05rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
+            display: inline-block;
+            border: none;
         }
         
         .btn-primary {
-            background: #2563eb;
+            background: linear-gradient(135deg, #0066FF, #0052CC);
             color: white;
-            border: 2px solid #2563eb;
+            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
         }
         
         .btn-primary:hover {
-            background: #1d4ed8;
-            border-color: #1d4ed8;
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 15px 40px rgba(0, 102, 255, 0.5);
         }
         
         .btn-secondary {
-            background: transparent;
-            color: #2563eb;
-            border: 2px solid #2563eb;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
         }
         
         .btn-secondary:hover {
-            background: #2563eb;
-            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
             transform: translateY(-3px);
-        }
-        
-        .hero-visual {
-            position: relative;
-        }
-        
-        .hero-image {
-            width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
-            background: white;
-            padding: 30px;
         }
         
         /* Stats */
         .stats {
-            padding: 80px 40px;
-            background: white;
-        }
-        
-        .stats-container {
-            max-width: 1400px;
-            margin: 0 auto;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 60px;
-            text-align: center;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         
-        .stat-item {
-            padding: 30px 20px;
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            transform: translateY(-5px);
         }
         
         .stat-number {
             font-size: 3.5rem;
             font-weight: 900;
-            color: #2563eb;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #0066FF, #00C9A7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             letter-spacing: -2px;
+            margin-bottom: 10px;
         }
         
         .stat-label {
-            font-size: 1.1rem;
-            color: #64748b;
+            color: var(--text-muted);
+            font-size: 1rem;
             font-weight: 500;
         }
         
         /* Features */
-        .features {
+        .section {
             padding: 120px 40px;
-            background: #f8fafc;
         }
         
         .section-header {
             text-align: center;
-            margin-bottom: 80px;
+            max-width: 800px;
+            margin: 0 auto 80px;
         }
         
-        .section-subtitle {
-            color: #2563eb;
-            font-size: 1rem;
+        .section-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(0, 102, 255, 0.1);
+            border: 1px solid rgba(0, 102, 255, 0.3);
+            border-radius: 50px;
+            color: var(--primary);
+            font-size: 0.75rem;
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         .section-title {
-            font-size: 2.8rem;
+            font-size: 3.5rem;
             font-weight: 900;
-            color: #1e293b;
             margin-bottom: 20px;
-            letter-spacing: -1px;
+            letter-spacing: -2px;
         }
         
         .section-description {
             font-size: 1.2rem;
-            color: #64748b;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        
-        .features-container {
-            max-width: 1400px;
-            margin: 0 auto;
+            color: var(--text-muted);
+            line-height: 1.8;
         }
         
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
         
         .feature-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 24px;
             padding: 50px 40px;
-            border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            border: 1px solid #e2e8f0;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0066FF, #00C9A7);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+        
+        .feature-card:hover::before {
+            transform: scaleX(1);
         }
         
         .feature-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(0, 102, 255, 0.5);
             transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(37, 99, 235, 0.15);
-            border-color: #2563eb;
         }
         
         .feature-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 3rem;
             margin-bottom: 25px;
-            font-size: 2rem;
-            color: white;
+            display: block;
         }
         
         .feature-card h3 {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 15px;
-            color: #1e293b;
+            color: var(--text);
         }
         
         .feature-card p {
-            color: #64748b;
+            color: var(--text-muted);
             line-height: 1.8;
             font-size: 1rem;
         }
         
         /* Process */
-        .process {
-            padding: 120px 40px;
-            background: white;
-        }
-        
         .process-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -328,33 +372,19 @@
         .process-steps {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 60px;
+            gap: 40px;
             margin-top: 80px;
         }
         
         .process-step {
-            text-align: center;
             position: relative;
-        }
-        
-        .process-step::after {
-            content: '→';
-            position: absolute;
-            right: -30px;
-            top: 50px;
-            font-size: 3rem;
-            color: #cbd5e1;
-            font-weight: 300;
-        }
-        
-        .process-step:last-child::after {
-            display: none;
+            text-align: center;
         }
         
         .step-number {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, #0066FF, #00C9A7);
             border-radius: 20px;
             display: flex;
             align-items: center;
@@ -363,115 +393,52 @@
             font-size: 2.5rem;
             font-weight: 900;
             color: white;
+            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
         }
         
         .process-step h3 {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 15px;
-            color: #1e293b;
         }
         
         .process-step p {
-            color: #64748b;
+            color: var(--text-muted);
             line-height: 1.8;
-        }
-        
-        /* Results */
-        .results {
-            padding: 120px 40px;
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: white;
-        }
-        
-        .results-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 40px;
-            margin-top: 80px;
-        }
-        
-        .result-card {
-            text-align: center;
-            padding: 40px 30px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s;
-        }
-        
-        .result-card:hover {
-            background: rgba(255,255,255,0.1);
-            transform: translateY(-5px);
-        }
-        
-        .result-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        
-        .result-value {
-            font-size: 3rem;
-            font-weight: 900;
-            margin-bottom: 10px;
-            letter-spacing: -1px;
-        }
-        
-        .result-label {
-            font-size: 1.1rem;
-            opacity: 0.8;
         }
         
         /* CTA */
         .cta {
-            padding: 120px 40px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.1), rgba(0, 201, 167, 0.1));
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 100px 60px;
             text-align: center;
-            color: white;
-        }
-        
-        .cta-container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         
         .cta h2 {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 900;
             margin-bottom: 25px;
-            letter-spacing: -1px;
+            letter-spacing: -2px;
         }
         
         .cta p {
             font-size: 1.3rem;
+            color: var(--text-muted);
             margin-bottom: 50px;
-            opacity: 0.95;
-        }
-        
-        .cta .btn-primary {
-            background: white;
-            color: #2563eb;
-            border-color: white;
-            font-size: 1.2rem;
-            padding: 18px 50px;
-        }
-        
-        .cta .btn-primary:hover {
-            background: #f8fafc;
-            transform: translateY(-5px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         /* Footer */
         footer {
-            background: #0f172a;
-            color: #94a3b8;
-            padding: 60px 40px 40px;
+            padding: 80px 40px 40px;
+            border-top: 1px solid var(--border);
+            margin-top: 120px;
         }
         
         .footer-container {
@@ -479,26 +446,30 @@
             margin: 0 auto;
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 60px;
-            margin-bottom: 40px;
+            gap: 80px;
+            margin-bottom: 60px;
         }
         
         .footer-brand h3 {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #2563eb;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0066FF, #00C9A7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 20px;
         }
         
         .footer-brand p {
+            color: var(--text-muted);
             line-height: 1.8;
             margin-bottom: 20px;
         }
         
         .footer-section h4 {
-            color: white;
-            font-weight: 700;
+            font-weight: 600;
             margin-bottom: 20px;
+            font-size: 1.1rem;
         }
         
         .footer-section ul {
@@ -510,77 +481,69 @@
         }
         
         .footer-section a {
-            color: #94a3b8;
+            color: var(--text-muted);
             text-decoration: none;
             transition: color 0.3s;
         }
         
         .footer-section a:hover {
-            color: #2563eb;
+            color: var(--primary);
         }
         
         .footer-bottom {
             max-width: 1400px;
             margin: 0 auto;
-            padding-top: 30px;
-            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
             text-align: center;
+            color: var(--text-muted);
         }
         
         /* Responsive */
         @media (max-width: 1200px) {
-            .hero-container {
-                grid-template-columns: 1fr;
-                gap: 60px;
+            .hero h1 {
+                font-size: 4rem;
             }
             
             .features-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
-            .footer-container {
-                grid-template-columns: 1fr 1fr;
-            }
         }
         
         @media (max-width: 768px) {
-            .header-container {
-                padding: 0 20px;
-            }
-            
             .nav {
-                gap: 20px;
+                display: none;
             }
             
             .hero {
-                padding: 140px 20px 80px;
+                padding: 120px 20px 60px;
             }
             
-            .hero-content h1 {
+            .hero h1 {
                 font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
             }
             
             .hero-buttons {
                 flex-direction: column;
             }
             
-            .stats-container {
+            .stats {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 40px;
+                gap: 20px;
             }
             
             .features-grid,
             .process-steps,
-            .results-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .process-step::after {
-                display: none;
-            }
-            
             .footer-container {
                 grid-template-columns: 1fr;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
             }
         }
     </style>
@@ -589,229 +552,146 @@
     <!-- Header -->
     <header class="header">
         <div class="header-container">
-            <div class="logo">MGINE AutoAnalyzer</div>
+            <div class="logo">AutoAnalyzer</div>
             <nav class="nav">
-                <a href="#features">기능</a>
-                <a href="#process">사용방법</a>
-                <a href="#results">성과</a>
-                <a href="/analyzer" class="btn-demo">무료 체험</a>
+                <a href="#features">Features</a>
+                <a href="#process">Process</a>
+                <a href="#about">About</a>
+                <a href="/analyzer" class="btn-demo">Try Demo</a>
             </nav>
         </div>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Hero -->
     <section class="hero">
         <div class="hero-container">
-            <div class="hero-content">
-                <h1>
-                    웹사이트 UI/UX를<br>
-                    <span class="highlight">10초만에</span> 자동 평가
-                </h1>
-                <p>
-                    Nielsen 10원칙 기반 26개 항목을 AI가 자동으로 분석하고,<br>
-                    PDF/PPT 보고서를 즉시 생성합니다.
-                </p>
-                <div class="hero-buttons">
-                    <a href="/analyzer" class="btn btn-primary">
-                        <i class="fas fa-rocket"></i> 무료로 시작하기
-                    </a>
-                    <a href="#features" class="btn btn-secondary">
-                        <i class="fas fa-play-circle"></i> 자세히 보기
-                    </a>
+            <div class="hero-badge">✨ AI-Powered UI/UX Analysis</div>
+            <h1>
+                Analyze Your Website<br>
+                in <span class="gradient-text">10 Seconds</span>
+            </h1>
+            <p>
+                Nielsen 10원칙 기반 26개 항목을 AI가 자동 분석하고,<br>
+                전문가 수준의 평가 보고서를 PDF/PPT로 즉시 생성합니다.
+            </p>
+            <div class="hero-buttons">
+                <a href="/analyzer" class="btn btn-primary">Start Free Analysis</a>
+                <a href="#features" class="btn btn-secondary">Learn More</a>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">10s</div>
+                    <div class="stat-label">분석 시간</div>
                 </div>
-            </div>
-            <div class="hero-visual">
-                <div class="hero-image">
-                    <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Browser Window -->
-                        <rect x="50" y="50" width="700" height="500" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
-                        <rect x="50" y="50" width="700" height="40" rx="10" fill="#e2e8f0"/>
-                        <circle cx="75" cy="70" r="6" fill="#ef4444"/>
-                        <circle cx="95" cy="70" r="6" fill="#f59e0b"/>
-                        <circle cx="115" cy="70" r="6" fill="#10b981"/>
-                        
-                        <!-- Content -->
-                        <rect x="80" y="120" width="640" height="60" rx="5" fill="#2563eb" opacity="0.1"/>
-                        <text x="400" y="155" text-anchor="middle" font-size="24" font-weight="700" fill="#2563eb">UI/UX 분석 중...</text>
-                        
-                        <!-- Score Cards -->
-                        <rect x="80" y="210" width="200" height="120" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1"/>
-                        <text x="180" y="250" text-anchor="middle" font-size="36" font-weight="900" fill="#2563eb">4.5</text>
-                        <text x="180" y="280" text-anchor="middle" font-size="14" fill="#64748b">편의성</text>
-                        
-                        <rect x="300" y="210" width="200" height="120" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1"/>
-                        <text x="400" y="250" text-anchor="middle" font-size="36" font-weight="900" fill="#2563eb">4.2</text>
-                        <text x="400" y="280" text-anchor="middle" font-size="14" fill="#64748b">디자인</text>
-                        
-                        <rect x="520" y="210" width="200" height="120" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1"/>
-                        <text x="620" y="250" text-anchor="middle" font-size="36" font-weight="900" fill="#2563eb">4.3</text>
-                        <text x="620" y="280" text-anchor="middle" font-size="14" fill="#64748b">종합</text>
-                        
-                        <!-- Charts -->
-                        <rect x="80" y="360" width="640" height="160" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1"/>
-                        <path d="M 100 480 L 150 450 L 200 470 L 250 420 L 300 440 L 350 400 L 400 430 L 450 410 L 500 450 L 550 420 L 600 460 L 650 430 L 700 440" 
-                              fill="none" stroke="#2563eb" stroke-width="3"/>
-                    </svg>
+                <div class="stat-card">
+                    <div class="stat-number">26</div>
+                    <div class="stat-label">평가 항목</div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats -->
-    <section class="stats">
-        <div class="stats-container">
-            <div class="stat-item">
-                <div class="stat-number">10초</div>
-                <div class="stat-label">평균 분석 시간</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">26개</div>
-                <div class="stat-label">평가 항목</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">49개</div>
-                <div class="stat-label">학습 데이터</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">4.7/5.0</div>
-                <div class="stat-label">사용자 만족도</div>
+                <div class="stat-card">
+                    <div class="stat-number">49</div>
+                    <div class="stat-label">학습 데이터</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">4.7</div>
+                    <div class="stat-label">만족도</div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Features -->
-    <section class="features" id="features">
-        <div class="features-container">
-            <div class="section-header">
-                <div class="section-subtitle">FEATURES</div>
-                <h2 class="section-title">AutoAnalyzer의 핵심 기능</h2>
-                <p class="section-description">
-                    전문가 수준의 UI/UX 평가를 누구나 쉽게, 빠르게 수행할 수 있습니다
-                </p>
+    <section class="section" id="features">
+        <div class="section-header">
+            <div class="section-badge">Features</div>
+            <h2 class="section-title">Powerful Analysis Engine</h2>
+            <p class="section-description">
+                전문가 수준의 UI/UX 평가를 누구나 쉽고 빠르게 수행할 수 있습니다
+            </p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🤖</span>
+                <h3>AI 자동 분석</h3>
+                <p>Nielsen 10원칙 기반 26개 세부 항목을 자동 평가하고 5점 척도로 점수화합니다.</p>
             </div>
             
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3>AI 자동 분석</h3>
-                    <p>Nielsen 10원칙 기반 26개 세부 항목을 자동 평가하고 5점 척도로 점수화합니다. 메인+서브페이지 최대 10개까지 분석 가능합니다.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">✏️</div>
-                    <h3>실시간 점수 수정</h3>
-                    <p>전문가가 직접 평가 항목을 수정할 수 있으며, 수정 이력은 자동 저장되어 AI 학습에 활용됩니다.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📄</div>
-                    <h3>보고서 자동 생성</h3>
-                    <p>분석 결과를 PDF(A4) 또는 PPT(16:9)로 즉시 변환합니다. 화면 디자인을 100% 보존합니다.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>정확한 진단</h3>
-                    <p>49개 공공기관의 빅데이터를 학습한 AI가 사용성 문제점을 정확하게 진단하고 개선 방안을 제시합니다.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>빠른 처리 속도</h3>
-                    <p>Cloudflare Workers 기반 글로벌 CDN으로 평균 10-30초 만에 분석 완료. 평균 응답 50ms 이하를 보장합니다.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>안전한 데이터 관리</h3>
-                    <p>HTTPS 암호화 통신과 Cloudflare D1 데이터베이스로 분석 데이터를 안전하게 보호합니다.</p>
-                </div>
+            <div class="feature-card">
+                <span class="feature-icon">✏️</span>
+                <h3>실시간 점수 수정</h3>
+                <p>전문가가 직접 평가 항목을 수정할 수 있으며, 수정 이력은 자동 저장됩니다.</p>
+            </div>
+            
+            <div class="feature-card">
+                <span class="feature-icon">📄</span>
+                <h3>보고서 자동 생성</h3>
+                <p>분석 결과를 PDF(A4) 또는 PPT(16:9)로 즉시 변환합니다.</p>
+            </div>
+            
+            <div class="feature-card">
+                <span class="feature-icon">🎯</span>
+                <h3>정확한 진단</h3>
+                <p>49개 공공기관의 빅데이터를 학습한 AI가 사용성 문제점을 정확하게 진단합니다.</p>
+            </div>
+            
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <h3>빠른 처리 속도</h3>
+                <p>Cloudflare Workers 기반 글로벌 CDN으로 평균 10-30초 만에 분석 완료.</p>
+            </div>
+            
+            <div class="feature-card">
+                <span class="feature-icon">🔒</span>
+                <h3>안전한 데이터</h3>
+                <p>HTTPS 암호화 통신과 Cloudflare D1 데이터베이스로 데이터를 안전하게 보호합니다.</p>
             </div>
         </div>
     </section>
 
     <!-- Process -->
-    <section class="process" id="process">
+    <section class="section" id="process">
+        <div class="section-header">
+            <div class="section-badge">How It Works</div>
+            <h2 class="section-title">3단계로 완성</h2>
+            <p class="section-description">
+                복잡한 절차 없이 간단하게 웹사이트를 분석하고 보고서를 받아보세요
+            </p>
+        </div>
+        
         <div class="process-container">
-            <div class="section-header">
-                <div class="section-subtitle">HOW IT WORKS</div>
-                <h2 class="section-title">3단계로 완성되는 UI/UX 평가</h2>
-                <p class="section-description">
-                    복잡한 절차 없이 간단하게 웹사이트를 분석하고 보고서를 받아보세요
-                </p>
-            </div>
-            
             <div class="process-steps">
                 <div class="process-step">
                     <div class="step-number">1</div>
                     <h3>URL 입력</h3>
-                    <p>분석하고 싶은 웹사이트 주소를 입력하세요. 메인 페이지와 함께 서브 페이지도 자동으로 분석됩니다.</p>
+                    <p>분석하고 싶은 웹사이트 주소를 입력하세요.</p>
                 </div>
                 
                 <div class="process-step">
                     <div class="step-number">2</div>
                     <h3>자동 분석</h3>
-                    <p>AI가 10-30초 동안 26개 항목을 자동으로 평가하고, 편의성과 디자인 점수를 산출합니다.</p>
+                    <p>AI가 10-30초 동안 26개 항목을 자동으로 평가합니다.</p>
                 </div>
                 
                 <div class="process-step">
                     <div class="step-number">3</div>
                     <h3>보고서 다운로드</h3>
-                    <p>결과를 확인하고 필요시 수정한 후, PDF 또는 PPT로 다운로드하여 활용하세요.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Results -->
-    <section class="results" id="results">
-        <div class="results-container">
-            <div class="section-header">
-                <div class="section-subtitle" style="color: rgba(255,255,255,0.7);">BETA TEST RESULTS</div>
-                <h2 class="section-title" style="color: white;">베타 테스트 성과</h2>
-                <p class="section-description" style="color: rgba(255,255,255,0.8);">
-                    15개 기업이 먼저 경험하고 검증한 AutoAnalyzer의 성과입니다
-                </p>
-            </div>
-            
-            <div class="results-grid">
-                <div class="result-card">
-                    <div class="result-icon">👥</div>
-                    <div class="result-value">15개</div>
-                    <div class="result-label">참여 기업</div>
-                </div>
-                
-                <div class="result-card">
-                    <div class="result-icon">📈</div>
-                    <div class="result-value">347건</div>
-                    <div class="result-label">총 분석 건수</div>
-                </div>
-                
-                <div class="result-card">
-                    <div class="result-icon">⭐</div>
-                    <div class="result-value">4.7/5.0</div>
-                    <div class="result-label">평균 만족도</div>
-                </div>
-                
-                <div class="result-card">
-                    <div class="result-icon">🔄</div>
-                    <div class="result-value">93%</div>
-                    <div class="result-label">재사용 의향</div>
+                    <p>결과를 확인하고 PDF/PPT로 다운로드하세요.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- CTA -->
-    <section class="cta">
-        <div class="cta-container">
+    <section class="section">
+        <div class="cta">
             <h2>지금 바로 무료로 시작하세요</h2>
             <p>
                 전문가 수준의 UI/UX 평가를 경험하고,<br>
                 즉시 활용 가능한 보고서를 받아보세요
             </p>
-            <a href="/analyzer" class="btn btn-primary">
-                <i class="fas fa-rocket"></i> 무료 분석 시작하기
+            <a href="/analyzer" class="btn btn-primary" style="font-size: 1.1rem; padding: 20px 50px;">
+                Start Free Analysis →
             </a>
         </div>
     </section>
@@ -820,44 +700,41 @@
     <footer>
         <div class="footer-container">
             <div class="footer-brand">
-                <h3>MGINE AutoAnalyzer</h3>
+                <h3>AutoAnalyzer</h3>
                 <p>
                     AI 기반 웹사이트 UI/UX 자동 평가 시스템<br>
                     by MGINE Interactive
                 </p>
                 <p>
-                    <a href="mailto:contact@mgine.co.kr" style="color: #2563eb;">
-                        <i class="fas fa-envelope"></i> contact@mgine.co.kr
+                    <a href="mailto:contact@mgine.co.kr" style="color: var(--primary);">
+                        contact@mgine.co.kr
                     </a>
                 </p>
             </div>
             
             <div class="footer-section">
-                <h4>제품</h4>
+                <h4>Product</h4>
                 <ul>
-                    <li><a href="#features">기능</a></li>
-                    <li><a href="#process">사용방법</a></li>
-                    <li><a href="#results">성과</a></li>
-                    <li><a href="/analyzer">무료 체험</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#process">Process</a></li>
+                    <li><a href="/analyzer">Demo</a></li>
                 </ul>
             </div>
             
             <div class="footer-section">
-                <h4>회사</h4>
+                <h4>Company</h4>
                 <ul>
                     <li><a href="http://mgine.co.kr" target="_blank">MGINE Interactive</a></li>
-                    <li><a href="http://mgine.co.kr" target="_blank">포트폴리오</a></li>
-                    <li><a href="http://mgine.co.kr" target="_blank">문의하기</a></li>
+                    <li><a href="http://mgine.co.kr" target="_blank">Portfolio</a></li>
                 </ul>
             </div>
             
             <div class="footer-section">
-                <h4>기술</h4>
+                <h4>Technology</h4>
                 <ul>
-                    <li><a href="#">Nielsen 10원칙</a></li>
-                    <li><a href="#">KRDS 기반</a></li>
-                    <li><a href="#">Cloudflare Workers</a></li>
-                    <li><a href="#">AI 학습 시스템</a></li>
+                    <li><a href="#">Nielsen Principles</a></li>
+                    <li><a href="#">KRDS Based</a></li>
+                    <li><a href="#">AI Learning</a></li>
                 </ul>
             </div>
         </div>
