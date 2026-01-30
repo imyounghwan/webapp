@@ -450,24 +450,13 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         return;
     }
     
-    // 카드 전체 요소 찾기
-    const itemCard = document.getElementById(itemId);
-    if (!itemCard) {
-        console.error('❌ itemCard not found:', itemId);
-        alert('오류: 항목을 찾을 수 없습니다.');
-        return;
+    // 로딩 표시 (input 영역 전체를 "저장 중..."으로 변경)
+    const saveBtn = document.getElementById(`${itemId}-save-btn`);
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '저장 중...';
+        saveBtn.style.background = '#9ca3af';
     }
-    
-    // 점수 영역 찾기 (카드 내부에서 검색)
-    const scoreContainer = itemCard.querySelector(`#${itemId}-score`)?.parentElement;
-    if (!scoreContainer) {
-        console.error('❌ scoreContainer not found for itemId:', itemId);
-        alert('오류: 점수 영역을 찾을 수 없습니다.');
-        return;
-    }
-    
-    // 로딩 표시
-    scoreContainer.innerHTML = '<div style="color:#3b82f6;text-align:center;padding:20px;">저장 중...</div>';
     
     try {
         // API 호출
@@ -496,89 +485,16 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
         
         const result = await response.json();
         
-        // 성공 메시지
-        const scoreColor = correctedScore >= 4.5 ? '#059669' : correctedScore >= 3.5 ? '#3b82f6' : correctedScore >= 2.5 ? '#f59e0b' : '#ef4444';
+        // 성공! 페이지 새로고침으로 간단하게 처리
+        alert(`✅ 저장 완료!\n\n원본: ${originalScore.toFixed(1)}점 → 수정: ${correctedScore.toFixed(1)}점\n\n페이지를 새로고침하여 결과를 확인하세요.`);
         
-        // 점수 복원
-        const isConvenienceItem = itemId.includes('conv');
-        const buttonBgColor = isConvenienceItem ? '#3b82f6' : '#7c3aed';
-        const buttonHoverColor = isConvenienceItem ? '#2563eb' : '#6d28d9';
-        
-        scoreContainer.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;">
-                <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${correctedScore.toFixed(1)}</div>
-                <button 
-                    class="edit-score-btn"
-                    data-item-id="${itemId}"
-                    data-item-id-value="${itemIdValue}"
-                    data-item-name="${itemName}"
-                    data-original-score="${correctedScore}"
-                    data-url="${url}"
-                    data-diagnosis="${(correctedDiagnosis || '').replace(/"/g, '&quot;')}"
-                    style="background:${buttonBgColor};color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
-                    onmouseover="this.style.background='${buttonHoverColor}'"
-                    onmouseout="this.style.background='${buttonBgColor}'"
-                >
-                    ✏️ 수정
-                </button>
-            </div>
-        `;
-        
-        // 새로 생성된 버튼에 이벤트 리스너 추가
-        const newBtn = scoreContainer.querySelector('.edit-score-btn');
-        if (newBtn) {
-            newBtn.addEventListener('click', function() {
-                const itemId = this.getAttribute('data-item-id');
-                const itemIdValue = this.getAttribute('data-item-id-value');
-                const itemName = this.getAttribute('data-item-name');
-                const originalScore = parseFloat(this.getAttribute('data-original-score'));
-                const url = this.getAttribute('data-url');
-                const diagnosis = this.getAttribute('data-diagnosis').replace(/&quot;/g, '"');
-                
-                editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
-            });
-        }
-        
-        // 진단 복원 (수정된 텍스트로)
-        if (correctedDiagnosis) {
-            const diagElement = document.getElementById(`${itemId}-diagnosis`);
-            if (diagElement) {
-                const bgColor = correctedScore >= 4.0 ? 'dcfce7' : correctedScore >= 3.0 ? 'dbeafe' : 'fee2e2';
-                const textColor = correctedScore >= 4.0 ? '166534' : correctedScore >= 3.0 ? '1e40af' : 'dc2626';
-                diagElement.innerHTML = `
-                    <div style="font-size:13px;color:#${textColor};line-height:1.6;">
-                        📊 <strong>진단 결과 (관리자 수정):</strong> ${correctedDiagnosis}
-                    </div>
-                `;
-                diagElement.setAttribute('data-original', correctedDiagnosis);
-            }
-        }
-        
-        // 수정 완료 알림
-        const itemElement = document.getElementById(itemId);
-        const originalBorderLeft = itemElement.style.borderLeft;
-        itemElement.style.borderLeft = `4px solid #10b981`;
-        setTimeout(() => {
-            itemElement.style.borderLeft = originalBorderLeft;
-        }, 2000);
-        
-        // 하단에 성공 메시지 추가
-        const successMsg = document.createElement('div');
-        successMsg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:9999;animation:slideIn 0.3s;';
-        successMsg.innerHTML = `
-            <div style="font-weight:bold;margin-bottom:4px;">✓ 점수 수정 저장 완료</div>
-            <div style="font-size:12px;opacity:0.9;">${itemName}: ${originalScore.toFixed(1)} → ${correctedScore.toFixed(1)}</div>
-        `;
-        document.body.appendChild(successMsg);
-        
-        setTimeout(() => {
-            successMsg.remove();
-        }, 3000);
+        // 페이지 새로고침
+        location.reload();
         
     } catch (error) {
         console.error('저장 오류:', error);
-        alert('저장 실패: ' + error.message);
-        cancelEdit(itemId, originalScore);
+        alert('❌ 저장 실패: ' + error.message + '\n\n다시 시도해주세요.');
+        location.reload();
     }
 }
 
