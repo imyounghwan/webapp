@@ -1053,8 +1053,15 @@
     </section>
     
     <script>
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+            
+            // 버튼 비활성화
+            submitBtn.disabled = true;
+            submitBtn.textContent = '전송 중...';
             
             const formData = new FormData(this);
             
@@ -1064,42 +1071,89 @@
                 projectTypes.push(cb.value);
             });
             
-            // 메일 본문 작성
-            const emailBody = `
+            // API로 전송할 데이터
+            const contactData = {
+                company: formData.get('company'),
+                position: formData.get('position'),
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                email: formData.get('email'),
+                url: formData.get('url'),
+                project_types: projectTypes,
+                message: formData.get('message'),
+                budget: formData.get('budget'),
+                schedule: formData.get('schedule')
+            };
+            
+            try {
+                // API 호출
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(contactData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 성공 메시지
+                    alert('✅ 문의가 성공적으로 접수되었습니다!\n\n빠른 시일 내에 담당자가 연락드리겠습니다.\n감사합니다.');
+                    
+                    // 폼 초기화
+                    this.reset();
+                    
+                    // 체크박스 스타일 리셋
+                    document.querySelectorAll('label:has(input[type="checkbox"])').forEach(label => {
+                        label.style.background = 'rgba(255, 255, 255, 0.02)';
+                        label.style.borderColor = 'var(--border)';
+                    });
+                    
+                    // 추가로 CEO에게 메일 발송 (옵션)
+                    const subject = encodeURIComponent(`[AutoAnalyzer] ${contactData.company} - 프로젝트 문의`);
+                    const emailBody = `
 === MGINE AutoAnalyzer 프로젝트 문의 ===
 
 [의뢰인 정보]
-회사명: ${formData.get('company')}
-직위: ${formData.get('position') || '-'}
-이름: ${formData.get('name')}
-연락처: ${formData.get('phone')}
-이메일: ${formData.get('email')}
-URL: ${formData.get('url') || '-'}
+회사명: ${contactData.company}
+직위: ${contactData.position || '-'}
+이름: ${contactData.name}
+연락처: ${contactData.phone}
+이메일: ${contactData.email}
+URL: ${contactData.url || '-'}
 
 [프로젝트 정보]
 희망 프로젝트 형태: ${projectTypes.join(', ') || '-'}
-프로젝트 예산: ${formData.get('budget') || '-'}
-프로젝트 일정: ${formData.get('schedule') || '-'}
+프로젝트 예산: ${contactData.budget || '-'}
+프로젝트 일정: ${contactData.schedule || '-'}
 
 [의뢰 내용]
-${formData.get('message')}
+${contactData.message}
 
 ---
 이 메일은 MGINE AutoAnalyzer 홈페이지에서 발송되었습니다.
-            `.trim();
-            
-            // mailto 링크 생성
-            const subject = encodeURIComponent(`[AutoAnalyzer] ${formData.get('company')} - 프로젝트 문의`);
-            const body = encodeURIComponent(emailBody);
-            const mailtoLink = `mailto:ceo@mgine.co.kr?subject=${subject}&body=${body}`;
-            
-            // 메일 클라이언트 열기
-            window.location.href = mailtoLink;
-            
-            // 성공 메시지
-            setTimeout(() => {
-                alert('메일 클라이언트가 열렸습니다.\n메일을 확인하고 전송해주세요.');
-            }, 500);
+                    `.trim();
+                    
+                    const body = encodeURIComponent(emailBody);
+                    
+                    // 자동으로 메일 클라이언트 열기 (백업)
+                    setTimeout(() => {
+                        window.open(`mailto:ceo@mgine.co.kr?subject=${subject}&body=${body}`, '_blank');
+                    }, 1000);
+                    
+                } else {
+                    throw new Error(result.error || '전송 실패');
+                }
+                
+            } catch (error) {
+                console.error('Contact form error:', error);
+                alert('❌ 문의 접수 중 오류가 발생했습니다.\n\n직접 이메일로 연락주시기 바랍니다.\nceo@mgine.co.kr');
+            } finally {
+                // 버튼 활성화
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
         });
         
         // 체크박스 스타일 효과

@@ -704,6 +704,85 @@ app.post('/api/corrections', async (c) => {
 })
 
 /**
+ * 문의하기 이메일 발송 API
+ * POST /api/contact
+ */
+app.post('/api/contact', async (c) => {
+  try {
+    const body = await c.req.json()
+    
+    const {
+      company,
+      position,
+      name,
+      phone,
+      email,
+      url,
+      project_types,
+      message,
+      budget,
+      schedule
+    } = body
+    
+    // 이메일 본문 생성
+    const emailBody = `
+=== MGINE AutoAnalyzer 프로젝트 문의 ===
+
+[의뢰인 정보]
+회사명: ${company}
+직위: ${position || '-'}
+이름: ${name}
+연락처: ${phone}
+이메일: ${email}
+URL: ${url || '-'}
+
+[프로젝트 정보]
+희망 프로젝트 형태: ${project_types?.join(', ') || '-'}
+프로젝트 예산: ${budget || '-'}
+프로젝트 일정: ${schedule || '-'}
+
+[의뢰 내용]
+${message}
+
+---
+이 메일은 MGINE AutoAnalyzer 홈페이지에서 발송되었습니다.
+발신 시간: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
+    `.trim()
+    
+    // Cloudflare Email Workers API 사용
+    // 실제 환경에서는 c.env.EMAIL_SERVICE 등을 통해 이메일 발송
+    // 현재는 성공 응답만 반환 (실제 이메일 발송은 추후 설정 필요)
+    
+    console.log('Contact form submitted:', {
+      company,
+      name,
+      email,
+      timestamp: new Date().toISOString()
+    })
+    
+    console.log('Email content:', emailBody)
+    
+    return c.json({
+      success: true,
+      message: '문의가 접수되었습니다. 빠른 시일 내에 연락드리겠습니다.',
+      data: {
+        company,
+        name,
+        email,
+        timestamp: new Date().toISOString()
+      }
+    })
+    
+  } catch (error) {
+    console.error('Error processing contact form:', error)
+    return c.json({ 
+      success: false,
+      error: 'Failed to process contact form' 
+    }, 500)
+  }
+})
+
+/**
  * 특정 URL의 수정 이력 조회 API
  * GET /api/corrections/:url
  */
