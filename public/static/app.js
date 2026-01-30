@@ -200,28 +200,28 @@ function displayResults(data, resultElement) {
     
     // 종합 점수
     const scoreHTML = `
-        <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:40px;margin-bottom:30px;backdrop-filter:blur(10px);">
             <div style="text-align:center;">
-                <div style="font-size:14px;color:#6b7280;margin-bottom:10px;">종합 점수</div>
-                <div style="font-size:48px;font-weight:bold;color:#2563eb;margin-bottom:10px;">${predicted_score.overall.toFixed(2)}</div>
-                <div style="display:flex;justify-content:center;gap:30px;margin-top:15px;">
-                    <div>
-                        <div style="font-size:12px;color:#6b7280;">편의성</div>
-                        <div style="font-size:24px;font-weight:bold;color:#00C9A7;">${predicted_score.convenience.toFixed(2)}</div>
+                <div style="font-size:16px;color:#9CA3AF;margin-bottom:15px;font-weight:500;">종합 점수</div>
+                <div style="font-size:72px;font-weight:900;background:linear-gradient(135deg, #0066FF, #00C9A7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px;">${predicted_score.overall.toFixed(2)}</div>
+                <div style="display:flex;justify-content:center;gap:50px;margin-top:30px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:14px;color:#9CA3AF;margin-bottom:8px;font-weight:500;">편의성</div>
+                        <div style="font-size:36px;font-weight:800;color:#00C9A7;">${predicted_score.convenience.toFixed(2)}</div>
                     </div>
-                    <div>
-                        <div style="font-size:12px;color:#6b7280;">디자인</div>
-                        <div style="font-size:24px;font-weight:bold;color:#7c3aed;">${predicted_score.design.toFixed(2)}</div>
+                    <div style="text-align:center;">
+                        <div style="font-size:14px;color:#9CA3AF;margin-bottom:8px;font-weight:500;">디자인</div>
+                        <div style="font-size:36px;font-weight:800;color:#9333EA;">${predicted_score.design.toFixed(2)}</div>
                     </div>
                 </div>
                 
                 <!-- 다운로드 버튼 추가 -->
-                <div style="margin-top:20px;display:flex;justify-content:center;gap:10px;">
-                    <button id="downloadPdfBtn" style="background:#ef4444;color:white;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                        <span>📄</span> PDF 다운로드
+                <div style="margin-top:40px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;">
+                    <button id="downloadPdfBtn" style="background:#ef4444;color:white;border:none;border-radius:12px;padding:16px 32px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;transition:all 0.3s;box-shadow:0 10px 30px rgba(239,68,68,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 15px 40px rgba(239,68,68,0.5)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 10px 30px rgba(239,68,68,0.3)'">
+                        <span style="font-size:20px;">📄</span> PDF 다운로드
                     </button>
-                    <button id="downloadPptBtn" style="background:#f59e0b;color:white;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
-                        <span>📊</span> PPT 다운로드
+                    <button id="downloadPptBtn" style="background:#f59e0b;color:white;border:none;border-radius:12px;padding:16px 32px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;transition:all 0.3s;box-shadow:0 10px 30px rgba(245,158,11,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 15px 40px rgba(245,158,11,0.5)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 10px 30px rgba(245,158,11,0.3)'">
+                        <span style="font-size:20px;">📊</span> PPT 다운로드
                     </button>
                 </div>
             </div>
@@ -237,21 +237,21 @@ function displayResults(data, resultElement) {
     ` : '';
     
     // 편의성 항목
-    let convenienceHTML = '<h3 style="color:#00C9A7;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
+    let convenienceHTML = '<h3 style="color:#00C9A7;font-size:24px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
     predicted_score.convenience_items.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-conv-${itemIndex}`;
         convenienceHTML += `
-            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:rgba(255,255,255,0.05);border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;gap:20px;">
                     <div style="flex:1;">
-                        <div style="font-weight:bold;color:#1f2937;font-size:16px;margin-bottom:5px;">
+                        <div style="font-weight:700;color:#E5E7EB;font-size:18px;margin-bottom:8px;line-height:1.4;">
                             ${item.item}
                         </div>
-                        <div style="font-size:11px;color:#0066FF;font-weight:600;">${item.principle || ''}</div>
+                        <div style="font-size:13px;color:#0066FF;font-weight:600;background:rgba(0,102,255,0.1);padding:4px 10px;border-radius:6px;display:inline-block;">${item.principle || ''}</div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
+                    <div style="display:flex;align-items:center;gap:15px;">
+                        <div id="${itemId}-score" style="font-size:36px;font-weight:900;color:${scoreColor};">${item.score.toFixed(1)}</div>
                         <button 
                             class="edit-score-btn"
                             data-item-id="${itemId}"
@@ -260,40 +260,40 @@ function displayResults(data, resultElement) {
                             data-original-score="${item.score}"
                             data-url="${url}"
                             data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
-                            style="background:#0066FF;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
-                            onmouseover="this.style.background='#00C9A7'"
-                            onmouseout="this.style.background='#0066FF'"
+                            style="background:#0066FF;color:white;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(0,102,255,0.3);"
+                            onmouseover="this.style.background='#00C9A7';this.style.transform='scale(1.05)'"
+                            onmouseout="this.style.background='#0066FF';this.style.transform='scale(1)'"
                         >
                             ✏️ 수정
                         </button>
                     </div>
                 </div>
                 
-                <div style="background:#f0f9ff;padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#1e40af;line-height:1.6;">
-                        📝 <strong>항목 설명:</strong> ${item.description || '설명 없음'}
+                <div style="background:rgba(0,102,255,0.05);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(0,102,255,0.1);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        📝 <strong style="color:#0066FF;">항목 설명:</strong> ${item.description || '설명 없음'}
                     </div>
                 </div>
                 
-                <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#92400e;line-height:1.6;">
-                        💡 <strong>중요한 이유:</strong> ${item.why_important || '정보 없음'}
+                <div style="background:rgba(245,158,11,0.05);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(245,158,11,0.1);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        💡 <strong style="color:#f59e0b;">중요한 이유:</strong> ${item.why_important || '정보 없음'}
                     </div>
                 </div>
                 
-                <div style="background:#f9fafb;padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#374151;line-height:1.6;">
-                        🔍 <strong>평가 기준:</strong> ${item.evaluation_criteria || '정보 없음'}
+                <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        🔍 <strong style="color:#9CA3AF;">평가 기준:</strong> ${item.evaluation_criteria || '정보 없음'}
                     </div>
                 </div>
                 
-                <div id="${itemId}-diagnosis" data-original="${(item.diagnosis || '').replace(/"/g, '&quot;')}" style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#${item.score >= 4.0 ? '166534' : item.score >= 3.0 ? '1e40af' : 'dc2626'};line-height:1.6;">
-                        📊 <strong>진단 결과:</strong> ${item.diagnosis || '진단 정보 없음'}
+                <div id="${itemId}-diagnosis" data-original="${(item.diagnosis || '').replace(/"/g, '&quot;')}" style="background:${item.score >= 4.0 ? 'rgba(0,201,167,0.1)' : item.score >= 3.0 ? 'rgba(0,102,255,0.1)' : 'rgba(239,68,68,0.1)'};padding:16px;border-radius:12px;margin-bottom:12px;border:2px solid ${item.score >= 4.0 ? '#00C9A7' : item.score >= 3.0 ? '#0066FF' : '#ef4444'};">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        📊 <strong style="color:${scoreColor};">진단 결과:</strong> ${item.diagnosis || '진단 정보 없음'}
                     </div>
                 </div>
                 
-                <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">
+                <div style="font-size:13px;color:#9CA3AF;margin-bottom:10px;font-weight:500;">
                     🔗 <strong>평가 페이지 (${item.evaluated_pages ? item.evaluated_pages.length : 1}개):</strong><br>
                     ${item.evaluated_pages ? 
                         item.evaluated_pages.map((page, idx) => 
@@ -311,7 +311,7 @@ function displayResults(data, resultElement) {
     });
     
     // 디자인 항목
-    let designHTML = '<h3 style="color:#7c3aed;margin-bottom:15px;margin-top:40px;padding-bottom:10px;border-bottom:2px solid #7c3aed;">🎨 디자인 항목 (5개)</h3>';
+    let designHTML = '<h3 style="color:#9333EA;font-size:24px;font-weight:800;margin-bottom:25px;margin-top:50px;padding-bottom:15px;border-bottom:3px solid #9333EA;">🎨 디자인 항목 (5개)</h3>';
     predicted_score.design_items.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-design-${itemIndex}`;
