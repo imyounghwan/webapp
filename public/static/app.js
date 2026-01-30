@@ -150,18 +150,29 @@ function displayResults(data, resultElement) {
     
     // 편의성 항목
     let convenienceHTML = '<h3 style="color:#059669;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #059669;">📊 편의성 항목 (21개)</h3>';
-    predicted_score.convenience_items.forEach(item => {
+    predicted_score.convenience_items.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#059669' : item.score >= 3.5 ? '#3b82f6' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
+        const itemId = `item-conv-${itemIndex}`;
         convenienceHTML += `
-            <div style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                 <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-                    <div>
+                    <div style="flex:1;">
                         <div style="font-weight:bold;color:#1f2937;font-size:16px;margin-bottom:5px;">
                             ${item.item}
                         </div>
                         <div style="font-size:11px;color:#3b82f6;font-weight:600;">${item.principle || ''}</div>
                     </div>
-                    <div style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
+                        <button 
+                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}')"
+                            style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
+                            onmouseover="this.style.background='#2563eb'"
+                            onmouseout="this.style.background='#3b82f6'"
+                        >
+                            ✏️ 수정
+                        </button>
+                    </div>
                 </div>
                 
                 <div style="background:#f0f9ff;padding:12px;border-radius:6px;margin-bottom:10px;">
@@ -207,18 +218,29 @@ function displayResults(data, resultElement) {
     
     // 디자인 항목
     let designHTML = '<h3 style="color:#7c3aed;margin-bottom:15px;margin-top:40px;padding-bottom:10px;border-bottom:2px solid #7c3aed;">🎨 디자인 항목 (5개)</h3>';
-    predicted_score.design_items.forEach(item => {
+    predicted_score.design_items.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#059669' : item.score >= 3.5 ? '#3b82f6' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
+        const itemId = `item-design-${itemIndex}`;
         designHTML += `
-            <div style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                 <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-                    <div>
+                    <div style="flex:1;">
                         <div style="font-weight:bold;color:#1f2937;font-size:16px;margin-bottom:5px;">
                             ${item.item}
                         </div>
                         <div style="font-size:11px;color:#7c3aed;font-weight:600;">${item.principle || ''}</div>
                     </div>
-                    <div style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
+                        <button 
+                            onclick="editScore('${itemId}', '${item.item_id}', '${item.item}', ${item.score}, '${url}')"
+                            style="background:#7c3aed;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
+                            onmouseover="this.style.background='#6d28d9'"
+                            onmouseout="this.style.background='#7c3aed'"
+                        >
+                            ✏️ 수정
+                        </button>
+                    </div>
                 </div>
                 
                 <div style="background:#f5f3ff;padding:12px;border-radius:6px;margin-bottom:10px;">
@@ -270,6 +292,174 @@ function displayResults(data, resultElement) {
             ${summaryHTML}
             ${convenienceHTML}
             ${designHTML}
+        </div>
+    `;
+}
+
+/**
+ * 점수 수정 함수 (인라인 편집)
+ */
+window.editScore = async function(itemId, itemIdValue, itemName, originalScore, url) {
+    const scoreElement = document.getElementById(`${itemId}-score`);
+    
+    // 현재 점수를 입력 필드로 변경
+    const currentScore = parseFloat(scoreElement.textContent);
+    
+    // 수정 UI 생성
+    const editHTML = `
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+            <input 
+                type="number" 
+                id="${itemId}-input" 
+                min="2.0" 
+                max="5.0" 
+                step="0.5" 
+                value="${currentScore}"
+                style="width:80px;font-size:24px;font-weight:bold;padding:4px 8px;border:2px solid #3b82f6;border-radius:6px;text-align:center;"
+            />
+            <div style="display:flex;gap:4px;">
+                <button 
+                    onclick="saveScore('${itemId}', '${itemIdValue}', '${itemName}', ${originalScore}, '${url}')"
+                    style="background:#10b981;color:white;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;"
+                >
+                    ✓ 저장
+                </button>
+                <button 
+                    onclick="cancelEdit('${itemId}', ${currentScore})"
+                    style="background:#ef4444;color:white;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;"
+                >
+                    ✗ 취소
+                </button>
+            </div>
+            <textarea 
+                id="${itemId}-reason" 
+                placeholder="수정 사유 (선택사항)"
+                style="width:200px;height:60px;font-size:11px;padding:6px;border:1px solid #d1d5db;border-radius:4px;resize:none;"
+            ></textarea>
+        </div>
+    `;
+    
+    scoreElement.parentElement.innerHTML = editHTML;
+    
+    // 입력 필드에 포커스
+    document.getElementById(`${itemId}-input`).focus();
+}
+
+/**
+ * 점수 저장 함수
+ */
+window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, url) {
+    const inputElement = document.getElementById(`${itemId}-input`);
+    const reasonElement = document.getElementById(`${itemId}-reason`);
+    
+    const correctedScore = parseFloat(inputElement.value);
+    const reason = reasonElement.value.trim();
+    
+    // 유효성 검사
+    if (correctedScore < 2.0 || correctedScore > 5.0) {
+        alert('점수는 2.0 ~ 5.0 사이여야 합니다.');
+        return;
+    }
+    
+    // 변경사항 없으면 취소
+    if (correctedScore === originalScore) {
+        cancelEdit(itemId, originalScore);
+        return;
+    }
+    
+    // 로딩 표시
+    inputElement.parentElement.innerHTML = '<div style="color:#3b82f6;">저장 중...</div>';
+    
+    try {
+        // API 호출
+        const response = await fetch('/api/corrections', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: url,
+                evaluated_at: new Date().toISOString(),
+                item_id: itemIdValue,
+                item_name: itemName,
+                original_score: originalScore,
+                corrected_score: correctedScore,
+                correction_reason: reason || null,
+                admin_comment: reason || null,
+                corrected_by: 'admin'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('저장 실패');
+        }
+        
+        const result = await response.json();
+        
+        // 성공 메시지
+        const scoreColor = correctedScore >= 4.5 ? '#059669' : correctedScore >= 3.5 ? '#3b82f6' : correctedScore >= 2.5 ? '#f59e0b' : '#ef4444';
+        const scoreElement = document.getElementById(`${itemId}-score`);
+        scoreElement.parentElement.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${correctedScore.toFixed(1)}</div>
+                <button 
+                    onclick="editScore('${itemId}', '${itemIdValue}', '${itemName}', ${correctedScore}, '${url}')"
+                    style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
+                    onmouseover="this.style.background='#2563eb'"
+                    onmouseout="this.style.background='#3b82f6'"
+                >
+                    ✏️ 수정
+                </button>
+            </div>
+        `;
+        
+        // 수정 완료 알림
+        const itemElement = document.getElementById(itemId);
+        const originalBorderLeft = itemElement.style.borderLeft;
+        itemElement.style.borderLeft = `4px solid #10b981`;
+        setTimeout(() => {
+            itemElement.style.borderLeft = originalBorderLeft;
+        }, 2000);
+        
+        // 하단에 성공 메시지 추가
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:9999;animation:slideIn 0.3s;';
+        successMsg.innerHTML = `
+            <div style="font-weight:bold;margin-bottom:4px;">✓ 점수 수정 저장 완료</div>
+            <div style="font-size:12px;opacity:0.9;">${itemName}: ${originalScore.toFixed(1)} → ${correctedScore.toFixed(1)}</div>
+        `;
+        document.body.appendChild(successMsg);
+        
+        setTimeout(() => {
+            successMsg.remove();
+        }, 3000);
+        
+    } catch (error) {
+        console.error('저장 오류:', error);
+        alert('저장 실패: ' + error.message);
+        cancelEdit(itemId, originalScore);
+    }
+}
+
+/**
+ * 편집 취소 함수
+ */
+window.cancelEdit = function(itemId, originalScore) {
+    const scoreColor = originalScore >= 4.5 ? '#059669' : originalScore >= 3.5 ? '#3b82f6' : originalScore >= 2.5 ? '#f59e0b' : '#ef4444';
+    const scoreElement = document.getElementById(`${itemId}-score`);
+    
+    // 원래 상태로 복원
+    scoreElement.parentElement.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${originalScore.toFixed(1)}</div>
+            <button 
+                onclick="editScore('${itemId}', '', '', ${originalScore}, '')"
+                style="background:#3b82f6;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
+                onmouseover="this.style.background='#2563eb'"
+                onmouseout="this.style.background='#3b82f6'"
+            >
+                ✏️ 수정
+            </button>
         </div>
     `;
 }

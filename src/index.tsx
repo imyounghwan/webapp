@@ -6,11 +6,13 @@ import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/
 import { nielsenDescriptions, getItemDescription } from './analyzer/nielsenDescriptions'
 import { evaluateItemRelevance } from './analyzer/itemRelevance'
 import { loadWeights, getWeightsVersion, getWeightsLastUpdated, loadReferenceStatistics } from './config/weightsLoader'
+import { generateWeightAdjustments, applyWeightAdjustments } from './config/weightAdjuster'
+import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } from './types/database'
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
 
-const app = new Hono()
+const app = new Hono<{ Bindings: Env }>()
 
 // API routes
 app.use('/api/*', cors())
@@ -634,6 +636,212 @@ app.get('/api/reference-stats', (c) => {
       score: a.final_nielsen_score
     })),
     usage_note: "새로운 국민평가 데이터가 나오면 analysis/output/final_integrated_scores.json 파일을 교체하고 서비스를 재시작하세요."
+  })
+})
+
+/**
+ * 관리자 점수 수정 저장 API
+ * POST /api/corrections
+ */
+app.post('/api/corrections', async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const body = await c.req.json<CorrectionRequest>()
+    
+    // 필수 필드 검증
+    if (!body.url || !body.item_id || !body.item_name || 
+        body.original_score === undefined || body.corrected_score === undefined) {
+      return c.json({ error: 'Missing required fields' }, 400)
+    }
+    
+    // 점수 범위 검증 (2.0 ~ 5.0)
+    if (body.corrected_score < 2.0 || body.corrected_score > 5.0) {
+      return c.json({ error: 'Corrected score must be between 2.0 and 5.0' }, 400)
+    }
+    
+    const score_diff = body.corrected_score - body.original_score
+    
+    // 데이터베이스에 저장
+    const result = await db.prepare(`
+      INSERT INTO admin_corrections (
+        url, evaluated_at, item_id, item_name,
+        original_score, corrected_score, score_diff,
+        html_structure, correction_reason, admin_comment, corrected_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.url,
+      body.evaluated_at,
+      body.item_id,
+      body.item_name,
+      body.original_score,
+      body.corrected_score,
+      score_diff,
+      body.html_structure || null,
+      body.correction_reason || null,
+      body.admin_comment || null,
+      body.corrected_by || 'admin'
+    ).run()
+    
+    return c.json({
+      success: true,
+      correction_id: result.meta.last_row_id,
+      message: '점수 수정이 저장되었습니다. 학습 데이터로 활용됩니다.',
+      score_diff
+    })
+    
+  } catch (error) {
+    console.error('Error saving correction:', error)
+    return c.json({ error: 'Failed to save correction' }, 500)
+  }
+})
+
+/**
+ * 특정 URL의 수정 이력 조회 API
+ * GET /api/corrections/:url
+ */
+app.get('/api/corrections/:url', async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const url = decodeURIComponent(c.req.param('url'))
+    
+    const results = await db.prepare(`
+      SELECT * FROM admin_corrections
+      WHERE url = ?
+      ORDER BY corrected_at DESC
+    `).bind(url).all<AdminCorrection>()
+    
+    return c.json({
+      url,
+      corrections: results.results,
+      count: results.results.length
+    })
+    
+  } catch (error) {
+    console.error('Error fetching corrections:', error)
+    return c.json({ error: 'Failed to fetch corrections' }, 500)
+  }
+})
+
+/**
+ * 학습 데이터 인사이트 조회 API
+ * GET /api/learning-insights
+ */
+app.get('/api/learning-insights', async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    // 학습 데이터 요약 뷰 조회
+    const summary = await db.prepare(`
+      SELECT * FROM learning_data_summary
+      ORDER BY correction_count DESC
+    `).all<LearningDataSummary>()
+    
+    // 전체 수정 통계
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total_corrections,
+        COUNT(DISTINCT url) as unique_urls,
+        COUNT(DISTINCT item_id) as corrected_items,
+        AVG(score_diff) as avg_score_diff,
+        COUNT(CASE WHEN used_for_learning = 0 THEN 1 END) as pending_learning
+      FROM admin_corrections
+    `).first()
+    
+    // 가장 많이 수정된 항목 Top 5
+    const topItems = await db.prepare(`
+      SELECT 
+        item_id, item_name,
+        COUNT(*) as correction_count,
+        AVG(score_diff) as avg_adjustment
+      FROM admin_corrections
+      GROUP BY item_id, item_name
+      ORDER BY correction_count DESC
+      LIMIT 5
+    `).all()
+    
+    return c.json({
+      summary: summary.results,
+      statistics: stats,
+      top_corrected_items: topItems.results,
+      recommendations: summary.results
+        .filter(s => s.adjustment_suggestion !== '적정')
+        .map(s => ({
+          item_id: s.item_id,
+          item_name: s.item_name,
+          suggestion: s.adjustment_suggestion,
+          evidence: `${s.correction_count}건의 수정 데이터, 평균 ${s.avg_score_diff.toFixed(2)}점 차이`
+        }))
+    })
+    
+  } catch (error) {
+    console.error('Error fetching learning insights:', error)
+    return c.json({ error: 'Failed to fetch learning insights' }, 500)
+  }
+})
+
+/**
+ * 가중치 자동 조정 제안 API
+ * GET /api/weight-suggestions
+ */
+app.get('/api/weight-suggestions', async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    // 학습 데이터 요약 조회
+    const summary = await db.prepare(`
+      SELECT * FROM learning_data_summary
+      ORDER BY correction_count DESC
+    `).all<LearningDataSummary>()
+    
+    // 가중치 조정 제안 생성
+    const suggestions = generateWeightAdjustments(summary.results)
+    
+    return c.json({
+      suggestions,
+      total_suggestions: suggestions.length,
+      high_confidence: suggestions.filter(s => s.confidence === 'high').length,
+      medium_confidence: suggestions.filter(s => s.confidence === 'medium').length,
+      usage: {
+        description: "가중치 조정 제안을 자동으로 적용하려면 POST /api/weight-suggestions/apply 를 호출하세요.",
+        parameters: {
+          min_confidence: "적용할 최소 신뢰도 ('high', 'medium', 'low')"
+        }
+      }
+    })
+    
+  } catch (error) {
+    console.error('Error generating weight suggestions:', error)
+    return c.json({ error: 'Failed to generate weight suggestions' }, 500)
+  }
+})
+
+/**
+ * 가중치 자동 조정 적용 API (미구현 - 추후 자동화)
+ * POST /api/weight-suggestions/apply
+ */
+app.post('/api/weight-suggestions/apply', async (c) => {
+  return c.json({
+    message: '가중치 자동 적용 기능은 추후 구현 예정입니다.',
+    current_approach: 'config/weights.json 파일을 수동으로 수정한 후 서비스를 재시작하세요.',
+    note: '학습 데이터가 충분히 쌓이면 (100건 이상) 자동 적용을 권장합니다.'
   })
 })
 
