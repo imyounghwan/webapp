@@ -9,50 +9,50 @@ import type { HTMLStructure } from './htmlAnalyzer'
 
 export interface ImprovedNielsenScores {
   // N1: 시스템 상태 가시성 (3개 항목)
-  N1_1_current_location: number      // 현재 페이지 위치 표시 (Breadcrumb 등)
-  N1_2_loading_status: number        // 로딩 상태 표시
-  N1_3_action_feedback: number       // 사용자 행동 피드백
+  N1_1_current_location: number      // 현재 위치 표시 - Breadcrumb 등으로 사용자가 사이트 내 어디에 있는지 명확히 보여줌
+  N1_2_loading_status: number        // 로딩 상태 표시 - ARIA 레이블 등으로 페이지 로딩이나 처리 중임을 알림
+  N1_3_action_feedback: number       // 행동 피드백 - 사용자 행동(클릭, 입력 등)에 대한 즉각적 반응 제공
   
   // N2: 현실 세계 일치 (3개 항목)
-  N2_1_familiar_terms: number        // 친숙한 용어 사용
-  N2_2_natural_flow: number          // 자연스러운 흐름
-  N2_3_real_world_metaphor: number   // 현실 세계 은유
+  N2_1_familiar_terms: number        // 친숙한 용어 - 사용자가 이해하기 쉬운 일상 언어와 표현 사용
+  N2_2_natural_flow: number          // 자연스러운 흐름 - 정보가 논리적이고 예측 가능한 순서로 배치
+  N2_3_real_world_metaphor: number   // 현실 은유 - 아이콘, 버튼 등이 현실 세계 객체를 시각적으로 표현
   
   // N3: 사용자 제어와 자유 (2개 항목) - N3.2 나가기 제거 (N1.1과 중복)
-  N3_1_undo_redo: number             // 실행 취소/재실행
-  N3_3_flexible_navigation: number   // 유연한 네비게이션
+  N3_1_undo_redo: number             // 실행 취소 - 사용자가 실수를 되돌릴 수 있는 기능 (폼 리셋 등)
+  N3_3_flexible_navigation: number   // 유연한 탐색 - 다양한 경로와 방법으로 원하는 정보에 도달 가능
   
   // N4: 일관성과 표준 (3개 항목)
-  N4_1_visual_consistency: number    // 시각적 일관성
-  N4_2_terminology_consistency: number // 용어 일관성
-  N4_3_standard_compliance: number   // 표준 준수
+  N4_1_visual_consistency: number    // 시각적 일관성 - 색상, 폰트, 레이아웃이 페이지 전체에서 통일됨
+  N4_2_terminology_consistency: number // 용어 일관성 - 같은 개념을 같은 단어로 일관되게 표현
+  N4_3_standard_compliance: number   // 표준 준수 - HTML, 접근성 등 웹 표준을 따름 (lang, alt, ARIA 등)
   
   // N5: 오류 예방 (3개 항목)
-  N5_1_input_validation: number      // 입력 검증 (폼 검증 포함)
-  N5_2_confirmation_dialog: number   // 확인 대화상자
-  N5_3_constraints: number           // 제약 조건 표시 (레이블 등)
+  N5_1_input_validation: number      // 입력 검증 - 잘못된 형식의 데이터 입력을 사전에 차단 (required, pattern 등)
+  N5_2_confirmation_dialog: number   // 확인 대화상자 - 중요한 작업 전 사용자에게 재확인 요청
+  N5_3_constraints: number           // 제약 표시 - 입력 필드에 레이블로 제약사항을 명확히 안내
   
   // N6: 인식보다 회상 (2개 항목) - N6.1 보이는 옵션 제거 (검색 의존)
-  N6_2_recognition_cues: number      // 인식 단서 (아이콘, 시각적 힌트)
-  N6_3_memory_load: number           // 기억 부담 최소화
+  N6_2_recognition_cues: number      // 인식 단서 - 아이콘, 툴팁 등으로 사용자가 기억하지 않아도 기능을 인식
+  N6_3_memory_load: number           // 기억 부담 최소화 - Breadcrumb, 명확한 레이블로 정보 기억 부담 감소
   
   // N7: 유연성과 효율성 (3개 항목) - N7.1 단축키 교체 → N7.1 빠른 접근
-  N7_1_quick_access: number          // 빠른 접근 (주요 기능 직접 접근)
-  N7_2_customization: number         // 맞춤 설정 (반응형, 크기 조절 등)
-  N7_3_search_filter: number         // 검색/필터 기능 (새 항목)
+  N7_1_quick_access: number          // 빠른 접근 - 메인 메뉴, GNB 등으로 주요 기능에 클릭 1~2회로 도달
+  N7_2_customization: number         // 맞춤 설정 - 반응형 디자인, 글자 크기 조절 등 사용자 환경 조정
+  N7_3_search_filter: number         // 검색/필터 - 사이트 내 검색으로 원하는 정보를 빠르게 찾음 (새 항목)
   
   // N8: 미니멀 디자인 (3개 항목)
-  N8_1_essential_info: number        // 핵심 정보만
-  N8_2_clean_interface: number       // 깔끔한 인터페이스
-  N8_3_visual_hierarchy: number      // 시각적 계층
+  N8_1_essential_info: number        // 핵심 정보 - 불필요한 내용 없이 꼭 필요한 정보만 간결하게 제공
+  N8_2_clean_interface: number       // 깔끔한 인터페이스 - 여백, 정렬, 이미지 수를 적절히 유지해 시각적 부담 감소
+  N8_3_visual_hierarchy: number      // 시각적 계층 - 헤딩 구조로 중요도에 따라 정보를 계층적으로 배치
   
   // N9: 오류 인식과 복구 (2개 항목) - N9.1, N9.3 제거 (N5.1, N5.3과 중복)
-  N9_2_recovery_support: number      // 복구 지원 (새 항목 강화)
-  N9_4_error_guidance: number        // 오류 안내 (새 항목)
+  N9_2_recovery_support: number      // 복구 지원 - 오류 발생 시 사용자가 쉽게 이전 상태로 돌아가거나 재시도
+  N9_4_error_guidance: number        // 오류 안내 - 오류 메시지가 명확하고 해결 방법을 구체적으로 제시
   
   // N10: 도움말과 문서 (2개 항목) - N10.1 도움말 접근 교체 → N10.1 도움말 가시성
-  N10_1_help_visibility: number      // 도움말 가시성 (찾기 쉬움)
-  N10_2_documentation: number        // 문서화 (FAQ, 가이드)
+  N10_1_help_visibility: number      // 도움말 가시성 - 도움말, FAQ를 찾기 쉬운 위치에 배치
+  N10_2_documentation: number        // 문서화 - FAQ, 가이드 등이 체계적으로 정리되어 있음
 }
 
 /**

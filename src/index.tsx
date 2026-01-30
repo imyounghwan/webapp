@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { analyzeHTML } from './analyzer/htmlAnalyzer'
 import { findSimilarSites, calculatePredictedScore } from './analyzer/similarityCalculator'
 import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
+import { nielsenDescriptions, getItemDescription } from './analyzer/nielsenDescriptions'
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
@@ -183,41 +184,91 @@ app.post('/api/analyze', async (c) => {
     const convenience_items_detail: any[] = []
     const design_items_detail: any[] = []
     
-    // 편의성 항목 상세
-    const convenienceKeys = [
-      'N1.1_현재_위치', 'N1.2_로딩_상태', 'N1.3_행동_피드백',
-      'N3.1_실행_취소', 'N3.3_유연한_네비게이션',
-      'N5.1_입력_검증', 'N5.2_확인_대화상자', 'N5.3_제약_조건_표시',
-      'N6.2_인식_단서', 'N6.3_기억_부담',
-      'N7.1_빠른_접근', 'N7.2_맞춤_설정', 'N7.3_검색_필터',
+    // 편의성 항목 상세 (ID 매핑 추가)
+    const convenienceMapping = [
+      { key: 'N1.1_현재_위치', id: 'N1_1' },
+      { key: 'N1.2_로딩_상태', id: 'N1_2' },
+      { key: 'N1.3_행동_피드백', id: 'N1_3' },
+      { key: 'N3.1_실행_취소', id: 'N3_1' },
+      { key: 'N3.3_유연한_네비게이션', id: 'N3_3' },
+      { key: 'N5.1_입력_검증', id: 'N5_1' },
+      { key: 'N5.2_확인_대화상자', id: 'N5_2' },
+      { key: 'N5.3_제약_조건_표시', id: 'N5_3' },
+      { key: 'N6.2_인식_단서', id: 'N6_2' },
+      { key: 'N6.3_기억_부담', id: 'N6_3' },
+      { key: 'N7.1_빠른_접근', id: 'N7_1' },
+      { key: 'N7.2_맞춤_설정', id: 'N7_2' },
+      { key: 'N7.3_검색_필터', id: 'N7_3' },
+    ]
+    
+    const convenienceDiagnosisKeys = [
+      'N1_1_current_location', 'N1_2_loading_status', 'N1_3_action_feedback',
+      'N3_1_undo_redo', 'N3_3_flexible_navigation',
+      'N5_1_input_validation', 'N5_2_confirmation_dialog', 'N5_3_constraints',
+      'N6_2_recognition_cues', 'N6_3_memory_load',
+      'N7_1_quick_access', 'N7_2_customization', 'N7_3_search_filter',
     ]
     
     convenienceItems.forEach((score, idx) => {
-      const key = convenienceKeys[idx]
+      const { key, id } = convenienceMapping[idx]
+      const desc = getItemDescription(id)
+      const diagnosisKey = convenienceDiagnosisKeys[idx]
+      
       convenience_items_detail.push({
         item: key,
+        item_id: id,
         category: '편의성',
         score: Math.round(score * 10) / 10,
-        diagnosis: improvedDiagnoses[key.split('_')[0] + '_' + key.split('_')[1]] || ''
+        diagnosis: improvedDiagnoses[diagnosisKey] || '',
+        description: desc?.description || '',
+        principle: desc?.principle || '',
+        why_important: desc?.why_important || '',
+        evaluation_criteria: desc?.evaluation_criteria || '',
+        evaluated_url: url
       })
     })
     
-    // 디자인 항목 상세
-    const designKeys = [
-      'N2.1_친숙한_용어', 'N2.2_자연스러운_흐름', 'N2.3_현실_세계_은유',
-      'N4.1_시각적_일관성', 'N4.2_용어_일관성', 'N4.3_표준_준수',
-      'N8.1_핵심_정보', 'N8.2_깔끔한_인터페이스', 'N8.3_시각적_계층',
-      'N9.2_복구_지원', 'N9.4_오류_안내',
-      'N10.1_도움말_가시성', 'N10.2_문서화',
+    // 디자인 항목 상세 (ID 매핑 추가)
+    const designMapping = [
+      { key: 'N2.1_친숙한_용어', id: 'N2_1' },
+      { key: 'N2.2_자연스러운_흐름', id: 'N2_2' },
+      { key: 'N2.3_현실_세계_은유', id: 'N2_3' },
+      { key: 'N4.1_시각적_일관성', id: 'N4_1' },
+      { key: 'N4.2_용어_일관성', id: 'N4_2' },
+      { key: 'N4.3_표준_준수', id: 'N4_3' },
+      { key: 'N8.1_핵심_정보', id: 'N8_1' },
+      { key: 'N8.2_깔끔한_인터페이스', id: 'N8_2' },
+      { key: 'N8.3_시각적_계층', id: 'N8_3' },
+      { key: 'N9.2_복구_지원', id: 'N9_2' },
+      { key: 'N9.4_오류_안내', id: 'N9_4' },
+      { key: 'N10.1_도움말_가시성', id: 'N10_1' },
+      { key: 'N10.2_문서화', id: 'N10_2' },
+    ]
+    
+    const designDiagnosisKeys = [
+      'N2_1_familiar_terms', 'N2_2_natural_flow', 'N2_3_real_world_metaphor',
+      'N4_1_visual_consistency', 'N4_2_terminology_consistency', 'N4_3_standard_compliance',
+      'N8_1_essential_info', 'N8_2_clean_interface', 'N8_3_visual_hierarchy',
+      'N9_2_recovery_support', 'N9_4_error_guidance',
+      'N10_1_help_visibility', 'N10_2_documentation',
     ]
     
     designItems.forEach((score, idx) => {
-      const key = designKeys[idx]
+      const { key, id } = designMapping[idx]
+      const desc = getItemDescription(id)
+      const diagnosisKey = designDiagnosisKeys[idx]
+      
       design_items_detail.push({
         item: key,
+        item_id: id,
         category: '디자인',
         score: Math.round(score * 10) / 10,
-        diagnosis: improvedDiagnoses[key.split('_')[0] + '_' + key.split('_')[1]] || ''
+        diagnosis: improvedDiagnoses[diagnosisKey] || '',
+        description: desc?.description || '',
+        principle: desc?.principle || '',
+        why_important: desc?.why_important || '',
+        evaluation_criteria: desc?.evaluation_criteria || '',
+        evaluated_url: url
       })
     })
     
