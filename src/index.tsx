@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { analyzeHTML } from './analyzer/htmlAnalyzer'
 import { findSimilarSites, calculatePredictedScore } from './analyzer/similarityCalculator'
+import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
 
 // 49개 기관 통합 데이터 import (정적 데이터로 번들에 포함)
 import referenceData from '../analysis/output/final_integrated_scores.json'
@@ -137,19 +138,97 @@ app.post('/api/analyze', async (c) => {
     // 2. 결과 종합
     const structure = aggregateResults(pageResults)
 
-    // 3. 49개 기관과 유사도 계산
-    const similarSites = findSimilarSites(structure, referenceData.agencies)
+    // 3. 개선된 Nielsen 평가 (22개 독립 항목)
+    const improvedScores = calculateImprovedNielsen(structure)
+    const improvedDiagnoses = generateImprovedDiagnoses(structure, improvedScores, url)
+    
+    // 4. 편의성/디자인 점수 계산 (개선된 항목 기준)
+    const convenienceItems = [
+      improvedScores.N1_1_current_location,
+      improvedScores.N1_2_loading_status,
+      improvedScores.N1_3_action_feedback,
+      improvedScores.N3_1_undo_redo,
+      improvedScores.N3_3_flexible_navigation,
+      improvedScores.N5_1_input_validation,
+      improvedScores.N5_2_confirmation_dialog,
+      improvedScores.N5_3_constraints,
+      improvedScores.N6_2_recognition_cues,
+      improvedScores.N6_3_memory_load,
+      improvedScores.N7_1_quick_access,
+      improvedScores.N7_2_customization,
+      improvedScores.N7_3_search_filter,
+    ]
+    
+    const designItems = [
+      improvedScores.N2_1_familiar_terms,
+      improvedScores.N2_2_natural_flow,
+      improvedScores.N2_3_real_world_metaphor,
+      improvedScores.N4_1_visual_consistency,
+      improvedScores.N4_2_terminology_consistency,
+      improvedScores.N4_3_standard_compliance,
+      improvedScores.N8_1_essential_info,
+      improvedScores.N8_2_clean_interface,
+      improvedScores.N8_3_visual_hierarchy,
+      improvedScores.N9_2_recovery_support,
+      improvedScores.N9_4_error_guidance,
+      improvedScores.N10_1_help_visibility,
+      improvedScores.N10_2_documentation,
+    ]
+    
+    const convenience = convenienceItems.reduce((sum, s) => sum + s, 0) / convenienceItems.length
+    const design = designItems.reduce((sum, s) => sum + s, 0) / designItems.length
+    const overall = (convenience + design) / 2
+    
+    // 5. 응답 포맷 (convenience_items, design_items 포함)
+    const convenience_items_detail: any[] = []
+    const design_items_detail: any[] = []
+    
+    // 편의성 항목 상세
+    const convenienceKeys = [
+      'N1.1_현재_위치', 'N1.2_로딩_상태', 'N1.3_행동_피드백',
+      'N3.1_실행_취소', 'N3.3_유연한_네비게이션',
+      'N5.1_입력_검증', 'N5.2_확인_대화상자', 'N5.3_제약_조건_표시',
+      'N6.2_인식_단서', 'N6.3_기억_부담',
+      'N7.1_빠른_접근', 'N7.2_맞춤_설정', 'N7.3_검색_필터',
+    ]
+    
+    convenienceItems.forEach((score, idx) => {
+      const key = convenienceKeys[idx]
+      convenience_items_detail.push({
+        item: key,
+        category: '편의성',
+        score: Math.round(score * 10) / 10,
+        diagnosis: improvedDiagnoses[key.split('_')[0] + '_' + key.split('_')[1]] || ''
+      })
+    })
+    
+    // 디자인 항목 상세
+    const designKeys = [
+      'N2.1_친숙한_용어', 'N2.2_자연스러운_흐름', 'N2.3_현실_세계_은유',
+      'N4.1_시각적_일관성', 'N4.2_용어_일관성', 'N4.3_표준_준수',
+      'N8.1_핵심_정보', 'N8.2_깔끔한_인터페이스', 'N8.3_시각적_계층',
+      'N9.2_복구_지원', 'N9.4_오류_안내',
+      'N10.1_도움말_가시성', 'N10.2_문서화',
+    ]
+    
+    designItems.forEach((score, idx) => {
+      const key = designKeys[idx]
+      design_items_detail.push({
+        item: key,
+        category: '디자인',
+        score: Math.round(score * 10) / 10,
+        diagnosis: improvedDiagnoses[key.split('_')[0] + '_' + key.split('_')[1]] || ''
+      })
+    })
+    
+    // 6. 개선 제안 생성
+    const recommendations = generateImprovedRecommendations(structure, improvedScores)
 
-    // 4. 예측 점수 산출
-    const predictedScore = calculatePredictedScore(similarSites, structure, url)
-
-    // 5. 개선 제안 생성
-    const recommendations = generateRecommendations(structure, predictedScore)
-
-    // 응답 (49개 기관 유사도는 내부적으로만 사용, 외부 노출 안함)
+    // 응답
     return c.json({
       url,
       analysis_date: new Date().toISOString(),
+      version: '3.0-improved',
       structure: {
         navigation: structure.navigation,
         accessibility: structure.accessibility,
@@ -157,8 +236,22 @@ app.post('/api/analyze', async (c) => {
         forms: structure.forms,
         visuals: structure.visuals
       },
-      // similar_sites: similarSites,  // 🔒 49개 기관 정보 숨김
-      predicted_score: predictedScore,
+      predicted_score: {
+        overall: Math.round(overall * 100) / 100,
+        convenience: Math.round(convenience * 100) / 100,
+        design: Math.round(design * 100) / 100,
+        convenience_items: convenience_items_detail,
+        design_items: design_items_detail,
+        nielsen_scores: improvedScores,
+        nielsen_diagnoses: improvedDiagnoses
+      },
+      improvements: {
+        total_items: 22,  // 개선: 25 → 22개 독립 항목
+        removed_duplicates: 3,  // N3.2, N9.1, N9.3 제거
+        new_items: 3,  // N7.3, N9.2, N9.4 추가/강화
+        score_levels: 7,  // 2단계 → 7단계 세밀화
+        search_detection: 'improved'  // 검색 탐지 개선
+      },
       recommendations
     })
 
@@ -171,8 +264,8 @@ app.post('/api/analyze', async (c) => {
   }
 })
 
-// 개선 제안 생성 함수
-function generateRecommendations(structure: any, score: any): string[] {
+// 개선된 추천 생성 함수
+function generateImprovedRecommendations(structure: any, scores: any): string[] {
   const recommendations: string[] = []
 
   // 접근성 관련
@@ -191,47 +284,55 @@ function generateRecommendations(structure: any, score: any): string[] {
 
   // 네비게이션 관련
   if (!structure.navigation.searchExists) {
-    recommendations.push('🔎 사이트 내 검색 기능을 추가하세요.')
+    recommendations.push('🔎 사이트 내 검색/필터 기능을 추가하세요. (N7.3)')
   }
 
   if (!structure.navigation.breadcrumbExists) {
-    recommendations.push('📍 Breadcrumb 내비게이션을 추가하여 현재 위치를 표시하세요.')
+    recommendations.push('📍 Breadcrumb 내비게이션을 추가하여 현재 위치를 표시하세요. (N1.1)')
   }
 
   // 폼 관련
   if (structure.forms.formCount > 0 && structure.forms.labelRatio < 0.9) {
-    recommendations.push('🏷️ 모든 입력 필드에 label을 연결하세요.')
+    recommendations.push('🏷️ 모든 입력 필드에 label을 연결하세요. (N5.3)')
   }
 
   if (structure.forms.formCount > 0 && !structure.forms.validationExists) {
-    recommendations.push('✅ 폼 입력 검증 기능을 추가하세요.')
+    recommendations.push('✅ 폼 입력 검증 기능을 추가하세요. (N5.1)')
   }
 
   // 콘텐츠 관련
   if (structure.content.headingCount < 5) {
-    recommendations.push('📝 명확한 정보 구조를 위해 제목 태그(h1-h6)를 활용하세요.')
+    recommendations.push('📝 명확한 정보 구조를 위해 제목 태그(h1-h6)를 활용하세요. (N8.3)')
   }
 
-  // Nielsen 점수 기반 제안
-  if (score.nielsen_scores.N1_visibility < 3.5) {
-    recommendations.push('👁️ 시스템 상태를 더 명확하게 표시하세요. (로딩 상태, 현재 위치 등)')
+  // 개선된 Nielsen 점수 기반 제안
+  if (scores.N1_1_current_location < 3.5) {
+    recommendations.push('👁️ Breadcrumb을 추가하여 사용자가 현재 위치를 파악하도록 하세요. (N1.1)')
   }
 
-  if (score.nielsen_scores.N8_minimalism < 3.5) {
-    recommendations.push('🎨 불필요한 요소를 제거하고 핵심 콘텐츠에 집중하세요.')
+  if (scores.N7_3_search_filter < 3.5) {
+    recommendations.push('🔍 검색 또는 필터 기능을 추가하여 정보 탐색을 쉽게 하세요. (N7.3)')
   }
 
-  if (score.nielsen_scores.N10_help < 3.5) {
-    recommendations.push('❓ 도움말이나 FAQ 섹션을 추가하세요.')
+  if (scores.N8_1_essential_info < 3.5) {
+    recommendations.push('✂️ 불필요한 콘텐츠를 제거하고 핵심 정보에 집중하세요. (N8.1)')
   }
 
-  return recommendations.slice(0, 5) // 최대 5개만 반환
+  if (scores.N9_2_recovery_support < 3.5 && structure.forms.formCount > 0) {
+    recommendations.push('🔄 폼 입력 오류 시 복구 방법을 명확히 안내하세요. (N9.2)')
+  }
+
+  if (scores.N10_1_help_visibility < 3.5) {
+    recommendations.push('❓ 도움말/FAQ를 찾기 쉽게 배치하세요. (N10.1)')
+  }
+
+  return recommendations.slice(0, 8) // 최대 8개 반환
 }
 
 // Catch-all route - wrangler will serve static files from dist/
 // This is just a fallback
 app.get('/', (c) => {
-  return c.text('API is running. Use /api/analyze endpoint.', 200)
+  return c.text('AutoAnalyzer API v3.0 - Improved Nielsen System', 200)
 })
 
 app.notFound((c) => {

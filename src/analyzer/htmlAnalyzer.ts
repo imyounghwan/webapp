@@ -84,7 +84,26 @@ function analyzeNavigation(html: string): NavigationStructure {
     /(class|id)\s*=\s*["'][^"']*location[^"']*["']/i.test(html) || // location 클래스/ID
     />\s*Home\s*<.*?>\s*[>›▶]\s*</i.test(html)    // Home > 메뉴 형태
   
-  const searchExists = /type\s*=\s*["']search["']/i.test(html) || /role\s*=\s*["']search["']/i.test(html)
+  // 검색 기능 탐지 (개선된 포괄적 패턴)
+  const searchExists = 
+    // HTML5 표준
+    /type\s*=\s*["']search["']/i.test(html) ||
+    // ARIA 접근성
+    /role\s*=\s*["']search["']/i.test(html) ||
+    // name 속성으로 검색 (search, query, keyword, searchWord 등)
+    /name\s*=\s*["'](search|query|keyword|searchWord|q|kwd)[^"']*["']/i.test(html) ||
+    // class/id에 search 포함
+    /(class|id)\s*=\s*["'][^"']*search[^"']*["']/i.test(html) ||
+    // placeholder에 "검색" 텍스트
+    /placeholder\s*=\s*["'][^"']*검색[^"']*["']/i.test(html) ||
+    /placeholder\s*=\s*["'][^"']*search[^"']*["']/i.test(html) ||
+    // 검색 버튼
+    /<button[^>]*>[^<]*검색[^<]*<\/button>/i.test(html) ||
+    /<button[^>]*>[^<]*search[^<]*<\/button>/i.test(html) ||
+    // 검색 링크
+    /<a[^>]*href\s*=\s*["'][^"']*(search|\/search\.)[^"']*["'][^>]*>[^<]*검색[^<]*<\/a>/i.test(html) ||
+    // input 근처에 검색 관련 텍스트
+    /<input[^>]*[^>]*>[\s\S]{0,100}검색/i.test(html)
   
   // 메뉴 깊이 추정 (ul > li > ul 구조 카운트)
   const nestedUlMatches = html.match(/<ul[^>]*>[\s\S]*?<li[^>]*>[\s\S]*?<ul/gi) || []
