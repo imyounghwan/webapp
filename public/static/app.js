@@ -361,6 +361,10 @@ function displayResults(data, resultElement) {
         </div>
     `;
     
+    // 결과 영역 표시
+    resultElement.style.display = 'block';
+    console.log('✅ Results displayed successfully');
+    
     // 수정 버튼에 이벤트 리스너 추가
     document.querySelectorAll('.edit-score-btn').forEach(btn => {
         btn.addEventListener('click', function() {
