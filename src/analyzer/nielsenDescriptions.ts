@@ -1,5 +1,6 @@
 /**
- * Nielsen 22개 항목 상세 설명 (v3.0)
+ * Nielsen 26개 항목 상세 설명 (v3.1 - 사용자 친화적 버전)
+ * 전문 용어를 최소화하고 구체적인 예시를 포함
  */
 
 export interface ItemDescription {
@@ -15,237 +16,237 @@ export interface ItemDescription {
 export const nielsenDescriptions: Record<string, ItemDescription> = {
   'N1_1': {
     id: 'N1.1',
-    name: '현재 위치 표시',
+    name: '내가 어디있는지 알려주기',
     category: '편의성',
     principle: 'N1: 시스템 상태 가시성',
-    description: 'Breadcrumb 네비게이션 등을 통해 사용자가 웹사이트 내에서 현재 어디에 있는지 명확하게 보여줍니다.',
-    why_important: '사용자가 자신의 위치를 모르면 길을 잃고 목표를 달성하기 어렵습니다.',
-    evaluation_criteria: 'Breadcrumb 존재 여부, 경로 표시의 명확성'
+    description: '홈 > 회사소개 > 연혁 처럼 현재 페이지의 위치를 보여주는 경로(빵 부스러기) 표시',
+    why_important: '큰 쇼핑몰에서 길을 잃으면 원하는 매장을 찾기 어렵듯이, 웹사이트에서도 내 위치를 모르면 헤매게 됩니다.',
+    evaluation_criteria: '상단에 "홈 > 카테고리 > 현재페이지" 같은 경로 표시가 있는지 확인'
   },
   'N1_2': {
     id: 'N1.2',
-    name: '로딩 상태 표시',
+    name: '로딩중이라고 알려주기',
     category: '편의성',
     principle: 'N1: 시스템 상태 가시성',
-    description: 'ARIA 레이블 등으로 페이지 로딩이나 처리 중임을 사용자에게 알립니다.',
-    why_important: '시스템이 응답하는지 사용자가 모르면 혼란과 불안을 느낍니다.',
-    evaluation_criteria: 'ARIA 레이블 수, 로딩 인디케이터 존재 여부'
+    description: '페이지를 불러오는 중이거나 데이터 처리 중일 때 빙글빙글 도는 아이콘이나 "처리중..." 메시지 표시',
+    why_important: '아무 반응이 없으면 "고장났나?" 하고 불안해지고, 버튼을 여러 번 누르게 됩니다.',
+    evaluation_criteria: '느린 작업 중에 로딩 표시나 진행상황 바가 있는지 확인'
   },
   'N1_3': {
     id: 'N1.3',
-    name: '행동 피드백',
+    name: '내 행동에 반응하기',
     category: '편의성',
     principle: 'N1: 시스템 상태 가시성',
-    description: '사용자 행동(클릭, 입력 등)에 대한 즉각적인 반응을 제공합니다.',
-    why_important: '피드백이 없으면 사용자는 자신의 행동이 받아들여졌는지 알 수 없습니다.',
-    evaluation_criteria: '폼 검증, 호버 효과, 클릭 피드백 존재'
+    description: '버튼을 누르면 색이 바뀌거나, 입력란에 잘못 입력하면 즉시 "올바른 형식이 아닙니다" 같은 피드백 제공',
+    why_important: '버튼을 눌렀는데 아무 변화가 없으면 "내가 잘못 눌렀나?" 하고 혼란스럽습니다.',
+    evaluation_criteria: '마우스를 올리면 색이 바뀌는지, 입력 오류를 바로 알려주는지 확인'
   },
   'N2_1': {
     id: 'N2.1',
-    name: '친숙한 용어',
+    name: '쉬운 말로 쓰기',
     category: '편의성',
     principle: 'N2: 현실 세계 일치',
-    description: '사용자가 이해하기 쉬운 일상 언어와 표현을 사용합니다.',
-    why_important: '전문 용어나 시스템 중심 언어는 사용자를 혼란스럽게 합니다.',
-    evaluation_criteria: 'HTML lang 속성, 한국어/영어 명확성'
+    description: '"Submit" 대신 "제출하기", "Authentication Failed" 대신 "로그인 실패" 처럼 일상 언어 사용',
+    why_important: '전문 용어나 영어는 일반 사용자가 이해하기 어렵고 불편합니다.',
+    evaluation_criteria: '한국 사이트인데 영어나 어려운 전문용어를 많이 쓰는지 확인'
   },
   'N2_2': {
     id: 'N2.2',
-    name: '자연스러운 흐름',
+    name: '자연스러운 순서로 배치',
     category: '편의성',
     principle: 'N2: 현실 세계 일치',
-    description: '정보가 논리적이고 예측 가능한 순서로 배치되어 있습니다.',
-    why_important: '예상치 못한 순서는 사용자의 멘탈 모델과 충돌합니다.',
-    evaluation_criteria: '헤딩 구조, 콘텐츠 흐름의 논리성'
+    description: '회원가입 시 "이름 → 이메일 → 비밀번호" 순서처럼 예상 가능한 흐름으로 정보 배치',
+    why_important: '뒤죽박죽 순서는 "왜 이게 여기있지?" 하며 헷갈리게 만듭니다.',
+    evaluation_criteria: '정보 순서가 논리적인지, 제목-내용 구조가 명확한지 확인'
   },
   'N2_3': {
     id: 'N2.3',
-    name: '현실 세계 은유',
+    name: '직관적인 아이콘 사용',
     category: '디자인',
     principle: 'N2: 현실 세계 일치',
-    description: '아이콘, 버튼 등이 현실 세계 객체를 시각적으로 표현합니다.',
-    why_important: '친숙한 은유는 학습 비용을 줄이고 직관성을 높입니다.',
-    evaluation_criteria: '아이콘 사용 수, 시각적 메타포의 적절성'
+    description: '휴지통 아이콘은 삭제, 돋보기는 검색처럼 현실 물건과 똑같이 생긴 아이콘 사용',
+    why_important: '익숙한 모양은 설명 없이도 바로 이해할 수 있어서 편합니다.',
+    evaluation_criteria: '아이콘이 많이 사용되는지, 의미가 명확한지 확인'
   },
   'N3_1': {
     id: 'N3.1',
-    name: '실행 취소',
+    name: '되돌리기 버튼 제공',
     category: '편의성',
     principle: 'N3: 사용자 제어와 자유',
-    description: '사용자가 실수를 되돌릴 수 있는 기능을 제공합니다 (폼 리셋 등).',
-    why_important: '실수를 복구할 수 없으면 사용자는 시스템을 신뢰하지 않습니다.',
-    evaluation_criteria: '폼 리셋 버튼, 뒤로 가기 지원'
+    description: '긴 폼 작성 중 "초기화" 버튼이나, 잘못 입력한 내용을 "취소" 할 수 있는 기능 제공',
+    why_important: '실수를 고칠 방법이 없으면 처음부터 다시 해야 해서 짜증납니다.',
+    evaluation_criteria: '폼에 "초기화" 버튼이나 뒤로가기가 잘 작동하는지 확인'
   },
   'N3_3': {
-    id: 'N3.3',
-    name: '유연한 탐색',
+    id: 'N3_3',
+    name: '여러 길로 갈 수 있게 하기',
     category: '편의성',
     principle: 'N3: 사용자 제어와 자유',
-    description: '다양한 경로와 방법으로 원하는 정보에 도달할 수 있습니다.',
-    why_important: '단일 경로만 제공하면 사용자가 막혔을 때 대안이 없습니다.',
-    evaluation_criteria: '링크 수, 다양한 탐색 옵션'
+    description: '고객센터를 상단메뉴, 하단링크, 검색 등 여러 방법으로 찾아갈 수 있도록 구성',
+    why_important: '한 가지 길만 있으면 그 길을 놓치면 막막합니다.',
+    evaluation_criteria: '중요 페이지로 가는 링크가 여러 곳에 있는지 확인'
   },
   'N4_1': {
     id: 'N4.1',
-    name: '시각적 일관성',
+    name: '통일된 디자인',
     category: '디자인',
     principle: 'N4: 일관성과 표준',
-    description: '색상, 폰트, 레이아웃이 페이지 전체에서 통일되어 있습니다.',
-    why_important: '일관성이 없으면 사용자는 매번 새로 학습해야 합니다.',
-    evaluation_criteria: '이미지 수와 분포, 시각적 스타일 통일성'
+    description: '모든 페이지에서 같은 색상, 같은 폰트, 같은 버튼 스타일 사용',
+    why_important: '페이지마다 디자인이 다르면 매번 새로 익혀야 해서 피곤합니다.',
+    evaluation_criteria: '페이지별로 색상, 폰트, 레이아웃이 비슷한지 확인'
   },
   'N4_2': {
     id: 'N4.2',
-    name: '용어 일관성',
+    name: '같은 말로 통일하기',
     category: '편의성',
     principle: 'N4: 일관성과 표준',
-    description: '같은 개념을 같은 단어로 일관되게 표현합니다.',
-    why_important: '같은 것을 다르게 부르면 사용자가 혼란스럽습니다.',
-    evaluation_criteria: '헤딩 구조, 용어 사용의 일관성'
+    description: '"로그인"을 어떤 페이지에선 "로그인", 다른 페이지에선 "Sign In"으로 부르지 않고 하나로 통일',
+    why_important: '같은 기능을 다르게 부르면 "이게 다른 건가?" 하고 헷갈립니다.',
+    evaluation_criteria: '같은 개념을 여러 이름으로 부르지 않는지 확인'
   },
   'N4_3': {
     id: 'N4.3',
-    name: '표준 준수',
+    name: '웹 표준 지키기',
     category: '편의성',
     principle: 'N4: 일관성과 표준',
-    description: 'HTML, 접근성 등 웹 표준을 따릅니다 (lang, alt, ARIA 등).',
-    why_important: '표준을 따르지 않으면 보조 기술이 제대로 작동하지 않습니다.',
-    evaluation_criteria: 'HTML lang, alt text 비율, ARIA 사용'
+    description: '이미지에 설명글(alt) 추가, 페이지 언어(한국어) 명시 등 웹 기본 규칙 준수',
+    why_important: '표준을 안 지키면 시각장애인용 화면낭독기 같은 보조도구가 제대로 작동하지 않습니다.',
+    evaluation_criteria: '이미지마다 설명이 있는지, HTML이 올바르게 작성됐는지 확인'
   },
   'N5_1': {
     id: 'N5.1',
-    name: '입력 검증',
+    name: '잘못된 입력 미리 막기',
     category: '편의성',
     principle: 'N5: 오류 예방',
-    description: '잘못된 형식의 데이터 입력을 사전에 차단합니다 (required, pattern 등).',
-    why_important: '오류가 발생한 후 수정하는 것보다 예방이 효율적입니다.',
-    evaluation_criteria: 'HTML5 validation 속성 (required, pattern, min, max 등)'
+    description: '이메일 입력란에 숫자만 입력하면 "올바른 이메일이 아닙니다" 즉시 표시, 필수항목 빈칸 제출 차단',
+    why_important: '잘못 입력하고 제출한 뒤 오류 보는 것보다, 입력 중에 미리 알려주는 게 편합니다.',
+    evaluation_criteria: '입력란에 형식 검사(이메일, 숫자, 필수 등)가 있는지 확인'
   },
   'N5_2': {
     id: 'N5.2',
-    name: '확인 대화상자',
+    name: '중요한 작업은 재확인',
     category: '편의성',
     principle: 'N5: 오류 예방',
-    description: '중요한 작업 전 사용자에게 재확인을 요청합니다.',
-    why_important: '되돌릴 수 없는 작업은 확인 절차가 필수입니다.',
-    evaluation_criteria: '폼 존재 여부 (확인 가능성)'
+    description: '삭제, 결제 같은 중요한 버튼 누르면 "정말 삭제하시겠습니까?" 재확인 팝업 표시',
+    why_important: '실수로 눌러서 돌이킬 수 없는 일이 생기면 큰일입니다.',
+    evaluation_criteria: '중요한 작업 전에 확인 메시지가 나오는지 확인'
   },
   'N5_3': {
     id: 'N5.3',
-    name: '제약 조건 표시',
+    name: '입력 조건 미리 알려주기',
     category: '편의성',
     principle: 'N5: 오류 예방',
-    description: '입력 필드에 레이블로 제약사항을 명확히 안내합니다.',
-    why_important: '제약을 모르면 오류를 피할 수 없습니다.',
-    evaluation_criteria: 'Label-input 연결 비율, placeholder 사용'
+    description: '비밀번호 입력란 옆에 "8자 이상, 영문+숫자 조합" 같은 조건을 미리 표시',
+    why_important: '규칙을 모르고 입력했다가 오류 나면 다시 입력해야 해서 귀찮습니다.',
+    evaluation_criteria: '입력란마다 무엇을 입력해야 하는지 설명이 있는지 확인'
   },
   'N6_2': {
     id: 'N6.2',
-    name: '인식 단서',
+    name: '아이콘으로 기능 표시',
     category: '편의성',
     principle: 'N6: 인식보다 회상',
-    description: '아이콘, 툴팁 등으로 사용자가 기억하지 않아도 기능을 인식할 수 있습니다.',
-    why_important: '기억에 의존하면 인지 부담이 증가합니다.',
-    evaluation_criteria: '아이콘 수, 시각적 힌트'
+    description: '프린터 아이콘만 봐도 "인쇄" 기능인 걸 알 수 있도록 시각적 힌트 제공',
+    why_important: '"이 버튼이 뭐였지?" 하고 기억해내려 애쓰는 것보다 보고 바로 아는 게 편합니다.',
+    evaluation_criteria: '아이콘이나 툴팁으로 기능을 명확히 보여주는지 확인'
   },
   'N6_3': {
     id: 'N6.3',
-    name: '기억 부담 최소화',
+    name: '기억할 것 최소화',
     category: '편의성',
     principle: 'N6: 인식보다 회상',
-    description: 'Breadcrumb, 명확한 레이블로 정보를 기억할 부담을 줄입니다.',
-    why_important: '작업 기억은 제한적이므로 최소화해야 합니다.',
-    evaluation_criteria: 'Breadcrumb, 탐색 깊이'
+    description: '여러 단계 작업 시 이전 단계 정보를 화면에 계속 보여줘서 기억하지 않아도 되게 하기',
+    why_important: '머릿속으로 기억하면서 작업하면 실수하기 쉽고 피곤합니다.',
+    evaluation_criteria: '페이지 경로나 이전 선택이 계속 보이는지 확인'
   },
   'N7_1': {
     id: 'N7.1',
-    name: '빠른 접근',
+    name: '메인 기능 빠르게 접근',
     category: '편의성',
     principle: 'N7: 유연성과 효율성',
-    description: '메인 메뉴, GNB 등으로 주요 기능에 클릭 1~2회로 도달할 수 있습니다.',
-    why_important: '깊은 계층 구조는 효율성을 떨어뜨립니다.',
-    evaluation_criteria: '메뉴 수, 링크 접근성'
+    description: '상단 메뉴에서 1~2번 클릭으로 회사소개, 제품, 고객센터 같은 주요 페이지 도달',
+    why_important: '5~6번 클릭해야 원하는 페이지 나오면 지쳐서 포기하게 됩니다.',
+    evaluation_criteria: '주요 메뉴가 첫 화면에 바로 보이는지 확인'
   },
   'N7_2': {
     id: 'N7.2',
-    name: '맞춤 설정',
+    name: '화면 크기에 맞게 조정',
     category: '편의성',
     principle: 'N7: 유연성과 효율성',
-    description: '반응형 디자인, 글자 크기 조절 등 사용자 환경에 맞게 조정할 수 있습니다.',
-    why_important: '사용자마다 선호와 필요가 다릅니다.',
-    evaluation_criteria: '반응형 디자인, 접근성 옵션'
+    description: '스마트폰, 태블릿, PC 등 어떤 기기로 봐도 화면에 맞게 자동으로 크기 조정(반응형)',
+    why_important: '스마트폰에서 PC용 화면이 그대로 나오면 글자가 너무 작아서 못 읽습니다.',
+    evaluation_criteria: '브라우저 창 크기를 바꿔도 레이아웃이 깨지지 않는지 확인'
   },
   'N7_3': {
     id: 'N7.3',
-    name: '검색/필터',
+    name: '검색 기능 제공',
     category: '편의성',
     principle: 'N7: 유연성과 효율성',
-    description: '사이트 내 검색으로 원하는 정보를 빠르게 찾을 수 있습니다.',
-    why_important: '대량의 정보를 브라우징만으로 찾기는 비효율적입니다.',
-    evaluation_criteria: '검색 기능 존재 여부'
+    description: '페이지 상단에 검색창이 있어서 원하는 정보를 키워드로 바로 찾을 수 있음',
+    why_important: '메뉴를 계속 뒤져보는 것보다 검색이 훨씬 빠릅니다.',
+    evaluation_criteria: '사이트 내 검색 기능이 눈에 잘 보이는지 확인'
   },
   'N8_1': {
     id: 'N8.1',
-    name: '핵심 정보',
+    name: '필요한 정보만 보여주기',
     category: '디자인',
     principle: 'N8: 미니멀 디자인',
-    description: '불필요한 내용 없이 꼭 필요한 정보만 간결하게 제공합니다.',
-    why_important: '과도한 정보는 중요한 것을 가립니다.',
-    evaluation_criteria: '문단 수, 정보 밀도'
+    description: '한 페이지에 너무 많은 내용을 담지 않고, 핵심만 간결하게 표시',
+    why_important: '정보가 너무 많으면 정작 중요한 걸 못 찾고 압도당합니다.',
+    evaluation_criteria: '한 페이지 글자 수가 적당한지, 군더더기가 없는지 확인'
   },
   'N8_2': {
     id: 'N8.2',
-    name: '깔끔한 인터페이스',
+    name: '깔끔하고 여유있게',
     category: '디자인',
     principle: 'N8: 미니멀 디자인',
-    description: '여백, 정렬, 이미지 수를 적절히 유지해 시각적 부담을 줄입니다.',
-    why_important: '복잡한 인터페이스는 사용자를 압도합니다.',
-    evaluation_criteria: '이미지 수, 시각적 복잡도'
+    description: '이미지, 버튼, 글자 사이에 적당한 여백을 두어 답답하지 않게 구성',
+    why_important: '빽빽하게 채우면 눈이 피곤하고 어디를 봐야 할지 모릅니다.',
+    evaluation_criteria: '이미지와 텍스트가 너무 많지 않고 여백이 있는지 확인'
   },
   'N8_3': {
     id: 'N8.3',
-    name: '시각적 계층',
+    name: '중요도 순서대로 배치',
     category: '디자인',
     principle: 'N8: 미니멀 디자인',
-    description: '헤딩 구조로 중요도에 따라 정보를 계층적으로 배치합니다.',
-    why_important: '평평한 구조는 무엇이 중요한지 알기 어렵습니다.',
-    evaluation_criteria: '헤딩 수, 계층 구조 명확성'
+    description: '큰 제목 → 중간 제목 → 본문 순서로 크기를 달리해서 중요도 표현',
+    why_important: '모든 글자가 똑같은 크기면 무엇이 중요한지 알 수 없습니다.',
+    evaluation_criteria: '제목이 본문보다 크고 눈에 띄는지 확인'
   },
   'N9_2': {
     id: 'N9.2',
-    name: '복구 지원',
-    category: '디자인',
+    name: '오류 발생시 복구 지원',
+    category: '편의성',
     principle: 'N9: 오류 인식과 복구',
-    description: '오류 발생 시 사용자가 쉽게 이전 상태로 돌아가거나 재시도할 수 있습니다.',
-    why_important: '오류에서 벗어날 방법이 없으면 사용자는 포기합니다.',
-    evaluation_criteria: '폼 검증, 오류 복구 메커니즘'
+    description: '오류 나도 입력한 내용이 그대로 남아있어서 처음부터 다시 안 해도 됨',
+    why_important: '오류 나서 다 날아가면 화가 나서 아예 그만두게 됩니다.',
+    evaluation_criteria: '폼 제출 실패해도 입력 내용이 유지되는지 확인'
   },
   'N9_4': {
     id: 'N9.4',
-    name: '오류 안내',
-    category: '디자인',
+    name: '오류 원인 명확하게 설명',
+    category: '편의성',
     principle: 'N9: 오류 인식과 복구',
-    description: '오류 메시지가 명확하고 해결 방법을 구체적으로 제시합니다.',
-    why_important: '모호한 오류 메시지는 사용자를 더 혼란스럽게 합니다.',
-    evaluation_criteria: '리스트 구조, 안내 정보의 명확성'
+    description: '"오류 발생" 대신 "비밀번호는 8자 이상이어야 합니다" 처럼 구체적인 해결방법 제시',
+    why_important: '무슨 문제인지 모르면 어떻게 고쳐야 할지 알 수 없습니다.',
+    evaluation_criteria: '오류 메시지가 구체적이고 해결책을 알려주는지 확인'
   },
   'N10_1': {
     id: 'N10.1',
-    name: '도움말 가시성',
-    category: '디자인',
+    name: '도움말 찾기 쉽게',
+    category: '편의성',
     principle: 'N10: 도움말과 문서',
-    description: '도움말, FAQ를 찾기 쉬운 위치에 배치합니다.',
-    why_important: '도움이 필요할 때 찾을 수 없으면 의미가 없습니다.',
-    evaluation_criteria: '검색 기능, 리스트 구조, 링크 수'
+    description: 'FAQ, 도움말 버튼이 페이지 상단이나 하단에 항상 보이는 위치에 있음',
+    why_important: '모를 때 도움말을 못 찾으면 답답해서 포기합니다.',
+    evaluation_criteria: '도움말이나 FAQ 링크가 눈에 잘 띄는지 확인'
   },
   'N10_2': {
     id: 'N10.2',
-    name: '문서화',
-    category: '디자인',
+    name: '체계적인 도움말 문서',
+    category: '편의성',
     principle: 'N10: 도움말과 문서',
-    description: 'FAQ, 가이드 등이 체계적으로 정리되어 있습니다.',
-    why_important: '산발적인 정보는 찾고 이해하기 어렵습니다.',
-    evaluation_criteria: '리스트 수, 문서 구조화 수준'
+    description: 'FAQ가 주제별로 정리되어 있고, 가이드 문서가 단계별로 잘 설명됨',
+    why_important: '도움말이 뒤죽박죽이면 찾기 어렵고 이해하기 힘듭니다.',
+    evaluation_criteria: '도움말이 카테고리별로 정리되어 있는지 확인'
   }
 }
 

@@ -441,7 +441,7 @@ app.post('/api/analyze', async (c) => {
       const relevantPages = itemRelevance.get(id) || [url]
       
       convenience_items_detail.push({
-        item: key,
+        item: desc?.name || key,
         item_id: id,
         category: '편의성',
         score: Math.round(score * 10) / 10,
@@ -477,7 +477,7 @@ app.post('/api/analyze', async (c) => {
       const relevantPages = itemRelevance.get(id) || [url]
       
       design_items_detail.push({
-        item: key,
+        item: desc?.name || key,
         item_id: id,
         category: '디자인',
         score: Math.round(score * 10) / 10,
