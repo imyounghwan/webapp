@@ -982,12 +982,18 @@ function displayKRDSResults(data, resultElement) {
     const { krds, url, analyzed_at, total_pages, analyzed_pages, structure, metadata } = data;
     const { principles, compliance_level, convenience_score, scores, issues } = krds;
     
-    // 준수 레벨 색상
+    // 등급별 색상
+    // S급: 95점 이상 (골드)
+    // A급: 90~94점 (그린)
+    // B급: 85~89점 (블루)
+    // C급: 80~84점 (오렌지)
+    // F급: 80점 미만 (레드)
     const levelColors = {
-        'AAA': '#00C9A7',
-        'AA': '#0066FF',
-        'A': '#FFA500',
-        'Fail': '#FF5F57'
+        'S': '#FFD700',  // 골드
+        'A': '#00C9A7',  // 그린
+        'B': '#0066FF',  // 블루
+        'C': '#FFA500',  // 오렌지
+        'F': '#FF5F57'   // 레드
     };
     
     const levelColor = levelColors[compliance_level] || '#999';

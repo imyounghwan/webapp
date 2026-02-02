@@ -63,7 +63,7 @@ export interface KRDSPrincipleScores {
 export interface KRDSResult {
   scores: KRDSScores
   principles: KRDSPrincipleScores
-  compliance_level: 'A' | 'AA' | 'AAA' | 'Fail'  // WCAG 준수 레벨
+  compliance_level: 'S' | 'A' | 'B' | 'C' | 'F'  // 등급 (S: 95+, A: 90+, B: 85+, C: 80+, F: 80미만)
   convenience_score: number  // 0-100 웹 편의성 점수
   issues: Array<{
     item: string
@@ -428,11 +428,17 @@ export function evaluateKRDS(structure: HTMLStructure, pageResults?: Array<{ url
   // 최종 점수 = 준수율 × 100 (반올림)
   const convenience_score = Math.round(compliance_ratio * 100)
   
-  // 준수 레벨 결정
-  let compliance_level: 'A' | 'AA' | 'AAA' | 'Fail' = 'Fail'
-  if (convenience_score >= 95) compliance_level = 'AAA'
-  else if (convenience_score >= 85) compliance_level = 'AA'
-  else if (convenience_score >= 70) compliance_level = 'A'
+  // 등급 결정
+  // S급: 95점 이상 (우수)
+  // A급: 90~94점 (매우 양호)
+  // B급: 85~89점 (양호)
+  // C급: 80~84점 (보통)
+  // F급: 80점 미만 (미흡)
+  let compliance_level: 'S' | 'A' | 'B' | 'C' | 'F' = 'F'
+  if (convenience_score >= 95) compliance_level = 'S'
+  else if (convenience_score >= 90) compliance_level = 'A'
+  else if (convenience_score >= 85) compliance_level = 'B'
+  else if (convenience_score >= 80) compliance_level = 'C'
   
   // 이슈 수집: 점수가 낮은 모든 항목을 이슈로 보고
   const issues: KRDSResult['issues'] = []
