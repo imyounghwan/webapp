@@ -5,6 +5,7 @@ import { findSimilarSites, calculatePredictedScore } from './analyzer/similarity
 import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
 import { nielsenDescriptions, getItemDescription } from './analyzer/nielsenDescriptions'
 import { evaluateItemRelevance } from './analyzer/itemRelevance'
+import { evaluateKRDS } from './analyzer/krdsEvaluator'
 import { loadWeights, getWeightsVersion, getWeightsLastUpdated, loadReferenceStatistics } from './config/weightsLoader'
 import { generateWeightAdjustments, applyWeightAdjustments } from './config/weightAdjuster'
 import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } from './types/database'
@@ -456,10 +457,15 @@ function aggregateResults(pageResults: any[]): any {
 // 실시간 URL 분석 API
 app.post('/api/analyze', authMiddleware, async (c) => {
   try {
-    const { url } = await c.req.json()
+    const { url, mode = 'mgine' } = await c.req.json() // mode: 'mgine' | 'public'
 
     if (!url || !url.startsWith('http')) {
       return c.json({ error: 'Invalid URL' }, 400)
+    }
+    
+    // 평가 모드 검증
+    if (mode !== 'mgine' && mode !== 'public') {
+      return c.json({ error: 'Invalid mode. Must be "mgine" or "public"' }, 400)
     }
 
     // 1. 메인 + 서브 페이지 분석
@@ -470,6 +476,54 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     
     // 2.5. 항목별 영향 페이지 추적
     const itemRelevance = evaluateItemRelevance(pageResults)
+    
+    // 평가 모드에 따라 다른 로직 실행
+    if (mode === 'public') {
+      // ========================================
+      // 공공 UI/UX 분석 (KRDS 기반)
+      // ========================================
+      const krdsResult = evaluateKRDS(structure)
+      
+      return c.json({
+        mode: 'public',
+        mode_name: '공공 UI/UX 분석',
+        evaluation_standard: 'KWCAG 2.2 (한국형 웹 콘텐츠 접근성 지침)',
+        url,
+        analyzed_at: new Date().toISOString(),
+        total_pages: pageResults.length,
+        analyzed_pages: pageResults.map(p => p.url),
+        
+        // KRDS 평가 결과
+        krds: {
+          principles: krdsResult.principles,
+          compliance_level: krdsResult.compliance_level,
+          accessibility_score: krdsResult.accessibility_score,
+          scores: krdsResult.scores,
+          issues: krdsResult.issues,
+        },
+        
+        // HTML 구조 정보
+        structure: {
+          navigation: structure.navigation,
+          breadcrumb: structure.breadcrumb,
+          search: structure.search,
+          accessibility: structure.accessibility,
+          content: structure.content,
+          visual: structure.visual,
+        },
+        
+        metadata: {
+          principle_count: 4,
+          guideline_count: 14,
+          criterion_count: 33,
+          evaluation_method: 'KRDS (한국형 웹 접근성)',
+        }
+      })
+    }
+
+    // ========================================
+    // MGINE UI/UX 분석 (Nielsen 기반) - 기존 로직
+    // ========================================
 
     // 3. 개선된 Nielsen 평가 (22개 독립 항목)
     const improvedScores = calculateImprovedNielsen(structure)
@@ -618,6 +672,9 @@ app.post('/api/analyze', authMiddleware, async (c) => {
 
     // 응답
     return c.json({
+      mode: 'mgine',
+      mode_name: 'MGINE UI/UX 분석',
+      evaluation_standard: 'Nielsen 10 Heuristics (22개 세부 항목)',
       url,
       analysis_date: new Date().toISOString(),
       version: '3.0-improved',

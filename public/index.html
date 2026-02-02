@@ -443,6 +443,44 @@
                     <p class="analyze-description">
                         분석 대상 웹사이트의 페이지 중 랜덤하게 평가 대상 페이지를 선정하여 UI/UX AI가 1차 분석을 시작합니다. Nielsen 10원칙을 기반으로 빅데이터를 활용하여 전문적인 평가를 진행합니다.
                     </p>
+                    
+                    <!-- 평가 모드 선택 -->
+                    <div class="evaluation-mode" style="margin-bottom: 30px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                        <label class="eval-mode-label" style="display: flex; align-items: center; cursor: pointer; padding: 15px 25px; background: rgba(0, 102, 255, 0.1); border: 2px solid #0066FF; border-radius: 12px; transition: all 0.3s; flex: 1; max-width: 400px; min-width: 280px;">
+                            <input type="radio" name="evalMode" value="mgine" checked style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; accent-color: #0066FF;">
+                            <div style="text-align: left;">
+                                <div style="font-weight: 700; font-size: 1.1rem; color: #0066FF; margin-bottom: 5px;">MGINE UI/UX 분석</div>
+                                <div style="font-size: 0.85rem; color: #9CA3AF;">Nielsen 10원칙 기반 (일반 기업/커머스)</div>
+                            </div>
+                        </label>
+                        <label class="eval-mode-label" style="display: flex; align-items: center; cursor: pointer; padding: 15px 25px; background: rgba(0, 201, 167, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; transition: all 0.3s; flex: 1; max-width: 400px; min-width: 280px;">
+                            <input type="radio" name="evalMode" value="public" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; accent-color: #00C9A7;">
+                            <div style="text-align: left;">
+                                <div style="font-weight: 700; font-size: 1.1rem; color: #00C9A7; margin-bottom: 5px;">공공 UI/UX 분석</div>
+                                <div style="font-size: 0.85rem; color: #9CA3AF;">KRDS (KWCAG 2.2) 기반 (공공기관)</div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <style>
+                        .eval-mode-label:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.2);
+                        }
+                        .eval-mode-label:has(input:checked) {
+                            box-shadow: 0 10px 40px rgba(0, 102, 255, 0.3);
+                            transform: scale(1.02);
+                        }
+                        @media (max-width: 768px) {
+                            .evaluation-mode {
+                                flex-direction: column !important;
+                            }
+                            .eval-mode-label {
+                                max-width: 100% !important;
+                            }
+                        }
+                    </style>
+                    
                     <div class="analyze-form">
                         <input 
                             type="text" 

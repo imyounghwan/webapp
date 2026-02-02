@@ -101,13 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            // 평가 모드 가져오기
+            const selectedMode = document.querySelector('input[name="evalMode"]:checked')?.value || 'mgine';
+            
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
                     'X-Session-ID': sessionId
                 },
-                body: JSON.stringify({ url })
+                body: JSON.stringify({ url, mode: selectedMode })
             });
             
             clearInterval(progressInterval);
@@ -148,7 +151,8 @@ function displayResults(data, resultElement) {
     console.log('🎨 displayResults called with:', {
         hasData: !!data,
         hasResultElement: !!resultElement,
-        url: data?.url
+        url: data?.url,
+        mode: data?.mode
     });
     
     if (!resultElement) {
@@ -160,6 +164,13 @@ function displayResults(data, resultElement) {
         }
     }
     
+    // KRDS(공공) 모드 체크
+    if (data.mode === 'public') {
+        displayKRDSResults(data, resultElement);
+        return;
+    }
+    
+    // MGINE 모드 (기존 Nielsen 로직)
     const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary } = data;
     
     // 전체 점수 재계산 (수정된 항목이 있을 경우)
@@ -924,4 +935,166 @@ async function downloadPPT(data) {
             btn.innerHTML = '<span>📊</span> PPT 다운로드';
         }
     }
+}
+
+/**
+ * KRDS (공공 UI/UX) 결과 표시 함수
+ */
+function displayKRDSResults(data, resultElement) {
+    const { krds, url, analyzed_at, total_pages, analyzed_pages, structure, metadata } = data;
+    const { principles, compliance_level, accessibility_score, scores, issues } = krds;
+    
+    // 준수 레벨 색상
+    const levelColors = {
+        'AAA': '#00C9A7',
+        'AA': '#0066FF',
+        'A': '#FFA500',
+        'Fail': '#FF5F57'
+    };
+    
+    const levelColor = levelColors[compliance_level] || '#999';
+    
+    // localStorage에 결과 저장
+    try {
+        localStorage.setItem('lastAnalysisResult', JSON.stringify(data));
+        localStorage.setItem('lastAnalysisUrl', url);
+    } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+    }
+    
+    resultElement.innerHTML = `
+        <div class="result-card" style="animation: fadeInUp 0.6s ease-out;">
+            <!-- 헤더 -->
+            <div class="result-header" style="background: linear-gradient(135deg, #00C9A7, #0066FF); padding: 40px; border-radius: 20px 20px 0 0; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 10px;">
+                            <i class="fas fa-shield-alt"></i> 공공 UI/UX 분석 (KRDS)
+                        </div>
+                        <h3 style="font-size: 1.8rem; font-weight: 800; margin: 0;">${url}</h3>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 3rem; font-weight: 900; line-height: 1; margin-bottom: 10px;">${accessibility_score}<span style="font-size: 1.5rem; opacity: 0.8;">/100</span></div>
+                        <div style="display: inline-block; padding: 8px 20px; background: ${levelColor}; border-radius: 20px; font-weight: 700; font-size: 1.1rem;">
+                            ${compliance_level} 등급
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; opacity: 0.8;">
+                    <i class="fas fa-calendar"></i> ${new Date(analyzed_at).toLocaleString('ko-KR')} |
+                    <i class="fas fa-file-alt"></i> ${total_pages}개 페이지 분석 |
+                    <i class="fas fa-bookmark"></i> KWCAG 2.2 (${metadata.criterion_count}개 항목)
+                </div>
+            </div>
+            
+            <!-- 4대 원칙 점수 -->
+            <div class="principles-section" style="padding: 40px; background: rgba(255, 255, 255, 0.02);">
+                <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-chart-bar" style="color: #0066FF;"></i>
+                    4대 접근성 원칙 평가
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div class="principle-card" style="background: rgba(0, 102, 255, 0.05); border: 2px solid rgba(0, 102, 255, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
+                        <div style="font-size: 2.5rem; color: #0066FF; margin-bottom: 10px;">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">인식의 용이성</div>
+                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Perceivable</div>
+                        <div style="font-size: 2rem; font-weight: 900; color: #0066FF;">${principles.perceivable.toFixed(1)}</div>
+                    </div>
+                    <div class="principle-card" style="background: rgba(0, 201, 167, 0.05); border: 2px solid rgba(0, 201, 167, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
+                        <div style="font-size: 2.5rem; color: #00C9A7; margin-bottom: 10px;">
+                            <i class="fas fa-hand-pointer"></i>
+                        </div>
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">운용의 용이성</div>
+                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Operable</div>
+                        <div style="font-size: 2rem; font-weight: 900; color: #00C9A7;">${principles.operable.toFixed(1)}</div>
+                    </div>
+                    <div class="principle-card" style="background: rgba(255, 165, 0, 0.05); border: 2px solid rgba(255, 165, 0, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
+                        <div style="font-size: 2.5rem; color: #FFA500; margin-bottom: 10px;">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">이해의 용이성</div>
+                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Understandable</div>
+                        <div style="font-size: 2rem; font-weight: 900; color: #FFA500;">${principles.understandable.toFixed(1)}</div>
+                    </div>
+                    <div class="principle-card" style="background: rgba(147, 51, 234, 0.05); border: 2px solid rgba(147, 51, 234, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
+                        <div style="font-size: 2.5rem; color: #9333EA; margin-bottom: 10px;">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">견고성</div>
+                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Robust</div>
+                        <div style="font-size: 2rem; font-weight: 900; color: #9333EA;">${principles.robust.toFixed(1)}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 주요 이슈 -->
+            ${issues.length > 0 ? `
+            <div class="issues-section" style="padding: 40px; background: rgba(255, 87, 87, 0.03); border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #FF5F57;"></i>
+                    발견된 접근성 이슈 (${issues.length}건)
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    ${issues.map(issue => {
+                        const severityColors = {
+                            critical: '#FF5F57',
+                            serious: '#FFA500',
+                            moderate: '#0066FF',
+                            minor: '#00C9A7'
+                        };
+                        const severityLabels = {
+                            critical: '심각',
+                            serious: '중요',
+                            moderate: '보통',
+                            minor: '경미'
+                        };
+                        const color = severityColors[issue.severity] || '#999';
+                        const label = severityLabels[issue.severity] || issue.severity;
+                        
+                        return `
+                            <div style="background: rgba(255, 255, 255, 0.02); border-left: 4px solid ${color}; border-radius: 10px; padding: 20px;">
+                                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 10px;">
+                                    <div style="flex: 1;">
+                                        <span style="display: inline-block; padding: 4px 12px; background: ${color}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin-right: 10px;">${label}</span>
+                                        <span style="font-weight: 700; font-size: 1.05rem;">${issue.item}</span>
+                                    </div>
+                                </div>
+                                <div style="color: #9CA3AF; font-size: 0.95rem; margin-bottom: 10px;">${issue.description}</div>
+                                <div style="background: rgba(0, 102, 255, 0.1); border-radius: 8px; padding: 12px; font-size: 0.9rem;">
+                                    <strong style="color: #0066FF;">💡 권장사항:</strong> ${issue.recommendation}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+            ` : ''}
+            
+            <!-- 분석 페이지 정보 -->
+            <div class="pages-info" style="padding: 40px; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <h4 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 20px;">
+                    <i class="fas fa-file-alt"></i> 분석된 페이지 (총 ${total_pages}개)
+                </h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    ${analyzed_pages.map(page => `
+                        <a href="${page}" target="_blank" style="display: inline-block; padding: 8px 16px; background: rgba(0, 102, 255, 0.1); border: 1px solid rgba(0, 102, 255, 0.3); border-radius: 20px; font-size: 0.85rem; color: #0066FF; text-decoration: none; transition: all 0.3s;">
+                            <i class="fas fa-external-link-alt"></i> ${page}
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <!-- 액션 버튼 -->
+            <div class="action-buttons" style="padding: 30px 40px; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0 0 20px 20px; display: flex; gap: 15px; justify-content: center;">
+                <button onclick="window.print()" style="padding: 15px 30px; background: linear-gradient(135deg, #0066FF, #0052CC); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-size: 1rem;">
+                    <i class="fas fa-print"></i> 인쇄하기
+                </button>
+                <button onclick="location.reload()" style="padding: 15px 30px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 2px solid var(--border); border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-size: 1rem;">
+                    <i class="fas fa-redo"></i> 새로 분석
+                </button>
+            </div>
+        </div>
+    `;
 }
