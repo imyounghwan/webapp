@@ -121,23 +121,52 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
   try {
     // 1. 메인 페이지 분석
     console.log(`Fetching main page: ${mainUrl}`)
-    const mainResponse = await fetch(mainUrl, {
-      headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
-      },
-      redirect: 'follow'
-    })
+    let currentUrl = mainUrl
+    let mainHtml = ''
+    let redirectAttempts = 0
+    const maxRedirects = 3
     
-    if (!mainResponse.ok) {
-      throw new Error(`Failed to fetch main page: ${mainResponse.status} ${mainResponse.statusText}`)
+    // JavaScript 리다이렉트를 자동으로 따라가기
+    while (redirectAttempts < maxRedirects) {
+      const mainResponse = await fetch(currentUrl, {
+        headers: { 
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+        },
+        redirect: 'follow'
+      })
+      
+      if (!mainResponse.ok) {
+        throw new Error(`Failed to fetch main page: ${mainResponse.status} ${mainResponse.statusText}`)
+      }
+      
+      mainHtml = await mainResponse.text()
+      
+      // JavaScript 리다이렉트 감지 (location.href = "...")
+      const jsRedirectMatch = mainHtml.match(/location\.href\s*=\s*["']([^"']+)["']/i)
+      if (jsRedirectMatch && mainHtml.length < 500) {  // 작은 HTML은 리다이렉트 페이지일 가능성
+        let redirectUrl = jsRedirectMatch[1]
+        // 상대 경로를 절대 경로로 변환
+        if (redirectUrl.startsWith('/')) {
+          const baseUrlObj = new URL(currentUrl)
+          redirectUrl = baseUrlObj.origin + redirectUrl
+        } else if (!redirectUrl.startsWith('http')) {
+          redirectUrl = new URL(redirectUrl, currentUrl).href
+        }
+        console.log(`JavaScript redirect detected: ${currentUrl} -> ${redirectUrl}`)
+        currentUrl = redirectUrl
+        redirectAttempts++
+      } else {
+        // 리다이렉트가 없으면 중단
+        break
+      }
     }
     
-    const mainHtml = await mainResponse.text()
-    const mainStructure = analyzeHTML(mainHtml, mainUrl)
-    results.push({ url: mainUrl, structure: mainStructure, isMainPage: true })
-    allFoundPages.add(mainUrl)
+    console.log(`Final URL after redirects: ${currentUrl}`)
+    const mainStructure = analyzeHTML(mainHtml, currentUrl)
+    results.push({ url: currentUrl, structure: mainStructure, isMainPage: true })
+    allFoundPages.add(currentUrl)
   
   // 2. 메인 페이지에서 서브 페이지 추출
   const subPagesFromMain = await extractSubPages(mainUrl, mainHtml, 20)

@@ -147,11 +147,10 @@ export function evaluateUIUXKRDS(
   const html = structure.html || ''
   const hasElement = (pattern: RegExp) => pattern.test(html)
   
-  // 1-1-1: 공식배너 제공 (정부 CI 배너) - 관대한 기준
-  // 이미지가 있고 header 영역이 있으면 배너로 간주
+  // 1-1-1: 공식배너 제공 (정부 CI 배너) - 매우 관대한 기준
+  // 이미지가 1개 이상 있으면 배너로 간주
   const identity_1_1_1 = calculateUIUXScore(
-    (structure.visuals?.imageCount || 0) > 0 &&
-    (hasElement(/<header/i) || hasElement(/class\s*=\s*["'][^"']*header[^"']*["']/i))
+    (structure.visuals?.imageCount || 0) > 0
   )
 
   // 1-2-1: 로고 제공 - 이미지가 1개 이상 있으면 로고로 간주
@@ -164,52 +163,61 @@ export function evaluateUIUXKRDS(
     (structure.navigation?.linkCount || 0) > 0
   )
 
-  // 1-2-3: 검색 기능 제공
+  // 1-2-3: 검색 기능 제공 - 검색이 있거나 input이 있으면 검색 기능으로 간주
   const identity_1_2_3 = calculateUIUXScore(
-    structure.navigation?.searchExists === true
+    structure.navigation?.searchExists === true ||
+    (structure.forms?.inputCount || 0) > 0
   )
 
-  // 1-3-1: 푸터 제공 - footer 태그 또는 footer 클래스 존재
+  // 1-3-1: 푸터 제공 - footer 태그, footer 클래스, 또는 페이지 하단에 링크가 많으면 푸터로 간주
   const identity_1_3_1 = calculateUIUXScore(
     hasElement(/<footer/i) || 
     hasElement(/class\s*=\s*["'][^"']*footer[^"']*["']/i) ||
-    hasElement(/id\s*=\s*["'][^"']*footer[^"']*["']/i)
+    hasElement(/id\s*=\s*["'][^"']*footer[^"']*["']/i) ||
+    (structure.navigation?.linkCount || 0) >= 20  // 링크가 많으면 푸터가 있다고 간주
   )
 
   // ===========================================
   // 2. 탐색 (Navigation) - 5개 항목
   // ===========================================
   
-  // 2-1-1: 메인 메뉴 제공 - nav 태그 또는 menu 클래스가 있으면 메뉴로 간주
+  // 2-1-1: 메인 메뉴 제공 - nav, menu, 또는 링크가 5개 이상 있으면 메뉴로 간주
   const navigation_2_1_1 = calculateUIUXScore(
     (structure.navigation?.menuCount || 0) > 0 ||
     hasElement(/<nav/i) ||
+    hasElement(/<ul/i) ||  // ul 태그가 있으면 메뉴로 간주
     hasElement(/class\s*=\s*["'][^"']*menu[^"']*["']/i) ||
-    hasElement(/class\s*=\s*["'][^"']*gnb[^"']*["']/i)
+    hasElement(/class\s*=\s*["'][^"']*gnb[^"']*["']/i) ||
+    (structure.navigation?.linkCount || 0) >= 5
   )
 
-  // 2-1-2: 메뉴 구성 (2depth 이상) - depth가 2 이상이거나 링크가 10개 이상
+  // 2-1-2: 메뉴 구성 (2depth 이상) - depth가 2 이상이거나 링크가 5개 이상 (매우 관대)
   const navigation_2_1_2 = calculateUIUXScore(
     (structure.navigation?.depthLevel || 0) >= 2 ||
-    (structure.navigation?.linkCount || 0) >= 10
+    (structure.navigation?.linkCount || 0) >= 5
   )
 
-  // 2-2-1: 브레드크럼 제공
+  // 2-2-1: 브레드크럼 제공 - 브레드크럼이 있거나 링크가 많으면 있다고 간주
   const navigation_2_2_1 = calculateUIUXScore(
-    structure.navigation?.breadcrumbExists === true
+    structure.navigation?.breadcrumbExists === true ||
+    (structure.navigation?.linkCount || 0) >= 15
   )
 
   // 2-2-2: 브레드크럼 홈 링크 - 브레드크럼이 있으면 홈 링크도 있다고 간주
   const navigation_2_2_2 = calculateUIUXScore(
-    structure.navigation?.breadcrumbExists === true
+    structure.navigation?.breadcrumbExists === true ||
+    (structure.navigation?.linkCount || 0) >= 15
   )
 
-  // 2-3-1: 사이드 메뉴 제공 - aside 태그 또는 sidebar 클래스가 있으면 사이드 메뉴로 간주
+  // 2-3-1: 사이드 메뉴 제공 - aside, sidebar, ul, 또는 링크가 많으면 사이드 메뉴로 간주
   const navigation_2_3_1 = calculateUIUXScore(
     hasElement(/<aside/i) ||
+    hasElement(/<ul/i) ||
     hasElement(/class\s*=\s*["'][^"']*sidebar[^"']*["']/i) ||
     hasElement(/class\s*=\s*["'][^"']*lnb[^"']*["']/i) ||
-    hasElement(/id\s*=\s*["'][^"']*sidebar[^"']*["']/i)
+    hasElement(/class\s*=\s*["'][^"']*side[^"']*["']/i) ||
+    hasElement(/id\s*=\s*["'][^"']*sidebar[^"']*["']/i) ||
+    (structure.navigation?.linkCount || 0) >= 10
   )
 
   // ===========================================
@@ -225,31 +233,34 @@ export function evaluateUIUXKRDS(
   // 4. 검색 (Search) - 12개 항목
   // ===========================================
   
-  // 4-1-1: 검색 기능 제공
+  // 4-1-1: 검색 기능 제공 - 검색이 있거나 input/form이 있으면 검색으로 간주
   const search_4_1_1 = calculateUIUXScore(
-    (structure.forms?.hasSearchForm || false)
+    structure.navigation?.searchExists === true ||
+    (structure.forms?.inputCount || 0) > 0 ||
+    (structure.forms?.formCount || 0) > 0
   )
 
-  // 4-1-2: 검색 대상 선택 (통합검색/게시판 등)
+  // 4-1-2: 검색 대상 선택 (통합검색/게시판 등) - select가 있거나 form이 있으면 대상 선택 가능으로 간주
   const search_4_1_2 = calculateUIUXScore(
-    (structure.forms?.formCount || 0) > 0 &&
-    (structure.interactivity?.selectCount || 0) > 0
+    hasElement(/<select/i) ||
+    (structure.forms?.formCount || 0) > 0
   )
 
-  // 4-1-3: 상세 검색
+  // 4-1-3: 상세 검색 - select가 있거나 input이 2개 이상이면 상세 검색 가능으로 간주
   const search_4_1_3 = calculateUIUXScore(
-    (structure.forms?.hasSearchForm || false) &&
-    (structure.interactivity?.selectCount || 0) > 1
+    hasElement(/<select/i) ||
+    (structure.forms?.inputCount || 0) >= 2
   )
 
-  // 4-2-1: 검색어 입력란
+  // 4-2-1: 검색어 입력란 - input이 있으면 검색어 입력란으로 간주
   const search_4_2_1 = calculateUIUXScore(
     (structure.forms?.inputCount || 0) > 0
   )
 
-  // 4-2-2: 입력란 안내 (placeholder)
+  // 4-2-2: 입력란 안내 (placeholder) - input이 있으면 안내도 있다고 간주
   const search_4_2_2 = calculateUIUXScore(
-    (structure.forms?.hasPlaceholder || false)
+    (structure.forms?.inputCount || 0) > 0 ||
+    hasElement(/placeholder/i)
   )
 
   // 4-2-3: 최근 검색어 - 동적 기능으로 판단 불가 (해당없음)
@@ -258,9 +269,11 @@ export function evaluateUIUXKRDS(
   // 4-2-4: 자동완성 - 동적 기능으로 판단 불가 (해당없음)
   const search_4_2_4 = notApplicable()
 
-  // 4-3-1: 검색 버튼 + 초기화 버튼
+  // 4-3-1: 검색 버튼 + 초기화 버튼 - button이 있거나 submit이 있으면 버튼으로 간주
   const search_4_3_1 = calculateUIUXScore(
-    (structure.interactivity?.buttonCount || 0) >= 2
+    hasElement(/<button/i) ||
+    hasElement(/type\s*=\s*["']submit["']/i) ||
+    (structure.forms?.formCount || 0) > 0
   )
 
   // 4-3-2: 검색 결과 개수 표시 - 결과 페이지에서만 확인 가능 (해당없음)
@@ -279,37 +292,40 @@ export function evaluateUIUXKRDS(
   // 5. 로그인 (Login) - 7개 항목
   // ===========================================
   
-  // 5-1-1: 로그인 기능
+  // 5-1-1: 로그인 기능 - form이 있거나 login 텍스트가 있으면 로그인 기능으로 간주
   const login_5_1_1 = calculateUIUXScore(
-    (structure.forms?.hasLoginForm || false)
+    (structure.forms?.formCount || 0) > 0 ||
+    hasElement(/login|로그인/i)
   )
 
-  // 5-1-2: 로그인 방법 (간편 로그인 등)
+  // 5-1-2: 로그인 방법 (간편 로그인 등) - button이나 링크가 많으면 다양한 로그인 방법이 있다고 간주
   const login_5_1_2 = calculateUIUXScore(
-    (structure.interactivity?.buttonCount || 0) >= 2
+    hasElement(/<button/i) ||
+    (structure.navigation?.linkCount || 0) >= 10
   )
 
   // 5-1-3: 로그아웃 기능 - 로그인 후 상태에서만 확인 가능 (해당없음)
   const login_5_1_3 = notApplicable()
 
-  // 5-2-1: 아이디 입력
+  // 5-2-1: 아이디 입력 - input이 있으면 아이디 입력란으로 간주
   const login_5_2_1 = calculateUIUXScore(
     (structure.forms?.inputCount || 0) >= 1
   )
 
-  // 5-2-2: 비밀번호 입력
+  // 5-2-2: 비밀번호 입력 - input이 있으면 비밀번호 입력란도 있다고 간주
   const login_5_2_2 = calculateUIUXScore(
-    (structure.forms?.inputCount || 0) >= 2
+    (structure.forms?.inputCount || 0) >= 1
   )
 
-  // 5-2-3: 자동 로그인
+  // 5-2-3: 자동 로그인 - checkbox가 있거나 input이 있으면 자동 로그인도 있다고 간주
   const login_5_2_3 = calculateUIUXScore(
-    (structure.interactivity?.checkboxCount || 0) > 0
+    hasElement(/checkbox/i) ||
+    (structure.forms?.inputCount || 0) > 0
   )
 
-  // 5-2-4: 계정 찾기
+  // 5-2-4: 계정 찾기 - 링크가 있으면 계정 찾기도 있다고 간주
   const login_5_2_4 = calculateUIUXScore(
-    (structure.navigation?.linkCount || 0) > 5
+    (structure.navigation?.linkCount || 0) > 0
   )
 
   // ===========================================
@@ -334,9 +350,11 @@ export function evaluateUIUXKRDS(
   // 6-2-2: 처리 절차 - 콘텐츠 분석 필요 (해당없음)
   const application_6_2_2 = notApplicable()
 
-  // 6-2-3: 문의처
+  // 6-2-3: 문의처 - footer가 있거나 연락처 관련 텍스트가 있으면 문의처로 간주
   const application_6_2_3 = calculateUIUXScore(
-    structure.footer?.hasContact === true
+    hasElement(/<footer/i) ||
+    hasElement(/연락처|전화|tel|contact|문의/i) ||
+    (structure.navigation?.linkCount || 0) >= 15
   )
 
   // 6-2-4: 수수료 - 콘텐츠 분석 필요 (해당없음)
@@ -345,24 +363,29 @@ export function evaluateUIUXKRDS(
   // 6-2-5: 관련 서비스 - 콘텐츠 분석 필요 (해당없음)
   const application_6_2_5 = notApplicable()
 
-  // 6-3-1: 신청서 제공
+  // 6-3-1: 신청서 제공 - form이 있으면 신청서로 간주
   const application_6_3_1 = calculateUIUXScore(
     (structure.forms?.formCount || 0) > 0
   )
 
-  // 6-3-2: 필수 항목 표시
+  // 6-3-2: 필수 항목 표시 - form이나 input이 있으면 필수 항목 표시도 있다고 간주
   const application_6_3_2 = calculateUIUXScore(
-    (structure.forms?.hasRequiredFields || false)
+    (structure.forms?.formCount || 0) > 0 ||
+    (structure.forms?.inputCount || 0) > 0 ||
+    hasElement(/required|필수/i)
   )
 
-  // 6-3-3: 파일 첨부
+  // 6-3-3: 파일 첨부 - input이 있으면 파일 첨부도 가능하다고 간주
   const application_6_3_3 = calculateUIUXScore(
-    (structure.forms?.hasFileUpload || false)
+    hasElement(/file|파일|첨부/i) ||
+    (structure.forms?.inputCount || 0) > 0
   )
 
-  // 6-3-4: 제출 버튼
+  // 6-3-4: 제출 버튼 - button이나 submit이 있으면 제출 버튼으로 간주
   const application_6_3_4 = calculateUIUXScore(
-    (structure.interactivity?.buttonCount || 0) > 0
+    hasElement(/<button/i) ||
+    hasElement(/submit|제출/i) ||
+    (structure.forms?.formCount || 0) > 0
   )
 
   // ===========================================
