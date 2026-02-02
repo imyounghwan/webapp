@@ -75,23 +75,33 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const progressSteps = [
             { progress: 10, text: '페이지 접속 중...' },
-            { progress: 25, text: '메인 페이지 분석 중...' },
-            { progress: 45, text: '서브 페이지 수집 중...' },
-            { progress: 65, text: 'HTML 구조 분석 중...' },
-            { progress: 80, text: 'Nielsen 평가 수행 중...' },
-            { progress: 95, text: '종합 평가 중...' }
+            { progress: 20, text: '메인 페이지 분석 중...' },
+            { progress: 35, text: '서브 페이지 수집 중...' },
+            { progress: 50, text: 'HTML 구조 분석 중...' },
+            { progress: 65, text: 'UI/UX 평가 수행 중...' },
+            { progress: 78, text: '접근성 검사 중...' },
+            { progress: 88, text: '종합 평가 중...' }
         ];
         
         let stepIndex = 0;
+        let currentProgress = 0;
         const progressInterval = setInterval(() => {
             if (stepIndex < progressSteps.length) {
                 const step = progressSteps[stepIndex];
+                currentProgress = step.progress;
                 progressBar.style.width = step.progress + '%';
                 progressBar.textContent = step.progress + '%';
                 progressText.textContent = step.text;
                 stepIndex++;
+            } else {
+                // 88% 이후에는 천천히 증가 (최대 97%까지)
+                if (currentProgress < 97) {
+                    currentProgress += 0.5;
+                    progressBar.style.width = currentProgress + '%';
+                    progressBar.textContent = Math.floor(currentProgress) + '%';
+                }
             }
-        }, 800);
+        }, stepIndex < progressSteps.length ? 1200 : 400);  // 초반은 빠르게, 후반은 천천히
         
         try {
             const sessionId = localStorage.getItem('session_id');
