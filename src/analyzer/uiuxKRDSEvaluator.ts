@@ -89,7 +89,8 @@ export interface UIUXKRDSResult {
   compliance_level: 'S' | 'A' | 'B' | 'C' | 'F'  // 등급
   convenience_score: number  // 0-100 편의성 점수
   compliant_count: number    // 준수 개수
-  total_count: number        // 전체 개수
+  total_count: number        // 전체 개수 (해당없음 제외)
+  not_applicable_count: number  // 해당없음 개수
   compliance_rate: number    // 준수율 (%)
   issues: Array<{
     item: string
@@ -105,10 +106,18 @@ export interface UIUXKRDSResult {
 /**
  * UI/UX KRDS 점수 계산 헬퍼
  * @param condition 조건 만족 여부
- * @returns 준수(5.0) 또는 미준수(2.0)
+ * @returns 준수(5.0), 미준수(2.0), 해당없음(-1)
  */
-function calculateUIUXScore(condition: boolean): number {
+function calculateUIUXScore(condition: boolean | null): number {
+  if (condition === null) return -1  // 해당없음 (판단 불가)
   return condition ? 5.0 : 2.0
+}
+
+/**
+ * 해당없음 표시 (판단 불가능한 항목)
+ */
+function notApplicable(): number {
+  return -1
 }
 
 /**
@@ -243,28 +252,28 @@ export function evaluateUIUXKRDS(
     (structure.forms?.hasPlaceholder || false)
   )
 
-  // 4-2-3: 최근 검색어 - 동적 기능이므로 준수로 간주
-  const search_4_2_3 = 5.0
+  // 4-2-3: 최근 검색어 - 동적 기능으로 판단 불가 (해당없음)
+  const search_4_2_3 = notApplicable()
 
-  // 4-2-4: 자동완성 - 동적 기능이므로 준수로 간주
-  const search_4_2_4 = 5.0
+  // 4-2-4: 자동완성 - 동적 기능으로 판단 불가 (해당없음)
+  const search_4_2_4 = notApplicable()
 
   // 4-3-1: 검색 버튼 + 초기화 버튼
   const search_4_3_1 = calculateUIUXScore(
     (structure.interactivity?.buttonCount || 0) >= 2
   )
 
-  // 4-3-2: 검색 결과 개수 표시 - 결과 페이지에서만 확인 가능하므로 준수로 간주
-  const search_4_3_2 = 5.0
+  // 4-3-2: 검색 결과 개수 표시 - 결과 페이지에서만 확인 가능 (해당없음)
+  const search_4_3_2 = notApplicable()
 
-  // 4-3-3: 결과 정렬 - 결과 페이지에서만 확인 가능하므로 준수로 간주
-  const search_4_3_3 = 5.0
+  // 4-3-3: 결과 정렬 - 결과 페이지에서만 확인 가능 (해당없음)
+  const search_4_3_3 = notApplicable()
 
-  // 4-3-4: 결과 필터 - 결과 페이지에서만 확인 가능하므로 준수로 간주
-  const search_4_3_4 = 5.0
+  // 4-3-4: 결과 필터 - 결과 페이지에서만 확인 가능 (해당없음)
+  const search_4_3_4 = notApplicable()
 
-  // 4-3-5: 결과 없음 안내 - 결과 페이지에서만 확인 가능하므로 준수로 간주
-  const search_4_3_5 = 5.0
+  // 4-3-5: 결과 없음 안내 - 결과 페이지에서만 확인 가능 (해당없음)
+  const search_4_3_5 = notApplicable()
 
   // ===========================================
   // 5. 로그인 (Login) - 7개 항목
@@ -280,8 +289,8 @@ export function evaluateUIUXKRDS(
     (structure.interactivity?.buttonCount || 0) >= 2
   )
 
-  // 5-1-3: 로그아웃 기능 - 로그인 후 상태에서만 확인 가능하므로 준수로 간주
-  const login_5_1_3 = 5.0
+  // 5-1-3: 로그아웃 기능 - 로그인 후 상태에서만 확인 가능 (해당없음)
+  const login_5_1_3 = notApplicable()
 
   // 5-2-1: 아이디 입력
   const login_5_2_1 = calculateUIUXScore(
@@ -307,34 +316,34 @@ export function evaluateUIUXKRDS(
   // 6. 신청 (Application) - 13개 항목
   // ===========================================
   
-  // 6-1-1: 신청 대상 확인 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_1_1 = 5.0
+  // 6-1-1: 신청 대상 확인 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_1_1 = notApplicable()
 
-  // 6-1-2: 신청 자격 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_1_2 = 5.0
+  // 6-1-2: 신청 자격 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_1_2 = notApplicable()
 
-  // 6-1-3: 구비 서류 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_1_3 = 5.0
+  // 6-1-3: 구비 서류 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_1_3 = notApplicable()
 
-  // 6-1-4: 신청 기간 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_1_4 = 5.0
+  // 6-1-4: 신청 기간 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_1_4 = notApplicable()
 
-  // 6-2-1: 서비스 정보 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_2_1 = 5.0
+  // 6-2-1: 서비스 정보 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_2_1 = notApplicable()
 
-  // 6-2-2: 처리 절차 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_2_2 = 5.0
+  // 6-2-2: 처리 절차 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_2_2 = notApplicable()
 
   // 6-2-3: 문의처
   const application_6_2_3 = calculateUIUXScore(
     structure.footer?.hasContact === true
   )
 
-  // 6-2-4: 수수료 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_2_4 = 5.0
+  // 6-2-4: 수수료 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_2_4 = notApplicable()
 
-  // 6-2-5: 관련 서비스 - 콘텐츠 분석 필요하므로 준수로 간주
-  const application_6_2_5 = 5.0
+  // 6-2-5: 관련 서비스 - 콘텐츠 분석 필요 (해당없음)
+  const application_6_2_5 = notApplicable()
 
   // 6-3-1: 신청서 제공
   const application_6_3_1 = calculateUIUXScore(
@@ -482,8 +491,12 @@ export function evaluateUIUXKRDS(
     scores.application_6_3_4_submit_button,
   ]
 
-  // 평균 계산 헬퍼
-  const avg = (arr: number[]) => arr.reduce((sum, v) => sum + v, 0) / arr.length
+  // 평균 계산 헬퍼 (해당없음 제외)
+  const avg = (arr: number[]) => {
+    const validScores = arr.filter(s => s >= 0)  // -1 (해당없음) 제외
+    if (validScores.length === 0) return 0
+    return validScores.reduce((sum, v) => sum + v, 0) / validScores.length
+  }
 
   const categories: UIUXKRDSCategoryScores = {
     identity: avg(identityScores),
@@ -496,13 +509,17 @@ export function evaluateUIUXKRDS(
   }
 
   // ===========================================
-  // 점수 및 등급 계산 (정확한 공식 적용)
+  // 점수 및 등급 계산 (해당없음 제외 방식)
   // ===========================================
   
+  // 유효한 항목만 선택 (해당없음 -1 제외)
+  const validScores = allScores.filter(s => s >= 0)
+  
   // 준수 기준: 4.5점 이상 = 준수, 4.5점 미만 = 미준수
-  const compliantCount = allScores.filter(s => s >= 4.5).length
-  const totalCount = allScores.length  // 43개
-  const complianceRate = (compliantCount / totalCount) * 100
+  const compliantCount = validScores.filter(s => s >= 4.5).length
+  const totalCount = validScores.length  // 유효한 항목 개수
+  const notApplicableCount = allScores.filter(s => s < 0).length  // 해당없음 개수
+  const complianceRate = totalCount > 0 ? (compliantCount / totalCount) * 100 : 0
   
   // 점수 = 준수율(%)
   const convenience_score = Math.round(complianceRate)
@@ -529,7 +546,20 @@ export function evaluateUIUXKRDS(
   
   // 각 항목별 이슈 체크
   Object.entries(scores).forEach(([key, value]) => {
-    if (value < 4.5) {
+    if (value < 0) {
+      // 해당없음 (-1)
+      const itemInfo = getItemInfo(key)
+      issues.push({
+        item: itemInfo.name,
+        category: itemInfo.category,
+        code: itemInfo.code,
+        status: 'not_applicable',  // 해당없음
+        description: '판단 불가능: ' + itemInfo.description,
+        recommendation: '자동 분석으로 판단할 수 없는 항목입니다. 수동 검증이 필요합니다.',
+        affected_pages: []
+      })
+    } else if (value < 4.5) {
+      // 미준수 (2.0)
       const itemInfo = getItemInfo(key)
       issues.push({
         item: itemInfo.name,
@@ -555,6 +585,7 @@ export function evaluateUIUXKRDS(
     convenience_score,
     compliant_count: compliantCount,
     total_count: totalCount,
+    not_applicable_count: notApplicableCount,  // 해당없음 개수 추가
     compliance_rate: complianceRate,
     issues,
   }

@@ -980,7 +980,7 @@ async function downloadPPT(data) {
  */
 function displayKRDSResults(data, resultElement) {
     const { krds, url, analyzed_at, total_pages, analyzed_pages, structure, metadata } = data;
-    const { categories, compliance_level, convenience_score, compliant_count, total_count, compliance_rate, scores, issues } = krds;
+    const { categories, compliance_level, convenience_score, compliant_count, total_count, not_applicable_count, compliance_rate, scores, issues } = krds;
     
     // 등급별 색상
     // S급: 95점 이상 (골드)
@@ -1029,6 +1029,7 @@ function displayKRDSResults(data, resultElement) {
                     <i class="fas fa-calendar"></i> ${new Date(analyzed_at).toLocaleString('ko-KR')} |
                     <i class="fas fa-file-alt"></i> ${total_pages}개 페이지 분석 |
                     <i class="fas fa-check-circle"></i> 준수율: ${compliance_rate.toFixed(1)}% (${compliant_count}/${total_count}) |
+                    <i class="fas fa-question-circle"></i> 해당없음: ${not_applicable_count || 0}개 |
                     <i class="fas fa-ruler"></i> 디지털정부서비스 UI/UX 가이드라인
                 </div>
             </div>

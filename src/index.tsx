@@ -519,6 +519,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
           convenience_score: uiuxResult.convenience_score,
           compliant_count: uiuxResult.compliant_count,
           total_count: uiuxResult.total_count,
+          not_applicable_count: uiuxResult.not_applicable_count,
           compliance_rate: uiuxResult.compliance_rate,
           scores: uiuxResult.scores,
           issues: uiuxResult.issues,
