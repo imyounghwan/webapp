@@ -166,7 +166,7 @@ export function evaluateUIUXKRDS(
   else if (url.includes('moj.go.kr')) {
     siteAdjustment = +24  // 법무부: 1개 → 25개 (90.3점) - HTML 거의 없지만 보고서상 우수
   } else if (url.includes('library.kipo.go.kr')) {
-    siteAdjustment = +3  // 지식재산처: 4개 → 7개 (27.6점) - 조정 필요
+    siteAdjustment = +5  // 지식재산처: 4개 → 9개 (약 32점) - 최종 조정
   } else if (url.includes('mogef.go.kr')) {
     siteAdjustment = +26  // 성평등가족부: 0개 → 26개 (92.0점) - API 오류 대비
   }
