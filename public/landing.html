@@ -617,35 +617,79 @@
                 display: none;
             }
             
+            .floating-elements {
+                display: none; /* 모바일에서 플로팅 카드 숨기기 */
+            }
+            
             .hero {
                 padding: 120px 20px 60px;
+                min-height: auto;
             }
             
             .hero h1 {
                 font-size: 2.5rem;
+                line-height: 1.2;
             }
             
             .hero p {
-                font-size: 1.1rem;
+                font-size: 1rem;
+                line-height: 1.6;
             }
             
             .hero-buttons {
                 flex-direction: column;
+                gap: 15px;
+            }
+            
+            .hero-buttons .btn {
+                width: 100%;
+                text-align: center;
             }
             
             .stats {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 20px 15px;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
             }
             
             .features-grid,
-            .process-steps,
-            .footer-container {
+            .process-steps {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .feature-card,
+            .process-step {
+                padding: 30px 25px;
             }
             
             .section-title {
-                font-size: 2.5rem;
+                font-size: 2rem;
+            }
+            
+            .section-description {
+                font-size: 1rem;
+            }
+            
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+            
+            .header-container {
+                padding: 15px 20px;
+            }
+            
+            .logo {
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -691,9 +735,9 @@
             </div>
             
             <div class="floating-card card-3">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">처리 시간</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: #9333EA;">10.2s</div>
-                <div style="font-size: 0.7rem; color: #00C9A7; margin-top: 8px;">✓ Real-time</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">AI 분석</div>
+                <div style="font-size: 1.8rem; font-weight: 900; color: #9333EA;">26항목</div>
+                <div style="font-size: 0.7rem; color: #00C9A7; margin-top: 8px;">✓ 심층 평가</div>
             </div>
         </div>
         
