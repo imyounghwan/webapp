@@ -90,26 +90,47 @@ function calculateKRDSScore(condition: boolean, weight: number = 1.0): number {
  * KRDS 평가 실행
  */
 export function evaluateKRDS(structure: HTMLStructure): KRDSResult {
+  // 안전한 접근을 위한 기본값 설정
+  const visual = structure.visuals || { imageCount: 0, videoCount: 0, iconCount: 0 }
+  const accessibility = structure.accessibility || {
+    altTextRatio: 0,
+    ariaLabelCount: 0,
+    headingStructure: false,
+    langAttribute: false,
+    skipLinkExists: false
+  }
+  const content = structure.content || {
+    headingCount: 0,
+    paragraphCount: 0,
+    listCount: 0,
+    tableCount: 0
+  }
+  const navigation = structure.navigation || {
+    linkCount: 0,
+    navDepth: 0
+  }
+  const html = structure.html || ''
+  
   // ===========================================
   // 원칙 1: 인식의 용이성 (Perceivable)
   // ===========================================
   
   // 1.1.1 적절한 대체 텍스트 제공
   const P1_1_1_alt_text = calculateKRDSScore(
-    structure.accessibility.altTextRatio >= 0.9
+    accessibility.altTextRatio >= 0.9
   )
   
   // 1.2.1 자막 제공 (비디오가 있으면 track 태그 확인)
-  const hasVideo = structure.visual.videoCount > 0
-  const hasTrack = structure.html.toLowerCase().includes('<track')
+  const hasVideo = visual.videoCount > 0
+  const hasTrack = html.toLowerCase().includes('<track')
   const P1_2_1_multimedia_caption = calculateKRDSScore(
     !hasVideo || hasTrack,
     hasVideo ? 1.0 : 0.5  // 비디오 없으면 가중치 감소
   )
   
   // 1.3.1 표의 구성 (th, caption 사용)
-  const hasTable = structure.content.tableCount > 0
-  const hasTableHeaders = structure.html.toLowerCase().includes('<th')
+  const hasTable = content.tableCount > 0
+  const hasTableHeaders = html.toLowerCase().includes('<th')
   const P1_3_1_table_structure = calculateKRDSScore(
     !hasTable || hasTableHeaders,
     hasTable ? 1.0 : 0.5
@@ -117,22 +138,22 @@ export function evaluateKRDS(structure: HTMLStructure): KRDSResult {
   
   // 1.3.2 콘텐츠의 선형구조 (헤딩 구조)
   const P1_3_2_linear_structure = calculateKRDSScore(
-    structure.accessibility.headingStructure === true
+    accessibility.headingStructure === true
   )
   
   // 1.3.3 명확한 지시사항 제공 (aria-label, label)
   const P1_3_3_clear_instructions = calculateKRDSScore(
-    structure.accessibility.ariaLabelCount > 0 ||
-    structure.html.toLowerCase().includes('<label')
+    accessibility.ariaLabelCount > 0 ||
+    html.toLowerCase().includes('<label')
   )
   
   // 1.4.1 색에 무관한 콘텐츠 인식 (텍스트로 정보 제공)
   const P1_4_1_color_independent = calculateKRDSScore(
-    structure.content.paragraphCount > 10  // 충분한 텍스트 콘텐츠
+    content.paragraphCount > 10  // 충분한 텍스트 콘텐츠
   )
   
   // 1.4.2 자동 재생 금지 (autoplay 속성 없음)
-  const hasAutoplay = structure.html.toLowerCase().includes('autoplay')
+  const hasAutoplay = html.toLowerCase().includes('autoplay')
   const P1_4_2_no_auto_play = calculateKRDSScore(!hasAutoplay)
   
   // 1.4.3 텍스트 명도 대비 (기본 4.5:1, 검증 어려우므로 기본 점수)
@@ -140,8 +161,8 @@ export function evaluateKRDS(structure: HTMLStructure): KRDSResult {
   
   // 1.4.4 콘텐츠 간의 구분 (헤딩, 리스트 사용)
   const P1_4_4_content_distinction = calculateKRDSScore(
-    structure.content.headingCount > 3 &&
-    structure.content.listCount > 0
+    content.headingCount > 3 &&
+    content.listCount > 0
   )
   
   // ===========================================
@@ -149,64 +170,64 @@ export function evaluateKRDS(structure: HTMLStructure): KRDSResult {
   // ===========================================
   
   // 2.1.1 키보드 사용 보장 (onclick이 아닌 링크/버튼 사용)
-  const hasOnClick = (structure.html.match(/onclick=/gi) || []).length
+  const hasOnClick = (html.match(/onclick=/gi) || []).length
   const O2_1_1_keyboard_access = calculateKRDSScore(
-    hasOnClick === 0 || structure.navigation.linkCount > hasOnClick
+    hasOnClick === 0 || navigation.linkCount > hasOnClick
   )
   
   // 2.1.2 초점 이동과 표시 (tabindex 적절히 사용)
-  const hasTabindex = structure.html.toLowerCase().includes('tabindex')
+  const hasTabindex = html.toLowerCase().includes('tabindex')
   const O2_1_2_focus_visible = calculateKRDSScore(
-    hasTabindex || structure.navigation.linkCount > 5
+    hasTabindex || navigation.linkCount > 5
   )
   
   // 2.1.3 조작 가능 (충분한 클릭 영역, 현재는 링크/버튼 수로 판단)
   const O2_1_3_input_control = calculateKRDSScore(
-    structure.navigation.linkCount >= 5
+    navigation.linkCount >= 5
   )
   
   // 2.1.4 문자 단축키 (accesskey 적절히 사용)
-  const hasAccesskey = structure.html.toLowerCase().includes('accesskey')
+  const hasAccesskey = html.toLowerCase().includes('accesskey')
   const O2_1_4_shortcut_key = calculateKRDSScore(
-    !hasAccesskey || structure.accessibility.ariaLabelCount > 0,
+    !hasAccesskey || accessibility.ariaLabelCount > 0,
     hasAccesskey ? 1.0 : 0.5
   )
   
   // 2.2.1 응답시간 조절 (시간제한 없음 또는 연장 가능)
-  const hasTimeout = structure.html.toLowerCase().includes('settimeout')
+  const hasTimeout = html.toLowerCase().includes('settimeout')
   const O2_2_1_time_control = calculateKRDSScore(
     !hasTimeout,
     hasTimeout ? 1.0 : 0.5
   )
   
   // 2.2.2 정지 기능 제공 (자동 슬라이드에 정지 버튼)
-  const hasCarousel = structure.html.toLowerCase().includes('carousel') ||
-                      structure.html.toLowerCase().includes('slider')
-  const hasPauseButton = structure.html.toLowerCase().includes('pause') ||
-                         structure.html.toLowerCase().includes('stop')
+  const hasCarousel = html.toLowerCase().includes('carousel') ||
+                      html.toLowerCase().includes('slider')
+  const hasPauseButton = html.toLowerCase().includes('pause') ||
+                         html.toLowerCase().includes('stop')
   const O2_2_2_pause_control = calculateKRDSScore(
     !hasCarousel || hasPauseButton,
     hasCarousel ? 1.0 : 0.5
   )
   
   // 2.3.1 깜빡임과 번쩍임 사용 제한 (blink, animation 체크)
-  const hasBlink = structure.html.toLowerCase().includes('blink') ||
-                   structure.html.toLowerCase().includes('@keyframes')
+  const hasBlink = html.toLowerCase().includes('blink') ||
+                   html.toLowerCase().includes('@keyframes')
   const O2_3_1_flash_limit = calculateKRDSScore(!hasBlink, 0.7)
   
   // 2.4.1 반복 영역 건너뛰기 (skip navigation)
   const O2_4_1_skip_navigation = calculateKRDSScore(
-    structure.accessibility.skipLinkExists === true
+    accessibility.skipLinkExists === true
   )
   
   // 2.4.2 제목 제공 (title 태그)
-  const hasTitle = structure.html.toLowerCase().includes('<title')
+  const hasTitle = html.toLowerCase().includes('<title')
   const O2_4_2_page_title = calculateKRDSScore(hasTitle)
   
   // 2.4.3 적절한 링크 텍스트 (aria-label 또는 충분한 텍스트)
   const O2_4_3_link_purpose = calculateKRDSScore(
-    structure.navigation.linkCount > 0 &&
-    structure.accessibility.ariaLabelCount >= structure.navigation.linkCount * 0.3
+    navigation.linkCount > 0 &&
+    accessibility.ariaLabelCount >= navigation.linkCount * 0.3
   )
   
   // 2.4.4 고정된 참조 위치 정보 (전자출판 관련, 일반 웹은 기본 통과)
