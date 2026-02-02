@@ -499,12 +499,12 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       // ========================================
       // 공공 UI/UX 분석 (KRDS 기반)
       // ========================================
-      const krdsResult = evaluateKRDS(structure)
+      const krdsResult = evaluateKRDS(structure, pageResults)
       
       return c.json({
         mode: 'public',
         mode_name: '공공 UI/UX 분석',
-        evaluation_standard: 'KWCAG 2.2 (한국형 웹 콘텐츠 접근성 지침)',
+        evaluation_standard: 'KWCAG 2.2 (한국형 웹 콘텐츠 편의성 지침)',
         url,
         analyzed_at: new Date().toISOString(),
         total_pages: pageResults.length,
@@ -514,7 +514,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         krds: {
           principles: krdsResult.principles,
           compliance_level: krdsResult.compliance_level,
-          accessibility_score: krdsResult.accessibility_score,
+          convenience_score: krdsResult.convenience_score,
           scores: krdsResult.scores,
           issues: krdsResult.issues,
         },
