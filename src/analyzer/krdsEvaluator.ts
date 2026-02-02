@@ -445,48 +445,60 @@ export function evaluateKRDS(structure: HTMLStructure, pageResults?: Array<{ url
   
   // 1.2.1 자막 제공
   if (P1_2_1_multimedia_caption < 4.5) {
-    const affectedPages = getAffectedPages(page => {
-      const html = page.structure.html || ''
-      const pageVisuals = page.structure.visuals || { videoCount: 0 }
-      // 비디오가 있고 track 태그가 없는 페이지만
-      return pageVisuals.videoCount > 0 && !html.toLowerCase().includes('<track')
-    })
+    // 비디오가 있는 경우에만 실제 문제 페이지를 수집
+    let affectedPages: string[] = []
+    let description = ''
     
-    // 비디오 유무와 관계없이 점수가 낮으면 이슈로 표시
-    const description = visual.videoCount > 0 
-      ? `동영상 ${visual.videoCount}개에 자막(<track> 태그) 누락`
-      : '멀티미디어 콘텐츠가 없어 자막 제공 여부를 확인할 수 없습니다. (기본 점수 적용)'
+    if (visual.videoCount > 0) {
+      // 비디오가 있는 경우: track 태그 없는 페이지 찾기
+      affectedPages = getAffectedPages(page => {
+        const html = page.structure.html || ''
+        const pageVisuals = page.structure.visuals || { videoCount: 0 }
+        return pageVisuals.videoCount > 0 && !html.toLowerCase().includes('<track')
+      })
+      description = `동영상 ${visual.videoCount}개에 자막(<track> 태그) 누락`
+    } else {
+      // 비디오가 없는 경우: 확인 불가 상태
+      affectedPages = []  // 빈 배열
+      description = '멀티미디어 콘텐츠가 없어 자막 제공 여부를 확인할 수 없습니다. (기본 점수 적용)'
+    }
     
     issues.push({
       item: '1.2.1 자막 제공',
       severity: getSeverity(P1_2_1_multimedia_caption),
       description: description,
       recommendation: '동영상 및 오디오 콘텐츠에 자막을 제공하세요. <video> 태그에 <track kind="captions"> 추가 필요.',
-      affected_pages: affectedPages.length > 0 ? affectedPages : ['확인 불가 (멀티미디어 없음)']
+      affected_pages: affectedPages.length > 0 ? affectedPages : ['해당 없음 (멀티미디어 콘텐츠 없음)']
     })
   }
   
   // 1.3.1 표의 구성
   if (P1_3_1_table_structure < 4.5) {
-    const affectedPages = getAffectedPages(page => {
-      const html = page.structure.html || ''
-      const tableCount = (html.match(/<table[^>]*>/gi) || []).length
-      const thCount = (html.match(/<th[^>]*>/gi) || []).length
-      // 표가 있고 th 태그가 부족한 페이지만
-      return tableCount > 0 && thCount < tableCount
-    })
+    // 표가 있는 경우에만 실제 문제 페이지를 수집
+    let affectedPages: string[] = []
+    let description = ''
     
-    // 표 유무와 관계없이 점수가 낮으면 이슈로 표시
-    const description = content.tableCount > 0
-      ? `표 ${content.tableCount}개에 <th> 태그 없음 또는 부족`
-      : '표가 없어 표 구조를 확인할 수 없습니다. (기본 점수 적용)'
+    if (content.tableCount > 0) {
+      // 표가 있는 경우: th 태그 부족한 페이지 찾기
+      affectedPages = getAffectedPages(page => {
+        const html = page.structure.html || ''
+        const tableCount = (html.match(/<table[^>]*>/gi) || []).length
+        const thCount = (html.match(/<th[^>]*>/gi) || []).length
+        return tableCount > 0 && thCount < tableCount
+      })
+      description = `표 ${content.tableCount}개에 <th> 태그 없음 또는 부족`
+    } else {
+      // 표가 없는 경우: 확인 불가 상태
+      affectedPages = []  // 빈 배열
+      description = '표가 없어 표 구조를 확인할 수 없습니다. (기본 점수 적용)'
+    }
     
     issues.push({
       item: '1.3.1 표의 구성',
       severity: getSeverity(P1_3_1_table_structure),
       description: description,
       recommendation: '표의 제목 셀은 <th> 태그를 사용하고, 복잡한 표는 scope 또는 headers 속성을 활용하세요.',
-      affected_pages: affectedPages.length > 0 ? affectedPages : ['확인 불가 (표 없음)']
+      affected_pages: affectedPages.length > 0 ? affectedPages : ['해당 없음 (표 없음)']
     })
   }
   
