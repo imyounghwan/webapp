@@ -127,17 +127,48 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
     const maxRedirects = 3
     
     // JavaScript 리다이렉트를 자동으로 따라가기
+    const visitedUrls = new Set<string>()  // 무한 루프 방지
     while (redirectAttempts < maxRedirects) {
+      // 이미 방문한 URL이면 무한 루프 - 중단
+      if (visitedUrls.has(currentUrl)) {
+        console.log(`Redirect loop detected at ${currentUrl}, stopping`)
+        break
+      }
+      visitedUrls.add(currentUrl)
+      
       const mainResponse = await fetch(currentUrl, {
         headers: { 
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
         },
-        redirect: 'follow'
+        redirect: 'manual'  // HTTP 리다이렉트를 수동으로 처리 (무한 루프 방지)
       })
       
-      if (!mainResponse.ok) {
+      // HTTP 리다이렉트 처리 (3xx)
+      if (mainResponse.status >= 300 && mainResponse.status < 400) {
+        const location = mainResponse.headers.get('Location')
+        if (location) {
+          let redirectUrl = location
+          // 상대 경로를 절대 경로로 변환
+          if (!redirectUrl.startsWith('http')) {
+            redirectUrl = new URL(redirectUrl, currentUrl).href
+          }
+          
+          // 리다이렉트 URL이 현재 URL과 같으면 무한 루프 - 중단
+          if (redirectUrl === currentUrl) {
+            console.log(`HTTP redirect loop detected at ${currentUrl}, stopping`)
+            break
+          }
+          
+          console.log(`HTTP redirect detected: ${currentUrl} -> ${redirectUrl}`)
+          currentUrl = redirectUrl
+          redirectAttempts++
+          continue
+        }
+      }
+      
+      if (!mainResponse.ok && mainResponse.status !== 304) {
         throw new Error(`Failed to fetch main page: ${mainResponse.status} ${mainResponse.statusText}`)
       }
       
@@ -154,6 +185,13 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
         } else if (!redirectUrl.startsWith('http')) {
           redirectUrl = new URL(redirectUrl, currentUrl).href
         }
+        
+        // 리다이렉트 URL이 현재 URL과 같으면 무한 루프 - 중단
+        if (redirectUrl === currentUrl) {
+          console.log(`JS redirect loop detected at ${currentUrl}, stopping`)
+          break
+        }
+        
         console.log(`JavaScript redirect detected: ${currentUrl} -> ${redirectUrl}`)
         currentUrl = redirectUrl
         redirectAttempts++

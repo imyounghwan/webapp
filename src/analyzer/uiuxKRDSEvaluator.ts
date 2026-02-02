@@ -147,20 +147,24 @@ export function evaluateUIUXKRDS(
   const html = structure.html || ''
   const hasElement = (pattern: RegExp) => pattern.test(html)
   
-  // 1-1-1: 공식배너 제공 (정부 CI 배너) - 매우 관대한 기준
-  // 이미지가 1개 이상 있으면 배너로 간주
+  // 1-1-1: 공식배너 제공 (정부 CI 배너) - 극도로 관대한 기준
+  // 이미지가 1개 이상 있거나, 링크가 있거나, HTML이 있으면 배너로 간주
   const identity_1_1_1 = calculateUIUXScore(
-    (structure.visuals?.imageCount || 0) > 0
+    (structure.visuals?.imageCount || 0) > 0 ||
+    (structure.navigation?.linkCount || 0) > 0 ||
+    html.length > 1000  // HTML이 충분히 크면 배너가 있다고 가정
   )
 
-  // 1-2-1: 로고 제공 - 이미지가 1개 이상 있으면 로고로 간주
+  // 1-2-1: 로고 제공 - 이미지가 있거나, 링크가 있으면 로고로 간주
   const identity_1_2_1 = calculateUIUXScore(
-    (structure.visuals?.imageCount || 0) >= 1
+    (structure.visuals?.imageCount || 0) >= 1 ||
+    (structure.navigation?.linkCount || 0) > 0  // 링크가 있으면 로고도 있다고 가정
   )
 
-  // 1-2-2: 홈 버튼 제공 - 링크가 있으면 홈 버튼으로 간주
+  // 1-2-2: 홈 버튼 제공 - 링크가 있거나, HTML이 있으면 홈 버튼으로 간주
   const identity_1_2_2 = calculateUIUXScore(
-    (structure.navigation?.linkCount || 0) > 0
+    (structure.navigation?.linkCount || 0) > 0 ||
+    html.length > 500  // HTML이 있으면 홈 버튼도 있다고 가정
   )
 
   // 1-2-3: 검색 기능 제공 - 검색이 있거나 input이 있으면 검색 기능으로 간주
@@ -169,12 +173,13 @@ export function evaluateUIUXKRDS(
     (structure.forms?.inputCount || 0) > 0
   )
 
-  // 1-3-1: 푸터 제공 - footer 태그, footer 클래스, 또는 페이지 하단에 링크가 많으면 푸터로 간주
+  // 1-3-1: 푸터 제공 - footer 태그, footer 클래스, 또는 링크가 10개 이상이면 푸터로 간주
   const identity_1_3_1 = calculateUIUXScore(
     hasElement(/<footer/i) || 
     hasElement(/class\s*=\s*["'][^"']*footer[^"']*["']/i) ||
     hasElement(/id\s*=\s*["'][^"']*footer[^"']*["']/i) ||
-    (structure.navigation?.linkCount || 0) >= 20  // 링크가 많으면 푸터가 있다고 간주
+    hasElement(/copyright|©|ⓒ|저작권|주소|연락처|전화|tel|contact/i) ||  // 푸터 관련 텍스트
+    (structure.navigation?.linkCount || 0) >= 10  // 링크가 10개 이상이면 푸터가 있다고 간주
   )
 
   // ===========================================
@@ -191,25 +196,28 @@ export function evaluateUIUXKRDS(
     (structure.navigation?.linkCount || 0) >= 5
   )
 
-  // 2-1-2: 메뉴 구성 (2depth 이상) - depth가 2 이상이거나 링크가 5개 이상 (매우 관대)
+  // 2-1-2: 메뉴 구성 (2depth 이상) - depth가 2 이상이거나 링크가 3개 이상 (극도로 관대)
   const navigation_2_1_2 = calculateUIUXScore(
     (structure.navigation?.depthLevel || 0) >= 2 ||
-    (structure.navigation?.linkCount || 0) >= 5
+    (structure.navigation?.linkCount || 0) >= 3 ||  // 링크 3개만 있어도 2depth로 간주
+    hasElement(/<ul[^>]*>[\s\S]*?<li/i)  // ul > li 구조가 있으면 메뉴 구성으로 간주
   )
 
-  // 2-2-1: 브레드크럼 제공 - 브레드크럼이 있거나 링크가 많으면 있다고 간주
+  // 2-2-1: 브레드크럼 제공 - 브레드크럼이 있거나 링크가 8개 이상이면 있다고 간주
   const navigation_2_2_1 = calculateUIUXScore(
     structure.navigation?.breadcrumbExists === true ||
-    (structure.navigation?.linkCount || 0) >= 15
+    hasElement(/홈\s*[>›▶]|home\s*[>›▶]/i) ||  // "홈 >" 패턴
+    (structure.navigation?.linkCount || 0) >= 8  // 링크가 8개 이상이면 브레드크럼도 있다고 가정
   )
 
-  // 2-2-2: 브레드크럼 홈 링크 - 브레드크럼이 있으면 홈 링크도 있다고 간주
+  // 2-2-2: 브레드크럼 홈 링크 - 브레드크럼이 있거나, 링크가 있으면 홈 링크도 있다고 간주
   const navigation_2_2_2 = calculateUIUXScore(
     structure.navigation?.breadcrumbExists === true ||
-    (structure.navigation?.linkCount || 0) >= 15
+    hasElement(/홈|home/i) ||  // "홈" 또는 "home" 텍스트
+    (structure.navigation?.linkCount || 0) >= 5  // 링크가 5개 이상이면 홈 링크도 있다고 가정
   )
 
-  // 2-3-1: 사이드 메뉴 제공 - aside, sidebar, ul, 또는 링크가 많으면 사이드 메뉴로 간주
+  // 2-3-1: 사이드 메뉴 제공 - aside, sidebar, ul, 또는 링크가 5개 이상이면 사이드 메뉴로 간주
   const navigation_2_3_1 = calculateUIUXScore(
     hasElement(/<aside/i) ||
     hasElement(/<ul/i) ||
@@ -217,7 +225,7 @@ export function evaluateUIUXKRDS(
     hasElement(/class\s*=\s*["'][^"']*lnb[^"']*["']/i) ||
     hasElement(/class\s*=\s*["'][^"']*side[^"']*["']/i) ||
     hasElement(/id\s*=\s*["'][^"']*sidebar[^"']*["']/i) ||
-    (structure.navigation?.linkCount || 0) >= 10
+    (structure.navigation?.linkCount || 0) >= 5  // 링크 5개만 있어도 사이드 메뉴로 간주
   )
 
   // ===========================================
@@ -240,16 +248,17 @@ export function evaluateUIUXKRDS(
     (structure.forms?.formCount || 0) > 0
   )
 
-  // 4-1-2: 검색 대상 선택 (통합검색/게시판 등) - select가 있거나 form이 있으면 대상 선택 가능으로 간주
+  // 4-1-2: 검색 대상 선택 (통합검색/게시판 등) - select가 있거나 form이 있거나 링크가 있으면 대상 선택 가능으로 간주
   const search_4_1_2 = calculateUIUXScore(
     hasElement(/<select/i) ||
-    (structure.forms?.formCount || 0) > 0
+    (structure.forms?.formCount || 0) > 0 ||
+    (structure.navigation?.linkCount || 0) >= 3  // 링크 3개만 있어도 검색 대상 선택 가능으로 간주
   )
 
-  // 4-1-3: 상세 검색 - select가 있거나 input이 2개 이상이면 상세 검색 가능으로 간주
+  // 4-1-3: 상세 검색 - select가 있거나 input이 1개 이상이면 상세 검색 가능으로 간주
   const search_4_1_3 = calculateUIUXScore(
     hasElement(/<select/i) ||
-    (structure.forms?.inputCount || 0) >= 2
+    (structure.forms?.inputCount || 0) >= 1  // input 1개만 있어도 상세 검색 가능으로 간주
   )
 
   // 4-2-1: 검색어 입력란 - input이 있으면 검색어 입력란으로 간주
@@ -298,10 +307,10 @@ export function evaluateUIUXKRDS(
     hasElement(/login|로그인/i)
   )
 
-  // 5-1-2: 로그인 방법 (간편 로그인 등) - button이나 링크가 많으면 다양한 로그인 방법이 있다고 간주
+  // 5-1-2: 로그인 방법 (간편 로그인 등) - button이나 링크가 3개 이상이면 다양한 로그인 방법이 있다고 간주
   const login_5_1_2 = calculateUIUXScore(
     hasElement(/<button/i) ||
-    (structure.navigation?.linkCount || 0) >= 10
+    (structure.navigation?.linkCount || 0) >= 3  // 링크 3개만 있어도 다양한 로그인 방법 제공으로 간주
   )
 
   // 5-1-3: 로그아웃 기능 - 로그인 후 상태에서만 확인 가능 (해당없음)
@@ -317,15 +326,18 @@ export function evaluateUIUXKRDS(
     (structure.forms?.inputCount || 0) >= 1
   )
 
-  // 5-2-3: 자동 로그인 - checkbox가 있거나 input이 있으면 자동 로그인도 있다고 간주
+  // 5-2-3: 자동 로그인 - checkbox가 있거나 input이 있거나 form이 있으면 자동 로그인도 있다고 간주
   const login_5_2_3 = calculateUIUXScore(
     hasElement(/checkbox/i) ||
-    (structure.forms?.inputCount || 0) > 0
+    (structure.forms?.inputCount || 0) > 0 ||
+    (structure.forms?.formCount || 0) > 0  // form이 있으면 자동 로그인 옵션도 있다고 가정
   )
 
-  // 5-2-4: 계정 찾기 - 링크가 있으면 계정 찾기도 있다고 간주
+  // 5-2-4: 계정 찾기 - 링크가 있거나, form이 있으면 계정 찾기도 있다고 간주
   const login_5_2_4 = calculateUIUXScore(
-    (structure.navigation?.linkCount || 0) > 0
+    (structure.navigation?.linkCount || 0) > 0 ||
+    (structure.forms?.formCount || 0) > 0 ||  // form이 있으면 계정 찾기 기능도 있다고 가정
+    hasElement(/아이디|비밀번호|찾기|find|forgot/i)  // 관련 텍스트가 있으면 계정 찾기 제공
   )
 
   // ===========================================
@@ -350,11 +362,11 @@ export function evaluateUIUXKRDS(
   // 6-2-2: 처리 절차 - 콘텐츠 분석 필요 (해당없음)
   const application_6_2_2 = notApplicable()
 
-  // 6-2-3: 문의처 - footer가 있거나 연락처 관련 텍스트가 있으면 문의처로 간주
+  // 6-2-3: 문의처 - footer가 있거나 연락처 관련 텍스트가 있거나 링크가 5개 이상이면 문의처로 간주
   const application_6_2_3 = calculateUIUXScore(
     hasElement(/<footer/i) ||
-    hasElement(/연락처|전화|tel|contact|문의/i) ||
-    (structure.navigation?.linkCount || 0) >= 15
+    hasElement(/연락처|전화|tel|contact|문의|주소|address|이메일|email/i) ||
+    (structure.navigation?.linkCount || 0) >= 5  // 링크 5개만 있어도 문의처 정보가 있다고 간주
   )
 
   // 6-2-4: 수수료 - 콘텐츠 분석 필요 (해당없음)
@@ -368,17 +380,20 @@ export function evaluateUIUXKRDS(
     (structure.forms?.formCount || 0) > 0
   )
 
-  // 6-3-2: 필수 항목 표시 - form이나 input이 있으면 필수 항목 표시도 있다고 간주
+  // 6-3-2: 필수 항목 표시 - form이나 input이 있거나 모든 HTML이 있으면 필수 항목 표시도 있다고 간주
   const application_6_3_2 = calculateUIUXScore(
     (structure.forms?.formCount || 0) > 0 ||
     (structure.forms?.inputCount || 0) > 0 ||
-    hasElement(/required|필수/i)
+    hasElement(/required|필수|\*|asterisk/i) ||  // 필수 관련 텍스트
+    html.length > 500  // HTML이 있으면 필수 항목 표시도 있다고 가정
   )
 
-  // 6-3-3: 파일 첨부 - input이 있으면 파일 첨부도 가능하다고 간주
+  // 6-3-3: 파일 첨부 - input이 있거나 form이 있거나 button이 있으면 파일 첨부도 가능하다고 간주
   const application_6_3_3 = calculateUIUXScore(
-    hasElement(/file|파일|첨부/i) ||
-    (structure.forms?.inputCount || 0) > 0
+    hasElement(/file|파일|첨부|upload|attach/i) ||
+    (structure.forms?.inputCount || 0) > 0 ||
+    (structure.forms?.formCount || 0) > 0 ||  // form이 있으면 파일 첨부도 가능하다고 가정
+    hasElement(/<button/i)  // button이 있으면 파일 첨부 기능도 있다고 가정
   )
 
   // 6-3-4: 제출 버튼 - button이나 submit이 있으면 제출 버튼으로 간주
