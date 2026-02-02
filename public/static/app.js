@@ -980,7 +980,7 @@ async function downloadPPT(data) {
  */
 function displayKRDSResults(data, resultElement) {
     const { krds, url, analyzed_at, total_pages, analyzed_pages, structure, metadata } = data;
-    const { principles, compliance_level, convenience_score, scores, issues } = krds;
+    const { categories, compliance_level, convenience_score, compliant_count, total_count, compliance_rate, scores, issues } = krds;
     
     // 등급별 색상
     // S급: 95점 이상 (골드)
@@ -1028,54 +1028,70 @@ function displayKRDSResults(data, resultElement) {
                 <div style="font-size: 0.85rem; opacity: 0.8;">
                     <i class="fas fa-calendar"></i> ${new Date(analyzed_at).toLocaleString('ko-KR')} |
                     <i class="fas fa-file-alt"></i> ${total_pages}개 페이지 분석 |
-                    <i class="fas fa-bookmark"></i> KWCAG 2.2 (${metadata.criterion_count}개 항목) |
-                    <i class="fas fa-ruler"></i> 웹 편의성 평가
+                    <i class="fas fa-check-circle"></i> 준수율: ${compliance_rate.toFixed(1)}% (${compliant_count}/${total_count}) |
+                    <i class="fas fa-ruler"></i> 디지털정부서비스 UI/UX 가이드라인
                 </div>
             </div>
             
-            <!-- 4대 원칙 점수 -->
+            <!-- 6대 카테고리 점수 -->
             <div class="principles-section" style="padding: 40px; background: rgba(255, 255, 255, 0.02);">
                 <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-chart-bar" style="color: #0066FF;"></i>
-                    4대 편의성 원칙 평가
+                    6대 카테고리 평가
                 </h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;">
                     <div class="principle-card" style="background: rgba(0, 102, 255, 0.05); border: 2px solid rgba(0, 102, 255, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
-                        <div style="font-size: 2.5rem; color: #0066FF; margin-bottom: 10px;">
-                            <i class="fas fa-eye"></i>
+                        <div style="font-size: 2rem; color: #0066FF; margin-bottom: 10px;">
+                            <i class="fas fa-id-card"></i>
                         </div>
-                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">인식의 용이성</div>
-                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Perceivable</div>
-                        <div style="font-size: 2rem; font-weight: 900; color: #0066FF;">${principles.perceivable.toFixed(1)}</div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 5px;">아이덴티티</div>
+                        <div style="font-size: 0.8rem; color: #9CA3AF; margin-bottom: 10px;">5개 항목</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: #0066FF;">${categories.identity.toFixed(1)}</div>
                     </div>
                     <div class="principle-card" style="background: rgba(0, 201, 167, 0.05); border: 2px solid rgba(0, 201, 167, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
-                        <div style="font-size: 2.5rem; color: #00C9A7; margin-bottom: 10px;">
-                            <i class="fas fa-hand-pointer"></i>
+                        <div style="font-size: 2rem; color: #00C9A7; margin-bottom: 10px;">
+                            <i class="fas fa-compass"></i>
                         </div>
-                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">운용의 용이성</div>
-                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Operable</div>
-                        <div style="font-size: 2rem; font-weight: 900; color: #00C9A7;">${principles.operable.toFixed(1)}</div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 5px;">탐색</div>
+                        <div style="font-size: 0.8rem; color: #9CA3AF; margin-bottom: 10px;">5개 항목</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: #00C9A7;">${categories.navigation.toFixed(1)}</div>
                     </div>
                     <div class="principle-card" style="background: rgba(255, 165, 0, 0.05); border: 2px solid rgba(255, 165, 0, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
-                        <div style="font-size: 2.5rem; color: #FFA500; margin-bottom: 10px;">
-                            <i class="fas fa-book-open"></i>
+                        <div style="font-size: 2rem; color: #FFA500; margin-bottom: 10px;">
+                            <i class="fas fa-home"></i>
                         </div>
-                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">이해의 용이성</div>
-                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Understandable</div>
-                        <div style="font-size: 2rem; font-weight: 900; color: #FFA500;">${principles.understandable.toFixed(1)}</div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 5px;">방문</div>
+                        <div style="font-size: 0.8rem; color: #9CA3AF; margin-bottom: 10px;">1개 항목</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: #FFA500;">${categories.visit.toFixed(1)}</div>
                     </div>
                     <div class="principle-card" style="background: rgba(147, 51, 234, 0.05); border: 2px solid rgba(147, 51, 234, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
-                        <div style="font-size: 2.5rem; color: #9333EA; margin-bottom: 10px;">
-                            <i class="fas fa-shield-alt"></i>
+                        <div style="font-size: 2rem; color: #9333EA; margin-bottom: 10px;">
+                            <i class="fas fa-search"></i>
                         </div>
-                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">견고성</div>
-                        <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 15px;">Robust</div>
-                        <div style="font-size: 2rem; font-weight: 900; color: #9333EA;">${principles.robust.toFixed(1)}</div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 5px;">검색</div>
+                        <div style="font-size: 0.8rem; color: #9CA3AF; margin-bottom: 10px;">12개 항목</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: #9333EA;">${categories.search.toFixed(1)}</div>
+                    </div>
+                    <div class="principle-card" style="background: rgba(236, 72, 153, 0.05); border: 2px solid rgba(236, 72, 153, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
+                        <div style="font-size: 2rem; color: #EC4899; margin-bottom: 10px;">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 5px;">로그인</div>
+                        <div style="font-size: 0.8rem; color: #9CA3AF; margin-bottom: 10px;">7개 항목</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: #EC4899;">${categories.login.toFixed(1)}</div>
+                    </div>
+                    <div class="principle-card" style="background: rgba(34, 197, 94, 0.05); border: 2px solid rgba(34, 197, 94, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
+                        <div style="font-size: 2rem; color: #22C55E; margin-bottom: 10px;">
+                            <i class="fas fa-file-contract"></i>
+                        </div>
+                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 5px;">신청</div>
+                        <div style="font-size: 0.8rem; color: #9CA3AF; margin-bottom: 10px;">13개 항목</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: #22C55E;">${categories.application.toFixed(1)}</div>
                     </div>
                 </div>
             </div>
             
-            <!-- 전체 33개 항목 점수표 -->
+            <!-- 전체 43개 항목 점수표 -->
             <div class="all-scores-section" style="padding: 40px; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.1);">
                 <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-clipboard-list"></i>

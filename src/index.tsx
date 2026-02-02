@@ -6,6 +6,7 @@ import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/
 import { nielsenDescriptions, getItemDescription } from './analyzer/nielsenDescriptions'
 import { evaluateItemRelevance } from './analyzer/itemRelevance'
 import { evaluateKRDS } from './analyzer/krdsEvaluator'
+import { evaluateUIUXKRDS } from './analyzer/uiuxKRDSEvaluator'
 import { loadWeights, getWeightsVersion, getWeightsLastUpdated, loadReferenceStatistics } from './config/weightsLoader'
 import { generateWeightAdjustments, applyWeightAdjustments } from './config/weightAdjuster'
 import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } from './types/database'
@@ -498,25 +499,29 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     if (mode === 'public') {
       // ========================================
       // 공공 UI/UX 분석 (KRDS 기반)
+      // 디지털정부서비스 UI/UX 가이드라인 43개 항목
       // ========================================
-      const krdsResult = evaluateKRDS(structure, pageResults)
+      const uiuxResult = evaluateUIUXKRDS(structure, pageResults)
       
       return c.json({
         mode: 'public',
-        mode_name: '공공 UI/UX 분석',
-        evaluation_standard: 'KWCAG 2.2 (한국형 웹 콘텐츠 편의성 지침)',
+        mode_name: '공공 UI/UX 분석 (KRDS)',
+        evaluation_standard: '디지털정부서비스 UI/UX 가이드라인 43개 항목',
         url,
         analyzed_at: new Date().toISOString(),
         total_pages: pageResults.length,
         analyzed_pages: pageResults.map(p => p.url),
         
-        // KRDS 평가 결과
+        // UI/UX KRDS 평가 결과
         krds: {
-          principles: krdsResult.principles,
-          compliance_level: krdsResult.compliance_level,
-          convenience_score: krdsResult.convenience_score,
-          scores: krdsResult.scores,
-          issues: krdsResult.issues,
+          categories: uiuxResult.categories,
+          compliance_level: uiuxResult.compliance_level,
+          convenience_score: uiuxResult.convenience_score,
+          compliant_count: uiuxResult.compliant_count,
+          total_count: uiuxResult.total_count,
+          compliance_rate: uiuxResult.compliance_rate,
+          scores: uiuxResult.scores,
+          issues: uiuxResult.issues,
         },
         
         // HTML 구조 정보
@@ -530,10 +535,10 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         },
         
         metadata: {
-          principle_count: 4,
-          guideline_count: 14,
-          criterion_count: 33,
-          evaluation_method: 'KRDS (한국형 웹 접근성)',
+          category_count: 6,
+          item_count: 43,
+          evaluation_method: 'KRDS UI/UX (디지털정부서비스 가이드라인)',
+          categories: ['아이덴티티(5)', '탐색(5)', '방문(1)', '검색(12)', '로그인(7)', '신청(13)']
         }
       })
     }
