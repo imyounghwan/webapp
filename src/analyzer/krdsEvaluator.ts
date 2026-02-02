@@ -396,7 +396,10 @@ export function evaluateKRDS(structure: HTMLStructure, pageResults?: Array<{ url
   const operable = operableScores.reduce((a, b) => a + b, 0) / operableScores.length
   const understandable = understandableScores.reduce((a, b) => a + b, 0) / understandableScores.length
   const robust = robustScores.reduce((a, b) => a + b, 0) / robustScores.length
-  const overall = (perceivable + operable + understandable + robust) / 4
+  
+  // overall: 33개 항목 전체 평균 (각 원칙별 가중치 없이 순수 평균)
+  const allScores = [...perceivableScores, ...operableScores, ...understandableScores, ...robustScores]
+  const overall = allScores.reduce((a, b) => a + b, 0) / allScores.length
   
   const principles: KRDSPrincipleScores = {
     perceivable: Math.round(perceivable * 10) / 10,
