@@ -123,7 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            if (!response.ok) throw new Error('분석 실패');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: '분석 실패', message: '서버 오류' }));
+                throw new Error(errorData.details || errorData.message || '분석 실패');
+            }
             
             // 완료 애니메이션
             progressBar.style.width = '100%';
@@ -137,10 +140,35 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             clearInterval(progressInterval);
             console.error('❌ Error:', error);
+            
+            // 상세한 에러 메시지 표시
+            let errorTitle = '❌ 분석 실패';
+            let errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
+            let errorSuggestion = '';
+            
+            if (errorMessage.includes('CORS') || errorMessage.includes('차단')) {
+                errorTitle = '🚫 접근 차단';
+                errorSuggestion = '해당 웹사이트가 외부 접근을 차단하고 있습니다. 다른 URL을 시도해보세요.';
+            } else if (errorMessage.includes('찾을 수 없습니다') || errorMessage.includes('404')) {
+                errorTitle = '🔍 페이지 없음';
+                errorSuggestion = 'URL이 올바른지 확인해주세요. (예: https://example.com)';
+            } else if (errorMessage.includes('타임아웃') || errorMessage.includes('timeout')) {
+                errorTitle = '⏱️ 시간 초과';
+                errorSuggestion = '웹사이트 응답이 느립니다. 잠시 후 다시 시도해주세요.';
+            } else if (errorMessage.includes('네트워크') || errorMessage.includes('network')) {
+                errorTitle = '🌐 네트워크 오류';
+                errorSuggestion = '인터넷 연결을 확인하거나 나중에 다시 시도해주세요.';
+            }
+            
             analyzeResult.innerHTML = `
-                <div style="background:#fee;border:1px solid #fcc;border-radius:8px;padding:20px;margin:20px 0;">
-                    <div style="color:#c00;font-weight:bold;font-size:18px;">❌ 분석 실패</div>
-                    <div style="color:#666;margin-top:10px;">${error.message}</div>
+                <div style="background: linear-gradient(135deg, rgba(255, 87, 87, 0.1), rgba(255, 87, 87, 0.05)); border: 2px solid rgba(255, 87, 87, 0.3); border-radius: 16px; padding: 40px; margin: 20px 0; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">😔</div>
+                    <div style="color: #FF5F57; font-weight: 800; font-size: 1.5rem; margin-bottom: 15px;">${errorTitle}</div>
+                    <div style="color: var(--text); font-size: 1.05rem; margin-bottom: 10px; line-height: 1.6;">${errorMessage}</div>
+                    ${errorSuggestion ? `<div style="background: rgba(0, 102, 255, 0.1); border-radius: 10px; padding: 15px; margin-top: 20px; color: #0066FF; font-size: 0.95rem;">💡 ${errorSuggestion}</div>` : ''}
+                    <button onclick="location.reload()" style="margin-top: 25px; padding: 12px 30px; background: linear-gradient(135deg, #0066FF, #0052CC); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem;">
+                        🔄 다시 시도
+                    </button>
                 </div>
             `;
         }

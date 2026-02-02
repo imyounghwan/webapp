@@ -117,19 +117,26 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
   const results = []
   const allFoundPages = new Set<string>()
   
-  // 1. 메인 페이지 분석
-  const mainResponse = await fetch(mainUrl, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-  })
-  
-  if (!mainResponse.ok) {
-    throw new Error('Failed to fetch main page')
-  }
-  
-  const mainHtml = await mainResponse.text()
-  const mainStructure = analyzeHTML(mainHtml, mainUrl)
-  results.push({ url: mainUrl, structure: mainStructure, isMainPage: true })
-  allFoundPages.add(mainUrl)
+  try {
+    // 1. 메인 페이지 분석
+    console.log(`Fetching main page: ${mainUrl}`)
+    const mainResponse = await fetch(mainUrl, {
+      headers: { 
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+      },
+      redirect: 'follow'
+    })
+    
+    if (!mainResponse.ok) {
+      throw new Error(`Failed to fetch main page: ${mainResponse.status} ${mainResponse.statusText}`)
+    }
+    
+    const mainHtml = await mainResponse.text()
+    const mainStructure = analyzeHTML(mainHtml, mainUrl)
+    results.push({ url: mainUrl, structure: mainStructure, isMainPage: true })
+    allFoundPages.add(mainUrl)
   
   // 2. 메인 페이지에서 서브 페이지 추출
   const subPagesFromMain = await extractSubPages(mainUrl, mainHtml, 20)
@@ -228,6 +235,15 @@ async function analyzeMultiplePages(mainUrl: string): Promise<any> {
   
   console.log(`Total analyzed pages: ${results.length}`)
   return results
+  
+  } catch (error) {
+    console.error('Error in analyzeMultiplePages:', error)
+    // 최소한 메인 페이지라도 분석 시도
+    if (results.length === 0) {
+      throw new Error(`분석 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`)
+    }
+    return results
+  }
 }
 
 /**
@@ -712,9 +728,41 @@ app.post('/api/analyze', authMiddleware, async (c) => {
 
   } catch (error) {
     console.error('Analysis error:', error)
+    
+    // 에러 타입별 상세 메시지
+    let errorMessage = 'Unknown error'
+    let errorDetails = ''
+    
+    if (error instanceof Error) {
+      errorMessage = error.message
+      
+      // CORS 에러
+      if (errorMessage.includes('CORS') || errorMessage.includes('cross-origin')) {
+        errorDetails = '해당 웹사이트가 외부 접근을 차단하고 있습니다. CORS 정책으로 인해 분석이 불가능합니다.'
+      }
+      // 네트워크 에러
+      else if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+        errorDetails = '웹사이트에 접속할 수 없습니다. URL을 확인하거나 나중에 다시 시도해주세요.'
+      }
+      // 타임아웃
+      else if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+        errorDetails = '웹사이트 응답 시간이 너무 깁니다. 나중에 다시 시도해주세요.'
+      }
+      // 404 등 상태 코드
+      else if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        errorDetails = '해당 웹사이트를 찾을 수 없습니다. URL을 확인해주세요.'
+      }
+      // 500 서버 에러
+      else if (errorMessage.includes('500') || errorMessage.includes('503')) {
+        errorDetails = '웹사이트 서버에 문제가 있습니다. 나중에 다시 시도해주세요.'
+      }
+    }
+    
     return c.json({ 
-      error: 'Analysis failed', 
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: '분석 실패',
+      message: errorMessage,
+      details: errorDetails || '웹사이트 분석 중 오류가 발생했습니다.',
+      suggestion: 'URL이 올바른지 확인하고, 웹사이트가 정상적으로 작동하는지 확인해주세요.'
     }, 500)
   }
 })
