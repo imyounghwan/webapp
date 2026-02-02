@@ -980,7 +980,7 @@ async function downloadPPT(data) {
  */
 function displayKRDSResults(data, resultElement) {
     const { krds, url, analyzed_at, total_pages, analyzed_pages, structure, metadata } = data;
-    const { principles, compliance_level, accessibility_score, scores, issues } = krds;
+    const { principles, compliance_level, convenience_score, scores, issues } = krds;
     
     // 준수 레벨 색상
     const levelColors = {
@@ -996,6 +996,7 @@ function displayKRDSResults(data, resultElement) {
     try {
         localStorage.setItem('lastAnalysisResult', JSON.stringify(data));
         localStorage.setItem('lastAnalysisUrl', url);
+        localStorage.setItem('lastAnalysisMode', 'public'); // KRDS 모드 표시
     } catch (e) {
         console.warn('Failed to save to localStorage:', e);
     }
@@ -1012,7 +1013,7 @@ function displayKRDSResults(data, resultElement) {
                         <h3 style="font-size: 1.8rem; font-weight: 800; margin: 0;">${url}</h3>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 3rem; font-weight: 900; line-height: 1; margin-bottom: 10px;">${accessibility_score}<span style="font-size: 1.5rem; opacity: 0.8;">/100</span></div>
+                        <div style="font-size: 3rem; font-weight: 900; line-height: 1; margin-bottom: 10px;">${convenience_score}<span style="font-size: 1.5rem; opacity: 0.8;">/100</span></div>
                         <div style="display: inline-block; padding: 8px 20px; background: ${levelColor}; border-radius: 20px; font-weight: 700; font-size: 1.1rem;">
                             ${compliance_level} 등급
                         </div>
@@ -1021,7 +1022,8 @@ function displayKRDSResults(data, resultElement) {
                 <div style="font-size: 0.85rem; opacity: 0.8;">
                     <i class="fas fa-calendar"></i> ${new Date(analyzed_at).toLocaleString('ko-KR')} |
                     <i class="fas fa-file-alt"></i> ${total_pages}개 페이지 분석 |
-                    <i class="fas fa-bookmark"></i> KWCAG 2.2 (${metadata.criterion_count}개 항목)
+                    <i class="fas fa-bookmark"></i> KWCAG 2.2 (${metadata.criterion_count}개 항목) |
+                    <i class="fas fa-ruler"></i> 웹 편의성 평가
                 </div>
             </div>
             
@@ -1029,7 +1031,7 @@ function displayKRDSResults(data, resultElement) {
             <div class="principles-section" style="padding: 40px; background: rgba(255, 255, 255, 0.02);">
                 <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-chart-bar" style="color: #0066FF;"></i>
-                    4대 접근성 원칙 평가
+                    4대 편의성 원칙 평가
                 </h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                     <div class="principle-card" style="background: rgba(0, 102, 255, 0.05); border: 2px solid rgba(0, 102, 255, 0.2); border-radius: 15px; padding: 25px; text-align: center;">
@@ -1072,10 +1074,10 @@ function displayKRDSResults(data, resultElement) {
             <div class="issues-section" style="padding: 40px; background: rgba(255, 87, 87, 0.03); border-top: 1px solid rgba(255, 255, 255, 0.1);">
                 <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-exclamation-triangle" style="color: #FF5F57;"></i>
-                    발견된 접근성 이슈 (${issues.length}건)
+                    발견된 편의성 이슈 (${issues.length}건)
                 </h4>
                 <div style="display: flex; flex-direction: column; gap: 15px;">
-                    ${issues.map(issue => {
+                    ${issues.map((issue, idx) => {
                         const severityColors = {
                             critical: '#FF5F57',
                             serious: '#FFA500',
@@ -1091,18 +1093,36 @@ function displayKRDSResults(data, resultElement) {
                         const color = severityColors[issue.severity] || '#999';
                         const label = severityLabels[issue.severity] || issue.severity;
                         
+                        // affected_pages 표시
+                        const affectedPagesHTML = issue.affected_pages && issue.affected_pages.length > 0
+                            ? `<div style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; font-size: 0.85rem;">
+                                <strong style="color: #9CA3AF;">📍 문제 페이지:</strong><br>
+                                <div style="margin-top: 5px; color: #D1D5DB;">
+                                    ${issue.affected_pages.slice(0, 3).map(page => 
+                                        `<div style="margin: 3px 0; word-break: break-all;">${page}</div>`
+                                    ).join('')}
+                                    ${issue.affected_pages.length > 3 ? `<div style="color: #9CA3AF; margin-top: 5px;">외 ${issue.affected_pages.length - 3}개 페이지</div>` : ''}
+                                </div>
+                            </div>`
+                            : '';
+                        
                         return `
-                            <div style="background: rgba(255, 255, 255, 0.02); border-left: 4px solid ${color}; border-radius: 10px; padding: 20px;">
-                                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 10px;">
+                            <div id="krds-issue-${idx}" style="background: rgba(255, 255, 255, 0.02); border-left: 4px solid ${color}; border-radius: 10px; padding: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                                     <div style="flex: 1;">
                                         <span style="display: inline-block; padding: 4px 12px; background: ${color}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin-right: 10px;">${label}</span>
                                         <span style="font-weight: 700; font-size: 1.05rem;">${issue.item}</span>
                                     </div>
+                                    <button onclick="editKRDSScore(${idx}, '${issue.item}')" 
+                                            style="padding: 8px 16px; background: rgba(0, 102, 255, 0.2); color: #0066FF; border: 1px solid rgba(0, 102, 255, 0.4); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;">
+                                        <i class="fas fa-edit"></i> 수정
+                                    </button>
                                 </div>
                                 <div style="color: #9CA3AF; font-size: 0.95rem; margin-bottom: 10px;">${issue.description}</div>
                                 <div style="background: rgba(0, 102, 255, 0.1); border-radius: 8px; padding: 12px; font-size: 0.9rem;">
                                     <strong style="color: #0066FF;">💡 권장사항:</strong> ${issue.recommendation}
                                 </div>
+                                ${affectedPagesHTML}
                             </div>
                         `;
                     }).join('')}
@@ -1135,4 +1155,95 @@ function displayKRDSResults(data, resultElement) {
             </div>
         </div>
     `;
+}
+
+// ==========================================
+// KRDS 점수 수정 함수
+// ==========================================
+async function editKRDSScore(issueIndex, itemName) {
+    const lastResult = JSON.parse(localStorage.getItem('lastAnalysisResult') || '{}');
+    const krds = lastResult.krds;
+    
+    if (!krds || !krds.issues || !krds.issues[issueIndex]) {
+        alert('이슈 데이터를 찾을 수 없습니다.');
+        return;
+    }
+    
+    const issue = krds.issues[issueIndex];
+    
+    // 해당 이슈의 item_id 찾기 (예: P1_1_1_alt_text)
+    const itemId = Object.keys(krds.scores).find(key => {
+        const scoreName = key.replace(/_/g, '.').toUpperCase();
+        return itemName.includes(scoreName) || itemName.includes(key);
+    });
+    
+    if (!itemId) {
+        alert('항목 ID를 찾을 수 없습니다.');
+        return;
+    }
+    
+    const originalScore = krds.scores[itemId];
+    
+    // 수정 다이얼로그 표시
+    const newScore = prompt(
+        `${itemName}\n\n현재 점수: ${originalScore.toFixed(1)}\n\n새로운 점수를 입력하세요 (2.0 ~ 5.0):`,
+        originalScore.toFixed(1)
+    );
+    
+    if (newScore === null) return; // 취소
+    
+    const correctedScore = parseFloat(newScore);
+    
+    // 유효성 검사
+    if (isNaN(correctedScore) || correctedScore < 2.0 || correctedScore > 5.0) {
+        alert('점수는 2.0에서 5.0 사이여야 합니다.');
+        return;
+    }
+    
+    // 서버에 저장
+    try {
+        const sessionId = localStorage.getItem('session_id');
+        const response = await fetch('/api/krds/corrections', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-ID': sessionId
+            },
+            body: JSON.stringify({
+                url: lastResult.url,
+                evaluated_at: lastResult.analyzed_at,
+                item_id: itemId,
+                item_name: itemName,
+                original_score: originalScore,
+                corrected_score: correctedScore,
+                html_structure: JSON.stringify(lastResult.structure),
+                affected_pages: issue.affected_pages,
+                correction_reason: '관리자 수정',
+                admin_comment: '',
+                corrected_by: 'admin'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('저장 실패');
+        }
+        
+        const result = await response.json();
+        
+        // 로컬 데이터 업데이트
+        krds.scores[itemId] = correctedScore;
+        localStorage.setItem('lastAnalysisResult', JSON.stringify(lastResult));
+        
+        alert(`✅ 수정 완료!\n\n${itemName}\n원본: ${originalScore.toFixed(1)} → 수정: ${correctedScore.toFixed(1)}\n\n이 데이터는 향후 평가 로직 개선에 활용됩니다.`);
+        
+        // 결과 다시 표시
+        const resultElement = document.getElementById('analyzeResult');
+        if (resultElement) {
+            displayKRDSResults(lastResult, resultElement);
+        }
+        
+    } catch (error) {
+        console.error('KRDS correction error:', error);
+        alert('❌ 저장 실패: ' + error.message);
+    }
 }

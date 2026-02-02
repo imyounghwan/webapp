@@ -1571,6 +1571,125 @@ app.get('/api/admin/users', authMiddleware, adminMiddleware, async (c) => {
   }
 })
 
+/**
+ * KRDS Corrections API
+ * POST /api/krds/corrections - KRDS 평가 결과 수정 저장
+ */
+app.post('/api/krds/corrections', async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const body = await c.req.json()
+    
+    // 필수 필드 검증
+    if (!body.url || !body.item_id || !body.item_name || 
+        body.original_score === undefined || body.corrected_score === undefined) {
+      return c.json({ error: 'Missing required fields' }, 400)
+    }
+    
+    // 점수 범위 검증 (2.0 ~ 5.0)
+    if (body.corrected_score < 2.0 || body.corrected_score > 5.0) {
+      return c.json({ error: 'Corrected score must be between 2.0 and 5.0' }, 400)
+    }
+    
+    const score_diff = body.corrected_score - body.original_score
+    
+    // 데이터베이스에 저장
+    const result = await db.prepare(`
+      INSERT INTO krds_corrections (
+        url, evaluated_at, item_id, item_name,
+        original_score, corrected_score, score_diff,
+        html_structure, affected_pages, correction_reason, admin_comment, corrected_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.url,
+      body.evaluated_at,
+      body.item_id,
+      body.item_name,
+      body.original_score,
+      body.corrected_score,
+      score_diff,
+      body.html_structure || null,
+      body.affected_pages ? JSON.stringify(body.affected_pages) : null,
+      body.correction_reason || null,
+      body.admin_comment || null,
+      body.corrected_by || 'admin'
+    ).run()
+    
+    return c.json({
+      success: true,
+      correction_id: result.meta.last_row_id,
+      message: 'KRDS 수정 사항이 저장되었습니다. 이 데이터는 향후 평가 로직 개선에 활용됩니다.'
+    })
+  } catch (error: any) {
+    console.error('KRDS Correction save error:', error)
+    return c.json({ 
+      error: 'Failed to save correction',
+      details: error.message 
+    }, 500)
+  }
+})
+
+/**
+ * GET /api/krds/corrections/:url - 특정 URL의 KRDS 수정 이력 조회
+ */
+app.get('/api/krds/corrections/:url', async (c) => {
+  const db = c.env.DB
+  const url = c.req.param('url')
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const results = await db.prepare(`
+      SELECT * FROM krds_corrections
+      WHERE url = ?
+      ORDER BY corrected_at DESC
+    `).bind(decodeURIComponent(url)).all()
+    
+    return c.json({
+      url: decodeURIComponent(url),
+      corrections: results.results,
+      count: results.results.length
+    })
+  } catch (error: any) {
+    console.error('Error fetching KRDS corrections:', error)
+    return c.json({ error: 'Failed to fetch corrections' }, 500)
+  }
+})
+
+/**
+ * GET /api/krds/learning-summary - KRDS 학습 데이터 요약
+ */
+app.get('/api/krds/learning-summary', async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const summary = await db.prepare(`
+      SELECT * FROM krds_learning_data_summary
+      ORDER BY correction_count DESC
+    `).all()
+    
+    return c.json({
+      learning_data: summary.results,
+      total_items: summary.results.length,
+      message: '이 데이터는 KRDS 평가 로직 개선에 활용됩니다.'
+    })
+  } catch (error: any) {
+    console.error('Error fetching KRDS learning summary:', error)
+    return c.json({ error: 'Failed to fetch learning summary' }, 500)
+  }
+})
+
 // Serve landing page for root path
 app.get('/', (c) => {
   return c.html(landingHTML)
