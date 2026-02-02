@@ -133,18 +133,18 @@ export function evaluateKRDS(structure: HTMLStructure, pageResults?: Array<{ url
   // 1.2.1 자막 제공 (비디오가 있으면 track 태그 확인)
   const hasVideo = visual.videoCount > 0
   const hasTrack = html.toLowerCase().includes('<track')
-  const P1_2_1_multimedia_caption = calculateKRDSScore(
-    !hasVideo || hasTrack,
-    hasVideo ? 1.0 : 0.5  // 비디오 없으면 가중치 감소
-  )
+  // 비디오 없으면 만점 처리 (체크 불가)
+  const P1_2_1_multimedia_caption = !hasVideo 
+    ? 5.0  // 비디오 없음 = 자막 체크 불가 = 만점
+    : calculateKRDSScore(hasTrack)  // 비디오 있음 = track 태그 확인
   
   // 1.3.1 표의 구성 (th, caption 사용)
   const hasTable = content.tableCount > 0
   const hasTableHeaders = html.toLowerCase().includes('<th')
-  const P1_3_1_table_structure = calculateKRDSScore(
-    !hasTable || hasTableHeaders,
-    hasTable ? 1.0 : 0.5
-  )
+  // 표 없으면 만점 처리 (체크 불가)
+  const P1_3_1_table_structure = !hasTable
+    ? 5.0  // 표 없음 = 표 구조 체크 불가 = 만점
+    : calculateKRDSScore(hasTableHeaders)  // 표 있음 = th 태그 확인
   
   // 1.3.2 콘텐츠의 선형구조 (헤딩 구조)
   const P1_3_2_linear_structure = calculateKRDSScore(
