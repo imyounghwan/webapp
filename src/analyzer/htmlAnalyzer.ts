@@ -5,6 +5,7 @@
 
 export interface HTMLStructure {
   url: string
+  html?: string  // 원본 HTML (KRDS 평가용)
   navigation: NavigationStructure
   accessibility: AccessibilityScore
   content: ContentStructure
@@ -62,6 +63,7 @@ export function analyzeHTML(html: string, url: string): HTMLStructure {
 
   return {
     url,
+    html,  // 원본 HTML 저장 (KRDS 평가용)
     navigation,
     accessibility,
     content,

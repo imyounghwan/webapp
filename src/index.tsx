@@ -462,6 +462,7 @@ function aggregateResults(pageResults: any[]): any {
   }
   
   return {
+    html: mainPage.structure.html || '',  // 메인 페이지 HTML 사용 (KRDS 평가용)
     navigation: avgNavigation,
     accessibility: avgAccessibility,
     content: avgContent,
