@@ -1071,10 +1071,19 @@ function displayKRDSResults(data, resultElement) {
             
             <!-- 전체 33개 항목 점수표 -->
             <div class="all-scores-section" style="padding: 40px; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+                <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-clipboard-list"></i>
                     전체 평가 항목 점수 (33개)
                 </h4>
+                <div style="margin-bottom: 20px; padding: 12px 20px; background: rgba(0, 102, 255, 0.1); border-left: 4px solid #0066FF; border-radius: 8px; font-size: 0.9rem; color: #D1D5DB;">
+                    <strong style="color: #0066FF;">💡 점수 해석:</strong>
+                    <div style="margin-top: 8px;">
+                        <div>• <strong style="color: #00C9A7;">양호 (4.5~5.0점)</strong>: 기준을 충족하여 개선 불필요</div>
+                        <div>• <strong style="color: #0066FF;">보통 (3.5~4.4점)</strong>: 부분적 개선 권장 → 이슈로 표시</div>
+                        <div>• <strong style="color: #FFA500;">주의 (2.5~3.4점)</strong>: 개선 필요 → 이슈로 표시</div>
+                        <div>• <strong style="color: #FF5F57;">개선필요 (2.0~2.4점)</strong>: 즉시 개선 필요 → 이슈로 표시</div>
+                    </div>
+                </div>
                 <div style="background: rgba(0, 0, 0, 0.2); border-radius: 15px; padding: 20px; overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                         <thead>
@@ -1176,10 +1185,17 @@ function displayKRDSResults(data, resultElement) {
             <!-- 주요 이슈 -->
             ${issues.length > 0 ? `
             <div class="issues-section" style="padding: 40px; background: rgba(255, 87, 87, 0.03); border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+                <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-exclamation-triangle" style="color: #FF5F57;"></i>
                     발견된 편의성 이슈 (${issues.length}건)
                 </h4>
+                <div style="margin-bottom: 20px; padding: 12px 20px; background: rgba(255, 87, 87, 0.1); border-left: 4px solid #FF5F57; border-radius: 8px; font-size: 0.9rem; color: #D1D5DB;">
+                    <strong style="color: #FF5F57;">📌 이슈 판정 기준:</strong> 
+                    <span style="margin-left: 10px;">점수 4.5점 미만인 항목만 이슈로 표시됩니다.</span>
+                    <span style="display: block; margin-top: 5px; color: #9CA3AF;">
+                        (즉, 33개 항목 중 "양호(4.5~5.0)" 항목을 제외한 모든 항목이 개선 대상입니다)
+                    </span>
+                </div>
                 <div style="display: flex; flex-direction: column; gap: 15px;">
                     ${issues.map((issue, idx) => {
                         const severityColors = {
