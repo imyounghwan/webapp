@@ -1069,6 +1069,110 @@ function displayKRDSResults(data, resultElement) {
                 </div>
             </div>
             
+            <!-- 전체 33개 항목 점수표 -->
+            <div class="all-scores-section" style="padding: 40px; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-clipboard-list"></i>
+                    전체 평가 항목 점수 (33개)
+                </h4>
+                <div style="background: rgba(0, 0, 0, 0.2); border-radius: 15px; padding: 20px; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="background: rgba(0, 102, 255, 0.1); border-bottom: 2px solid rgba(0, 102, 255, 0.3);">
+                                <th style="padding: 12px; text-align: left; font-weight: 700;">항목</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 700; width: 100px;">점수</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 700; width: 120px;">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(krds.scores).map(([key, score]) => {
+                                // key 예시: P1_1_1_alt_text → "1.1.1 적절한 대체 텍스트 제공"
+                                const itemNames = {
+                                    'P1_1_1_alt_text': '1.1.1 적절한 대체 텍스트 제공',
+                                    'P1_2_1_multimedia_caption': '1.2.1 자막 제공',
+                                    'P1_3_1_table_structure': '1.3.1 표의 구성',
+                                    'P1_3_2_linear_structure': '1.3.2 콘텐츠의 선형구조',
+                                    'P1_3_3_clear_instructions': '1.3.3 명확한 지시사항 제공',
+                                    'P1_4_1_color_independent': '1.4.1 색에 무관한 콘텐츠 인식',
+                                    'P1_4_2_no_auto_play': '1.4.2 자동 재생 금지',
+                                    'P1_4_3_contrast_ratio': '1.4.3 텍스트 콘텐츠의 명도 대비',
+                                    'P1_4_4_content_distinction': '1.4.4 콘텐츠 간의 구분',
+                                    'O2_1_1_keyboard_access': '2.1.1 키보드 사용 보장',
+                                    'O2_1_2_focus_visible': '2.1.2 초점 이동과 표시',
+                                    'O2_1_3_input_control': '2.1.3 조작 가능',
+                                    'O2_1_4_shortcut_key': '2.1.4 문자 단축키',
+                                    'O2_2_1_time_control': '2.2.1 응답시간 조절',
+                                    'O2_2_2_pause_control': '2.2.2 정지 기능 제공',
+                                    'O2_3_1_flash_limit': '2.3.1 깜빡임과 번쩍임 사용 제한',
+                                    'O2_4_1_skip_navigation': '2.4.1 반복 영역 건너뛰기',
+                                    'O2_4_2_page_title': '2.4.2 제목 제공',
+                                    'O2_4_3_link_purpose': '2.4.3 적절한 링크 텍스트',
+                                    'O2_4_4_page_reference': '2.4.4 고정된 참조 위치 정보',
+                                    'O2_4_5_multiple_ways': '2.4.5 다양한 방법 제공',
+                                    'O2_4_6_pointer_gestures': '2.4.6 포인터 제스처',
+                                    'O2_4_7_dragging_movement': '2.4.7 끌기 동작',
+                                    'O2_4_8_target_size': '2.4.8 타겟 크기',
+                                    'O2_5_1_single_pointer': '2.5.1 단일 포인터 입력 지원',
+                                    'U3_1_1_language_attr': '3.1.1 기본 언어 표시',
+                                    'U3_2_1_user_control': '3.2.1 사용자 요구에 따른 실행',
+                                    'U3_2_2_help_consistency': '3.2.2 도움말의 일관성',
+                                    'U3_3_1_error_correction': '3.3.1 오류 정정',
+                                    'U3_3_2_label_provision': '3.3.2 레이블 제공',
+                                    'U3_3_3_accessible_auth': '3.3.3 접근 가능한 인증',
+                                    'U3_3_4_auto_fill': '3.3.4 자동완성',
+                                    'R4_1_1_markup_validity': '4.1.1 마크업 오류 방지',
+                                    'R4_2_1_web_app_access': '4.2.1 웹 애플리케이션 접근성 준수'
+                                };
+                                
+                                const itemName = itemNames[key] || key;
+                                const scoreValue = typeof score === 'number' ? score : 0;
+                                
+                                // 점수에 따른 색상 및 상태
+                                let statusColor, statusText, statusBg;
+                                if (scoreValue >= 4.5) {
+                                    statusColor = '#00C9A7';
+                                    statusBg = 'rgba(0, 201, 167, 0.1)';
+                                    statusText = '✅ 양호';
+                                } else if (scoreValue >= 3.5) {
+                                    statusColor = '#0066FF';
+                                    statusBg = 'rgba(0, 102, 255, 0.1)';
+                                    statusText = '⚠️ 보통';
+                                } else if (scoreValue >= 2.5) {
+                                    statusColor = '#FFA500';
+                                    statusBg = 'rgba(255, 165, 0, 0.1)';
+                                    statusText = '⚠️ 주의';
+                                } else {
+                                    statusColor = '#FF5F57';
+                                    statusBg = 'rgba(255, 95, 87, 0.1)';
+                                    statusText = '❌ 개선필요';
+                                }
+                                
+                                return `
+                                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                        <td style="padding: 12px; color: #D1D5DB;">${itemName}</td>
+                                        <td style="padding: 12px; text-align: center; font-weight: 700; color: ${statusColor}; font-size: 1.1rem;">
+                                            ${scoreValue.toFixed(1)}
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            <span style="display: inline-block; padding: 4px 12px; background: ${statusBg}; color: ${statusColor}; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                                                ${statusText}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0, 102, 255, 0.05); border-radius: 10px; font-size: 0.9rem; color: #9CA3AF;">
+                    <strong style="color: #0066FF;">📊 점수 기준:</strong>
+                    <span style="color: #00C9A7; margin-left: 10px;">✅ 4.5~5.0: 양호</span>
+                    <span style="color: #0066FF; margin-left: 10px;">⚠️ 3.5~4.4: 보통</span>
+                    <span style="color: #FFA500; margin-left: 10px;">⚠️ 2.5~3.4: 주의</span>
+                    <span style="color: #FF5F57; margin-left: 10px;">❌ 2.0~2.4: 개선필요</span>
+                </div>
+            </div>
+            
             <!-- 주요 이슈 -->
             ${issues.length > 0 ? `
             <div class="issues-section" style="padding: 40px; background: rgba(255, 87, 87, 0.03); border-top: 1px solid rgba(255, 255, 255, 0.1);">
