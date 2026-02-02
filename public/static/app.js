@@ -1172,9 +1172,12 @@ async function editKRDSScore(issueIndex, itemName) {
     const issue = krds.issues[issueIndex];
     
     // 해당 이슈의 item_id 찾기 (예: P1_1_1_alt_text)
+    // itemName 예시: "1.1.1 적절한 대체 텍스트 제공" → "P1_1_1_alt_text"
+    const itemCode = itemName.match(/[\d.]+/)[0]; // "1.1.1"
     const itemId = Object.keys(krds.scores).find(key => {
-        const scoreName = key.replace(/_/g, '.').toUpperCase();
-        return itemName.includes(scoreName) || itemName.includes(key);
+        // key 예시: "P1_1_1_alt_text"
+        const keyCode = key.match(/[A-Z](\d+_\d+_\d+)/)?.[1]?.replace(/_/g, '.'); // "1.1.1"
+        return keyCode === itemCode;
     });
     
     if (!itemId) {

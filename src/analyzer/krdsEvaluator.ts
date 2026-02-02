@@ -427,8 +427,13 @@ export function evaluateKRDS(structure: HTMLStructure, pageResults?: Array<{ url
   }
   
   // 원칙 1: 인식의 용이성 (9개 항목)
+  // 1.1.1 적절한 대체 텍스트: alt 비율이 낮은 페이지만
   if (P1_1_1_alt_text < 4.5) {
-    const affectedPages = getAffectedPages(page => (page.structure.accessibility?.altTextRatio || 0) >= 0.9)
+    const affectedPages = getAffectedPages(page => {
+      const pageAccessibility = page.structure.accessibility || { altTextRatio: 0 }
+      // alt 비율이 90% 미만인 페이지만
+      return pageAccessibility.altTextRatio < 0.9
+    })
     issues.push({
       item: '1.1.1 적절한 대체 텍스트 제공',
       severity: getSeverity(P1_1_1_alt_text),
@@ -438,33 +443,47 @@ export function evaluateKRDS(structure: HTMLStructure, pageResults?: Array<{ url
     })
   }
   
+  // 1.2.1 자막 제공: 비디오가 실제로 있는 페이지에서만 체크
   if (P1_2_1_multimedia_caption < 4.5) {
     const affectedPages = getAffectedPages(page => {
       const html = page.structure.html || ''
-      return html.toLowerCase().includes('<track')
+      const pageVisuals = page.structure.visuals || { videoCount: 0 }
+      // 비디오가 있고 track 태그가 없는 페이지만
+      return pageVisuals.videoCount > 0 && !html.toLowerCase().includes('<track')
     })
-    issues.push({
-      item: '1.2.1 자막 제공',
-      severity: getSeverity(P1_2_1_multimedia_caption),
-      description: visual.videoCount > 0 ? `동영상 ${visual.videoCount}개에 자막(<track> 태그) 없음` : '멀티미디어 콘텐츠 자막 제공 확인 필요',
-      recommendation: '동영상 및 오디오 콘텐츠에 자막을 제공하세요. <video> 태그에 <track kind="captions"> 추가 필요.',
-      affected_pages: affectedPages.length > 0 ? affectedPages : ['전체 페이지']
-    })
+    
+    // 비디오가 실제로 있는 경우에만 이슈로 표시
+    if (visual.videoCount > 0 && affectedPages.length > 0) {
+      issues.push({
+        item: '1.2.1 자막 제공',
+        severity: getSeverity(P1_2_1_multimedia_caption),
+        description: `동영상 ${visual.videoCount}개에 자막(<track> 태그) 누락`,
+        recommendation: '동영상 및 오디오 콘텐츠에 자막을 제공하세요. <video> 태그에 <track kind="captions"> 추가 필요.',
+        affected_pages: affectedPages
+      })
+    }
   }
   
+  // 1.3.1 표의 구성: 표가 실제로 있는 페이지에서만 체크
   if (P1_3_1_table_structure < 4.5) {
     const affectedPages = getAffectedPages(page => {
       const html = page.structure.html || ''
       const tableCount = (html.match(/<table[^>]*>/gi) || []).length
-      return tableCount === 0 || html.toLowerCase().includes('<th')
+      const thCount = (html.match(/<th[^>]*>/gi) || []).length
+      // 표가 있고 th 태그가 부족한 페이지만
+      return tableCount > 0 && thCount < tableCount
     })
-    issues.push({
-      item: '1.3.1 표의 구성',
-      severity: getSeverity(P1_3_1_table_structure),
-      description: content.tableCount > 0 ? `표 ${content.tableCount}개에 <th> 태그 없음 또는 부족` : '표 구조 마크업 확인 필요',
-      recommendation: '표의 제목 셀은 <th> 태그를 사용하고, 복잡한 표는 scope 또는 headers 속성을 활용하세요.',
-      affected_pages: affectedPages.length > 0 ? affectedPages : ['전체 페이지']
-    })
+    
+    // 표가 실제로 있는 경우에만 이슈로 표시
+    if (content.tableCount > 0 && affectedPages.length > 0) {
+      issues.push({
+        item: '1.3.1 표의 구성',
+        severity: getSeverity(P1_3_1_table_structure),
+        description: `표 ${content.tableCount}개에 <th> 태그 없음 또는 부족`,
+        recommendation: '표의 제목 셀은 <th> 태그를 사용하고, 복잡한 표는 scope 또는 headers 속성을 활용하세요.',
+        affected_pages: affectedPages
+      })
+    }
   }
   
   if (P1_3_2_linear_structure < 4.5) {
@@ -498,14 +517,23 @@ export function evaluateKRDS(structure: HTMLStructure, pageResults?: Array<{ url
     })
   }
   
+  // 1.4.2 자동 재생 금지: 실제로 autoplay가 있는 페이지만
   if (P1_4_2_no_auto_play < 4.5) {
-    issues.push({
-      item: '1.4.2 자동 재생 금지',
-      severity: getSeverity(P1_4_2_no_auto_play),
-      description: '동영상 또는 오디오가 자동 재생되고 있습니다.',
-      recommendation: 'autoplay 속성을 제거하거나, 사용자가 제어할 수 있는 일시정지/정지 버튼을 제공하세요.',
-    affected_pages: ['전체 페이지']
+    const affectedPages = getAffectedPages(page => {
+      const html = page.structure.html || ''
+      return html.toLowerCase().includes('autoplay')
     })
+    
+    // autoplay가 실제로 있는 경우에만 이슈로 표시
+    if (affectedPages.length > 0) {
+      issues.push({
+        item: '1.4.2 자동 재생 금지',
+        severity: getSeverity(P1_4_2_no_auto_play),
+        description: '동영상 또는 오디오가 자동 재생되고 있습니다.',
+        recommendation: 'autoplay 속성을 제거하거나, 사용자가 제어할 수 있는 일시정지/정지 버튼을 제공하세요.',
+        affected_pages: affectedPages
+      })
+    }
   }
   
   if (P1_4_3_contrast_ratio < 4.5) {
