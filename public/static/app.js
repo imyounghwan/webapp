@@ -1100,7 +1100,7 @@ function displayKRDSResults(data, resultElement) {
             <div class="all-scores-section" style="padding: 40px; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.1);">
                 <h4 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-clipboard-list"></i>
-                    전체 평가 항목 점수 (33개)
+                    전체 평가 항목 점수 (43개)
                 </h4>
                 <div style="margin-bottom: 20px; padding: 12px 20px; background: rgba(0, 102, 255, 0.1); border-left: 4px solid #0066FF; border-radius: 8px; font-size: 0.9rem; color: #D1D5DB;">
                     <strong style="color: #0066FF;">💡 점수 해석:</strong>
