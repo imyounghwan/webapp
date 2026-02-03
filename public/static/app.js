@@ -474,16 +474,16 @@ function displayResults(data, resultElement) {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-design-${itemIndex}`;
         designHTML += `
-            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:white;border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:rgba(255,255,255,0.05);border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);transition:all 0.3s;">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;gap:20px;">
                     <div style="flex:1;">
-                        <div style="font-weight:bold;color:#1f2937;font-size:16px;margin-bottom:5px;">
+                        <div style="font-weight:700;color:#E5E7EB;font-size:18px;margin-bottom:8px;line-height:1.4;">
                             ${item.item}
                         </div>
-                        <div style="font-size:11px;color:#7c3aed;font-weight:600;">${item.principle || ''}</div>
+                        <div style="font-size:13px;color:#9333EA;font-weight:600;background:rgba(147,51,234,0.1);padding:4px 10px;border-radius:6px;display:inline-block;">${item.principle || ''}</div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div id="${itemId}-score" style="font-size:28px;font-weight:bold;color:${scoreColor};">${item.score.toFixed(1)}</div>
+                    <div style="display:flex;align-items:center;gap:15px;">
+                        <div id="${itemId}-score" style="font-size:36px;font-weight:900;color:${scoreColor};">${item.score.toFixed(1)}</div>
                         <button 
                             class="edit-score-btn"
                             data-item-id="${itemId}"
@@ -493,48 +493,46 @@ function displayResults(data, resultElement) {
                             data-url="${url}"
                             data-description="${(item.description || '').replace(/"/g, '&quot;')}"
                             data-recommendation="${(item.recommendation || '').replace(/"/g, '&quot;')}"
-                            style="background:#7c3aed;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
-                            onmouseover="this.style.background='#6d28d9'"
-                            onmouseout="this.style.background='#7c3aed'"
+                            style="background:#9333EA;color:white;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(147,51,234,0.3);position:relative;z-index:100;"
                         >
                             ✏️ 수정
                         </button>
                     </div>
                 </div>
                 
-                <div style="background:#f5f3ff;padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#5b21b6;line-height:1.6;">
-                        📝 <strong>항목 설명:</strong> ${item.description || '설명 없음'}
+                <div style="background:rgba(147,51,234,0.05);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(147,51,234,0.1);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        📝 <strong style="color:#9333EA;">항목 설명:</strong> ${item.description || '설명 없음'}
                     </div>
                 </div>
                 
-                <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#92400e;line-height:1.6;">
-                        💡 <strong>중요한 이유:</strong> ${item.why_important || '정보 없음'}
+                <div style="background:rgba(245,158,11,0.05);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(245,158,11,0.1);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        💡 <strong style="color:#f59e0b;">중요한 이유:</strong> ${item.why_important || '정보 없음'}
                     </div>
                 </div>
                 
-                <div style="background:#f9fafb;padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#374151;line-height:1.6;">
-                        🔍 <strong>평가 기준:</strong> ${item.evaluation_criteria || '정보 없음'}
+                <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        🔍 <strong style="color:#9CA3AF;">평가 기준:</strong> ${item.evaluation_criteria || '정보 없음'}
                     </div>
                 </div>
                 
-                <div id="${itemId}-diagnosis" data-original="${(item.description || '').replace(/"/g, '&quot;')}" style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
-                    <div style="font-size:13px;color:#${item.score >= 4.0 ? '166534' : item.score >= 3.0 ? '1e40af' : 'dc2626'};line-height:1.6;">
-                        📊 <strong>진단 결과:</strong> ${item.description || '진단 정보 없음'}
+                <div id="${itemId}-diagnosis" data-original="${(item.description || '').replace(/"/g, '&quot;')}" style="background:${item.score >= 4.0 ? 'rgba(0,201,167,0.1)' : item.score >= 3.0 ? 'rgba(0,102,255,0.1)' : 'rgba(239,68,68,0.1)'};padding:16px;border-radius:12px;margin-bottom:12px;border:2px solid ${item.score >= 4.0 ? '#00C9A7' : item.score >= 3.0 ? '#0066FF' : '#ef4444'};">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        📊 <strong style="color:${scoreColor};">진단 결과:</strong> ${item.description || '진단 정보 없음'}
                     </div>
                 </div>
                 
                 ${item.recommendation ? `
-                <div id="${itemId}-recommendation" style="background:rgba(0,102,255,0.05);padding:12px;border-radius:6px;margin-bottom:10px;border:1px solid rgba(0,102,255,0.2);">
-                    <div style="font-size:13px;color:#1e40af;line-height:1.6;">
-                        💡 <strong>권장사항:</strong> ${item.recommendation}
+                <div id="${itemId}-recommendation" style="background:rgba(0,102,255,0.05);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(0,102,255,0.2);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        💡 <strong style="color:#0066FF;">권장사항:</strong> ${item.recommendation}
                     </div>
                 </div>
                 ` : ''}
                 
-                <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">
+                <div style="font-size:13px;color:#9CA3AF;margin-bottom:10px;font-weight:500;">
                     🔗 <strong>평가 페이지 (${item.affected_pages ? item.affected_pages.length : 0}개):</strong><br>
                     ${item.affected_pages && item.affected_pages.length > 0 ? 
                         item.affected_pages.slice(0, 3).map((page, idx) => 
