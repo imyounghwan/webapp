@@ -1164,13 +1164,12 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         item_id: id,
         category: '편의성',
         score: Math.round(score * 10) / 10,
-        diagnosis: improvedDiagnoses[diagnosisKey] || '',
-        description: desc?.description || '',
+        description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '',
+        recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
         principle: desc?.principle || '',
         why_important: desc?.why_important || '',
         evaluation_criteria: desc?.evaluation_criteria || '',
-        evaluated_pages: relevantPages,  // 이 항목 평가에 실제로 영향을 준 페이지들
-        evaluated_url: url  // 메인 URL (하위 호환성)
+        affected_pages: relevantPages
       })
     })
     
@@ -1200,13 +1199,12 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         item_id: id,
         category: '디자인',
         score: Math.round(score * 10) / 10,
-        diagnosis: improvedDiagnoses[diagnosisKey] || '',
-        description: desc?.description || '',
+        description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '',
+        recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
         principle: desc?.principle || '',
         why_important: desc?.why_important || '',
         evaluation_criteria: desc?.evaluation_criteria || '',
-        evaluated_pages: relevantPages,  // 이 항목 평가에 실제로 영향을 준 페이지들
-        evaluated_url: url  // 메인 URL (하위 호환성)
+        affected_pages: relevantPages
       })
     })
     
