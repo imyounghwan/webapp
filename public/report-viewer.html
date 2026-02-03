@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>페이지-항목 매칭 분석 보고서</title>
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -50,6 +51,7 @@
             gap: 15px;
             justify-content: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
         
         .btn {
@@ -117,6 +119,106 @@
             border-radius: 15px;
             padding: 40px;
             backdrop-filter: blur(10px);
+        }
+        
+        /* PDF 생성용 스타일 */
+        #pdf-content {
+            display: none;
+            background: white;
+            color: black;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        #pdf-content h1 {
+            color: #0066FF;
+            border-bottom: 3px solid #0066FF;
+            padding-bottom: 10px;
+            margin: 30px 0 20px 0;
+            font-size: 1.8rem;
+            page-break-after: avoid;
+        }
+        
+        #pdf-content h2 {
+            color: #00C9A7;
+            margin: 25px 0 15px 0;
+            font-size: 1.4rem;
+            page-break-after: avoid;
+        }
+        
+        #pdf-content h3 {
+            color: #9333EA;
+            margin: 20px 0 10px 0;
+            font-size: 1.2rem;
+            page-break-after: avoid;
+        }
+        
+        #pdf-content h4 {
+            color: #F59E0B;
+            margin: 15px 0 10px 0;
+            font-size: 1.1rem;
+            page-break-after: avoid;
+        }
+        
+        #pdf-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            page-break-inside: avoid;
+        }
+        
+        #pdf-content th {
+            background: #0066FF;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #ddd;
+        }
+        
+        #pdf-content td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+        }
+        
+        #pdf-content code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #0066FF;
+            font-size: 0.85em;
+        }
+        
+        #pdf-content pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid #0066FF;
+            page-break-inside: avoid;
+        }
+        
+        #pdf-content pre code {
+            background: none;
+            padding: 0;
+            color: black;
+        }
+        
+        #pdf-content ul, #pdf-content ol {
+            margin: 10px 0 10px 30px;
+        }
+        
+        #pdf-content li {
+            margin: 5px 0;
+        }
+        
+        #pdf-content strong {
+            color: #0066FF;
+            font-weight: 700;
         }
         
         #content h1 {
@@ -309,6 +411,9 @@
             <div class="spinner"></div>
             <p>보고서를 불러오는 중...</p>
         </div>
+        
+        <!-- PDF 생성용 숨겨진 컨테이너 -->
+        <div id="pdf-content"></div>
     </div>
 
     <script>
@@ -332,8 +437,11 @@
                 // HTML로 변환
                 const htmlContent = marked.parse(markdownContent);
                 
-                // 렌더링
+                // 화면 렌더링
                 document.getElementById('content').innerHTML = htmlContent;
+                
+                // PDF용 콘텐츠도 생성
+                document.getElementById('pdf-content').innerHTML = htmlContent;
                 
                 console.log('✅ 보고서 로드 완료');
             } catch (error) {
@@ -364,52 +472,64 @@
             progress.style.display = 'block';
             
             try {
-                const element = document.getElementById('content');
+                const element = document.getElementById('pdf-content');
+                element.style.display = 'block';
                 
-                // PDF 생성 옵션
-                const opt = {
-                    margin: [15, 15, 15, 15],
-                    filename: 'MGINE_페이지-항목-매칭-분석-보고서.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { 
-                        scale: 2,
-                        useCORS: true,
-                        letterRendering: true,
-                        logging: false
-                    },
-                    jsPDF: { 
-                        unit: 'mm', 
-                        format: 'a4', 
-                        orientation: 'portrait',
-                        compress: true
-                    },
-                    pagebreak: { 
-                        mode: ['avoid-all', 'css', 'legacy'],
-                        before: '.page-break-before',
-                        after: '.page-break-after',
-                        avoid: ['table', 'tr', 'img', 'pre']
-                    }
-                };
+                // 진행률 시작
+                progressFill.style.width = '10%';
+                progressFill.textContent = '10%';
+                progressText.textContent = '캔버스 렌더링 중... (1/3)';
                 
-                // 진행률 업데이트
-                let progress_value = 0;
-                const interval = setInterval(() => {
-                    progress_value += 5;
-                    if (progress_value <= 90) {
-                        progressFill.style.width = progress_value + '%';
-                        progressFill.textContent = progress_value + '%';
-                    }
-                }, 200);
+                // html2canvas로 이미지 생성
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
                 
-                progressText.textContent = 'PDF 생성 중... 잠시만 기다려주세요.';
+                progressFill.style.width = '50%';
+                progressFill.textContent = '50%';
+                progressText.textContent = 'PDF 문서 생성 중... (2/3)';
                 
-                // PDF 생성 (약 5~10초 소요)
-                await html2pdf().set(opt).from(element).save();
+                // jsPDF로 PDF 생성
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF.jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
                 
-                clearInterval(interval);
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                // 첫 페이지
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                // 여러 페이지 처리
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                progressFill.style.width = '90%';
+                progressFill.textContent = '90%';
+                progressText.textContent = '파일 저장 중... (3/3)';
+                
+                // PDF 저장
+                pdf.save('MGINE_페이지-항목-매칭-분석-보고서.pdf');
+                
                 progressFill.style.width = '100%';
                 progressFill.textContent = '100%';
                 progressText.textContent = '✅ PDF 다운로드 완료!';
+                
+                element.style.display = 'none';
                 
                 setTimeout(() => {
                     progress.style.display = 'none';
@@ -419,11 +539,12 @@
                 console.log('✅ PDF 다운로드 완료');
             } catch (error) {
                 console.error('❌ PDF 생성 실패:', error);
-                alert('PDF 생성에 실패했습니다. 인쇄 기능을 사용해보세요.');
+                alert('PDF 생성에 실패했습니다: ' + error.message);
                 progress.style.display = 'none';
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<span>📥</span><span>PDF 다운로드</span>';
+                document.getElementById('pdf-content').style.display = 'none';
             }
         }
         
