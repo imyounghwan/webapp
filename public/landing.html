@@ -795,19 +795,19 @@
             <div class="stats">
                 <div class="stat-card">
                     <div class="stat-number">26</div>
-                    <div class="stat-label">평가 항목</div>
+                    <div class="stat-label">세부 평가 항목</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">26</div>
-                    <div class="stat-label">평가 항목</div>
+                    <div class="stat-number">10+</div>
+                    <div class="stat-label">페이지 동시 분석</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">49</div>
-                    <div class="stat-label">학습 데이터</div>
+                    <div class="stat-number">5분</div>
+                    <div class="stat-label">AI 자동 분석</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">4.7</div>
-                    <div class="stat-label">만족도</div>
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">전문가 검증</div>
                 </div>
             </div>
         </div>
@@ -1333,6 +1333,33 @@ ${contactData.message}
                 behavior: 'smooth'
             });
         }
+        
+        // Smooth Scroll for Anchor Links
+        document.addEventListener('DOMContentLoaded', function() {
+            // 모든 앵커 링크에 부드러운 스크롤 적용
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    
+                    // 빈 앵커나 #만 있는 경우 무시
+                    if (href === '#' || href === '') {
+                        e.preventDefault();
+                        return;
+                    }
+                    
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        e.preventDefault();
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>
