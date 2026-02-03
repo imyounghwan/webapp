@@ -265,6 +265,14 @@ function displayResults(data, resultElement) {
     // MGINE 모드 (기존 Nielsen 로직)
     const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary, convenience_items, design_items } = data;
     
+    console.log('📊 MGINE 데이터:', { 
+        convenience_items_length: convenience_items?.length, 
+        design_items_length: design_items?.length,
+        predicted_score,
+        has_convenience_items: !!convenience_items,
+        has_design_items: !!design_items
+    });
+    
     // 전체 점수 재계산 (수정된 항목이 있을 경우)
     if (predicted_score) {
         const convenienceItems = convenience_items || [];
@@ -376,6 +384,7 @@ function displayResults(data, resultElement) {
     
     // 편의성 항목
     const convenienceItemsList = convenience_items || [];
+    console.log('📊 편의성 항목 수:', convenienceItemsList.length);
     let convenienceHTML = '<h3 style="color:#00C9A7;font-size:24px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
     convenienceItemsList.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';

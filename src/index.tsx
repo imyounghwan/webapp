@@ -1238,11 +1238,11 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         overall: Math.round(overall * 100) / 100,
         convenience: Math.round(convenience * 100) / 100,
         design: Math.round(design * 100) / 100,
-        convenience_items: convenience_items_detail,
-        design_items: design_items_detail,
         nielsen_scores: improvedScores,
         nielsen_diagnoses: improvedDiagnoses
       },
+      convenience_items: convenience_items_detail,
+      design_items: design_items_detail,
       improvements: {
         total_items: 26,  // 총 26개 평가 항목 (편의성 21개 + 디자인 5개)
         removed_duplicates: 3,  // N3.2, N9.1, N9.3 제거
