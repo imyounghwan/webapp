@@ -535,98 +535,85 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
     console.log('🔍 itemName:', itemName);
     
     const scoreElementId = `${itemId}-score`;
-    const diagnosisElementId = `${itemId}-diagnosis`;
+    const scoreElement = document.getElementById(scoreElementId);
     
     console.log('🔍 Looking for scoreElement with ID:', scoreElementId);
-    console.log('🔍 Looking for diagnosisElement with ID:', diagnosisElementId);
-    
-    const scoreElement = document.getElementById(scoreElementId);
-    const diagnosisElement = document.getElementById(diagnosisElementId);
-    
     console.log('📍 scoreElement:', scoreElement);
-    console.log('📍 diagnosisElement:', diagnosisElement);
     
     if (!scoreElement) {
         console.error('❌ scoreElement is NULL!');
         console.error('❌ Tried to find ID:', scoreElementId);
-        console.error('❌ All elements with class edit-score-btn:', document.querySelectorAll('.edit-score-btn').length);
         alert(`오류: 점수 요소를 찾을 수 없습니다.\nID: ${scoreElementId}\n\n페이지를 새로고침 후 다시 시도해주세요.`);
         return;
     }
     
-    if (!scoreElement.parentElement) {
-        console.error('❌ scoreElement.parentElement is NULL!');
-        alert('오류: 점수 요소의 부모 요소를 찾을 수 없습니다.');
+    // 현재 점수
+    const currentScore = parseFloat(scoreElement.textContent);
+    
+    // 모달 다이얼로그로 수정 UI 표시
+    const newScore = prompt(
+        `${itemName}\n\n현재 점수: ${currentScore.toFixed(1)}\n\n새로운 점수를 입력하세요 (0.0 ~ 5.0):`,
+        currentScore.toFixed(1)
+    );
+    
+    if (newScore === null) {
+        console.log('🚫 수정 취소됨');
         return;
     }
     
-    // 현재 점수를 입력 필드로 변경
-    const currentScore = parseFloat(scoreElement.textContent);
-    const currentDiagnosis = diagnosisElement ? diagnosisElement.textContent.replace('📊 진단 결과: ', '') : '';
+    const parsedScore = parseFloat(newScore);
     
-    // 수정 UI 생성
-    const editHTML = `
-        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:14px;color:#6b7280;">점수:</span>
-                <input 
-                    type="number" 
-                    id="${itemId}-input" 
-                    min="2.0" 
-                    max="5.0" 
-                    step="0.5" 
-                    value="${currentScore}"
-                    style="width:80px;font-size:24px;font-weight:bold;padding:4px 8px;border:2px solid #0066FF;border-radius:6px;text-align:center;"
-                />
-            </div>
-            <div style="display:flex;gap:4px;">
-                <button 
-                    id="${itemId}-save-btn"
-                    style="background:#10b981;color:white;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;"
-                >
-                    ✓ 저장
-                </button>
-                <button 
-                    id="${itemId}-cancel-btn"
-                    style="background:#ef4444;color:white;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:11px;"
-                >
-                    ✗ 취소
-                </button>
-            </div>
-            <textarea 
-                id="${itemId}-reason" 
-                placeholder="수정 사유 (선택사항)"
-                style="width:300px;height:50px;font-size:11px;padding:6px;border:1px solid #d1d5db;border-radius:4px;resize:vertical;"
-            ></textarea>
-        </div>
-    `;
-    
-    scoreElement.parentElement.innerHTML = editHTML;
-    
-    // 저장 버튼에 이벤트 리스너 추가
-    document.getElementById(`${itemId}-save-btn`).addEventListener('click', () => {
-        saveScore(itemId, itemIdValue, itemName, originalScore, url);
-    });
-    
-    // 취소 버튼에 이벤트 리스너 추가
-    document.getElementById(`${itemId}-cancel-btn`).addEventListener('click', () => {
-        cancelEdit(itemId, currentScore, currentDiagnosis);
-    });
-    
-    // 진단 텍스트도 편집 가능하게 변경
-    if (diagnosisElement) {
-        diagnosisElement.innerHTML = `
-            <textarea 
-                id="${itemId}-diagnosis-input" 
-                placeholder="진단 결과를 입력하세요"
-                style="width:100%;min-height:80px;font-size:13px;padding:8px;border:2px solid #0066FF;border-radius:4px;resize:vertical;font-family:inherit;line-height:1.6;"
-            >${currentDiagnosis}</textarea>
-        `;
+    if (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 5) {
+        alert('❌ 유효하지 않은 점수입니다.\n0.0 ~ 5.0 사이의 숫자를 입력해주세요.');
+        return;
     }
     
-    // 입력 필드에 포커스
-    document.getElementById(`${itemId}-input`).focus();
-}
+    // 점수 업데이트
+    scoreElement.textContent = parsedScore.toFixed(1);
+    
+    // 상태 업데이트
+    const statusElement = document.getElementById(`${itemId}-status`);
+    if (statusElement) {
+        let statusColor, statusBg, statusText;
+        if (parsedScore >= 4.5) {
+            statusColor = '#00C9A7';
+            statusBg = 'rgba(0, 201, 167, 0.1)';
+            statusText = '✅ 양호';
+        } else if (parsedScore >= 3.5) {
+            statusColor = '#0066FF';
+            statusBg = 'rgba(0, 102, 255, 0.1)';
+            statusText = '⚠️ 보통';
+        } else if (parsedScore >= 2.5) {
+            statusColor = '#FFA500';
+            statusBg = 'rgba(255, 165, 0, 0.1)';
+            statusText = '⚠️ 주의';
+        } else {
+            statusColor = '#FF5F57';
+            statusBg = 'rgba(255, 95, 87, 0.1)';
+            statusText = '❌ 개선필요';
+        }
+        
+        statusElement.textContent = statusText;
+        statusElement.style.background = statusBg;
+        statusElement.style.color = statusColor;
+    }
+    
+    // localStorage에 수정사항 저장
+    try {
+        const lastResult = JSON.parse(localStorage.getItem('lastAnalysisResult') || '{}');
+        if (lastResult.krds && lastResult.krds.scores) {
+            lastResult.krds.scores[itemId] = parsedScore;
+            localStorage.setItem('lastAnalysisResult', JSON.stringify(lastResult));
+            console.log('💾 Saved to localStorage:', itemId, parsedScore);
+        }
+    } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+    }
+    
+    alert(`✅ 저장 완료!\n\n${itemName}\n원래 점수: ${currentScore.toFixed(1)} → 수정 점수: ${parsedScore.toFixed(1)}\n차이: ${(parsedScore - currentScore).toFixed(1)}`);
+    
+    console.log('✅ Score updated successfully');
+};
 
 /**
  * 점수 저장 함수
@@ -1193,13 +1180,13 @@ function displayKRDSResults(data, resultElement) {
                                 }
                                 
                                 return `
-                                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                    <tr id="krds-row-${key}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
                                         <td style="padding: 12px; color: #D1D5DB;">${itemName}</td>
                                         <td style="padding: 12px; text-align: center; font-weight: 700; color: ${statusColor}; font-size: 1.1rem;">
-                                            ${scoreValue.toFixed(1)}
+                                            <span id="${key}-score">${scoreValue.toFixed(1)}</span>
                                         </td>
                                         <td style="padding: 12px; text-align: center;">
-                                            <span style="display: inline-block; padding: 4px 12px; background: ${statusBg}; color: ${statusColor}; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                                            <span id="${key}-status" style="display: inline-block; padding: 4px 12px; background: ${statusBg}; color: ${statusColor}; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
                                                 ${statusText}
                                             </span>
                                         </td>
