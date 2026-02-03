@@ -263,12 +263,12 @@ function displayResults(data, resultElement) {
     }
     
     // MGINE 모드 (기존 Nielsen 로직)
-    const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary } = data;
+    const { predicted_score, url, analysis_date, version, improvements, analyzed_pages, summary, convenience_items, design_items } = data;
     
     // 전체 점수 재계산 (수정된 항목이 있을 경우)
     if (predicted_score) {
-        const convenienceItems = predicted_score.convenience_items || [];
-        const designItems = predicted_score.design_items || [];
+        const convenienceItems = convenience_items || [];
+        const designItems = design_items || [];
         
         // 편의성 평균 계산
         if (convenienceItems.length > 0) {
@@ -375,8 +375,9 @@ function displayResults(data, resultElement) {
     ` : '';
     
     // 편의성 항목
+    const convenienceItemsList = convenience_items || [];
     let convenienceHTML = '<h3 style="color:#00C9A7;font-size:24px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
-    predicted_score.convenience_items.forEach((item, itemIndex) => {
+    convenienceItemsList.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-conv-${itemIndex}`;
         convenienceHTML += `
@@ -449,8 +450,9 @@ function displayResults(data, resultElement) {
     });
     
     // 디자인 항목
+    const designItemsList = design_items || [];
     let designHTML = '<h3 style="color:#9333EA;font-size:24px;font-weight:800;margin-bottom:25px;margin-top:50px;padding-bottom:15px;border-bottom:3px solid #9333EA;">🎨 디자인 항목 (5개)</h3>';
-    predicted_score.design_items.forEach((item, itemIndex) => {
+    designItemsList.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-design-${itemIndex}`;
         designHTML += `
