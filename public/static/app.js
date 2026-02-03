@@ -575,7 +575,12 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
     const statusElement = document.getElementById(`${itemId}-status`);
     if (statusElement) {
         let statusColor, statusBg, statusText;
-        if (parsedScore >= 4.5) {
+        if (parsedScore < 0) {
+            // -1: 해당없음
+            statusColor = '#6B7280';
+            statusBg = 'rgba(107, 114, 128, 0.1)';
+            statusText = '➖ 해당없음';
+        } else if (parsedScore >= 4.5) {
             statusColor = '#00C9A7';
             statusBg = 'rgba(0, 201, 167, 0.1)';
             statusText = '✅ 양호';
@@ -1161,7 +1166,12 @@ function displayKRDSResults(data, resultElement) {
                                 
                                 // 점수에 따른 색상 및 상태
                                 let statusColor, statusText, statusBg;
-                                if (scoreValue >= 4.5) {
+                                if (scoreValue < 0) {
+                                    // -1: 해당없음
+                                    statusColor = '#6B7280';
+                                    statusBg = 'rgba(107, 114, 128, 0.1)';
+                                    statusText = '➖ 해당없음';
+                                } else if (scoreValue >= 4.5) {
                                     statusColor = '#00C9A7';
                                     statusBg = 'rgba(0, 201, 167, 0.1)';
                                     statusText = '✅ 양호';
