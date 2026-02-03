@@ -353,10 +353,10 @@ function displayResults(data, resultElement) {
                 
                 <!-- 다운로드 버튼 추가 -->
                 <div style="margin-top:40px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;">
-                    <button id="downloadPdfBtn" style="background:#ef4444;color:white;border:none;border-radius:12px;padding:16px 32px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;transition:all 0.3s;box-shadow:0 10px 30px rgba(239,68,68,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 15px 40px rgba(239,68,68,0.5)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 10px 30px rgba(239,68,68,0.3)'">
+                    <button id="downloadPdfBtn" style="background:#ef4444;color:white;border:none;border-radius:12px;padding:16px 32px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;transition:all 0.3s;box-shadow:0 10px 30px rgba(239,68,68,0.3);" >
                         <span style="font-size:20px;">📄</span> PDF 다운로드
                     </button>
-                    <button id="downloadPptBtn" style="background:#f59e0b;color:white;border:none;border-radius:12px;padding:16px 32px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;transition:all 0.3s;box-shadow:0 10px 30px rgba(245,158,11,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 15px 40px rgba(245,158,11,0.5)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 10px 30px rgba(245,158,11,0.3)'">
+                    <button id="downloadPptBtn" style="background:#f59e0b;color:white;border:none;border-radius:12px;padding:16px 32px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;transition:all 0.3s;box-shadow:0 10px 30px rgba(245,158,11,0.3);" >
                         <span style="font-size:20px;">📊</span> PPT 다운로드
                     </button>
                 </div>
@@ -381,7 +381,7 @@ function displayResults(data, resultElement) {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-conv-${itemIndex}`;
         convenienceHTML += `
-            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:rgba(255,255,255,0.05);border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+            <div id="${itemId}" style="border-left:4px solid ${scoreColor};background:rgba(255,255,255,0.05);border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);transition:all 0.3s;" >
                 <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;gap:20px;">
                     <div style="flex:1;">
                         <div style="font-weight:700;color:#E5E7EB;font-size:18px;margin-bottom:8px;line-height:1.4;">
@@ -400,8 +400,8 @@ function displayResults(data, resultElement) {
                             data-url="${url}"
                             data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
                             style="background:#0066FF;color:white;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(0,102,255,0.3);position:relative;z-index:100;"
-                            onmouseover="this.style.background='#00C9A7';this.style.transform='scale(1.05)'"
-                            onmouseout="this.style.background='#0066FF';this.style.transform='scale(1)'"
+                            
+                            
                         >
                             ✏️ 수정
                         </button>
@@ -1430,8 +1430,8 @@ function displayKRDSResults(data, resultElement) {
                                                 data-url="${url}"
                                                 data-diagnosis=""
                                                 style="background:#0066FF;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(0,102,255,0.3);"
-                                                onmouseover="this.style.background='#00C9A7';this.style.transform='scale(1.05)'"
-                                                onmouseout="this.style.background='#0066FF';this.style.transform='scale(1)'"
+                                                
+                                                
                                             >
                                                 ✏️ 수정
                                             </button>
