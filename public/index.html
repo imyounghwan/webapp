@@ -481,7 +481,18 @@
                         }
                     </style>
                     
-                    <div class="analyze-form">
+                    <!-- 페이지 입력 모드 선택 -->
+                    <div class="input-mode-toggle" style="margin-bottom: 20px; text-align: center;">
+                        <button id="autoModeBtn" class="mode-btn active" style="padding: 10px 30px; margin: 0 10px; border: 2px solid #0066FF; background: #0066FF; color: white; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-robot"></i> 자동 수집
+                        </button>
+                        <button id="manualModeBtn" class="mode-btn" style="padding: 10px 30px; margin: 0 10px; border: 2px solid rgba(255, 255, 255, 0.1); background: transparent; color: var(--text-muted); border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-hand-pointer"></i> 직접 선별
+                        </button>
+                    </div>
+                    
+                    <!-- 자동 수집 모드 (기존) -->
+                    <div id="autoModeSection" class="analyze-form">
                         <input 
                             type="text" 
                             id="analyzeUrl" 
@@ -493,6 +504,132 @@
                             분석 시작
                         </button>
                     </div>
+                    
+                    <!-- 직접 선별 모드 (새로 추가) -->
+                    <div id="manualModeSection" style="display: none;">
+                        <div class="manual-urls-container" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 15px; padding: 30px; margin-bottom: 20px;">
+                            <h3 style="margin-bottom: 20px; color: var(--text); font-size: 1.1rem;">
+                                <i class="fas fa-list-check"></i>
+                                평가 대상 페이지 입력 (1~10개)
+                            </h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px; line-height: 1.6;">
+                                평가하고 싶은 페이지를 직접 선택하면 <strong style="color: #00C9A7;">정확도가 15~20%p 상승</strong>합니다.<br>
+                                최소 1개 이상 입력하면 평가가 진행됩니다.
+                            </p>
+                            
+                            <div class="url-inputs-grid" style="display: grid; gap: 15px;">
+                                <!-- 메인 페이지 (필수) -->
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-home" style="color: #0066FF;"></i>
+                                        1. 메인 페이지 <span style="color: #FF6B6B; font-weight: 700;">*필수</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        class="manual-url-input" 
+                                        data-index="0"
+                                        placeholder="https://example.com"
+                                        style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"
+                                    />
+                                </div>
+                                
+                                <!-- 서브 페이지 2-10 (선택) -->
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-magnifying-glass" style="color: #00C9A7;"></i>
+                                        2. 검색 결과 페이지 <span style="color: var(--text-muted); font-size: 0.85rem;">권장</span>
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="1" placeholder="검색창에 키워드 입력 후 결과 페이지" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-right-to-bracket" style="color: #9333EA;"></i>
+                                        3. 로그인 페이지 <span style="color: var(--text-muted); font-size: 0.85rem;">권장</span>
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="2" placeholder="로그인/회원가입 페이지" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-clipboard-list" style="color: #F59E0B;"></i>
+                                        4. 게시판 목록 페이지
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="3" placeholder="공지사항, 자료실 등" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-file-lines" style="color: #06B6D4;"></i>
+                                        5. 게시판 상세 페이지
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="4" placeholder="게시글 상세보기" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-pen-to-square" style="color: #10B981;"></i>
+                                        6. 폼 작성 페이지
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="5" placeholder="민원신청, 문의하기 등" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-circle-question" style="color: #EC4899;"></i>
+                                        7. FAQ/도움말 페이지
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="6" placeholder="자주 묻는 질문, 도움말" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-sitemap" style="color: #8B5CF6;"></i>
+                                        8. 사이트맵 또는 소개 페이지
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="7" placeholder="사이트맵, 회사소개 등" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-envelope" style="color: #14B8A6;"></i>
+                                        9. 연락처/문의 페이지
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="8" placeholder="연락처, 찾아오시는 길 등" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                                
+                                <div class="url-input-group">
+                                    <label class="url-label" style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600; font-size: 0.95rem;">
+                                        <i class="fas fa-triangle-exclamation" style="color: #EF4444;"></i>
+                                        10. 에러 페이지 (선택)
+                                    </label>
+                                    <input type="text" class="manual-url-input" data-index="9" placeholder="404 페이지 등 (있는 경우)" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.95rem; transition: all 0.3s;"/>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button id="analyzeManualBtn" class="analyze-btn" style="width: 100%;">
+                            <i class="fas fa-chart-line"></i>
+                            선별한 페이지로 분석 시작
+                        </button>
+                    </div>
+                    
+                    <style>
+                        .manual-url-input:focus {
+                            outline: none;
+                            border-color: #0066FF;
+                            background: rgba(0, 102, 255, 0.05);
+                        }
+                        .mode-btn.active {
+                            background: #0066FF !important;
+                            color: white !important;
+                            border-color: #0066FF !important;
+                        }
+                        .mode-btn:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 5px 15px rgba(0, 102, 255, 0.3);
+                        }
+                    </style>
                     <div id="analyzeStatus" class="analyze-status" style="display: none;">
                         <i class="fas fa-spinner fa-spin"></i>
                         <span>분석 중...</span>

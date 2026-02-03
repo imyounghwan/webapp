@@ -1,11 +1,35 @@
-console.log('🚀 MGINE AutoAnalyzer v3.0 - 상세 정보 포함');
+console.log('🚀 MGINE AutoAnalyzer v3.1 - 직접 선별 모드 추가');
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ DOM loaded');
     
     const analyzeBtn = document.getElementById('analyzeBtn');
+    const analyzeManualBtn = document.getElementById('analyzeManualBtn');
     const analyzeUrl = document.getElementById('analyzeUrl');
     const analyzeResult = document.getElementById('analyzeResult');
+    
+    // 모드 전환 버튼
+    const autoModeBtn = document.getElementById('autoModeBtn');
+    const manualModeBtn = document.getElementById('manualModeBtn');
+    const autoModeSection = document.getElementById('autoModeSection');
+    const manualModeSection = document.getElementById('manualModeSection');
+    
+    // 모드 전환 핸들러
+    if (autoModeBtn && manualModeBtn) {
+        autoModeBtn.addEventListener('click', () => {
+            autoModeBtn.classList.add('active');
+            manualModeBtn.classList.remove('active');
+            autoModeSection.style.display = 'block';
+            manualModeSection.style.display = 'none';
+        });
+        
+        manualModeBtn.addEventListener('click', () => {
+            manualModeBtn.classList.add('active');
+            autoModeBtn.classList.remove('active');
+            manualModeSection.style.display = 'block';
+            autoModeSection.style.display = 'none';
+        });
+    }
     
     if (!analyzeBtn || !analyzeUrl || !analyzeResult) {
         console.error('❌ Required elements not found!');
@@ -42,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('ℹ️ No saved result found');
     }
     
+    // 자동 수집 모드 분석
     analyzeBtn.addEventListener('click', async () => {
         const url = analyzeUrl.value;
         
@@ -50,11 +75,40 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        console.log('🔍 Analyzing:', url);
+        console.log('🔍 Analyzing (Auto Mode):', url);
+        performAnalysis({ url }, analyzeResult);
+    });
+    
+    // 직접 선별 모드 분석
+    if (analyzeManualBtn) {
+        analyzeManualBtn.addEventListener('click', async () => {
+            // 입력된 URL 수집
+            const urlInputs = document.querySelectorAll('.manual-url-input');
+            const urls = [];
+            
+            urlInputs.forEach((input, index) => {
+                const url = input.value.trim();
+                if (url && url.startsWith('http')) {
+                    urls.push(url);
+                }
+            });
+            
+            if (urls.length === 0) {
+                alert('최소 1개 이상의 유효한 URL을 입력하세요.\n(메인 페이지는 필수입니다)');
+                return;
+            }
+            
+            console.log(`🔍 Analyzing (Manual Mode): ${urls.length} pages`, urls);
+            performAnalysis({ urls }, analyzeResult);
+        });
+    }
+    
+    // 통합 분석 함수
+    async function performAnalysis(requestBody, resultContainer) {
         
         // 로딩 프로그레스 바 표시
         let progress = 0;
-        analyzeResult.innerHTML = `
+        resultContainer.innerHTML = `
             <div style="text-align:center;padding:40px;">
                 <div style="font-size:20px;font-weight:bold;color:#2563eb;margin-bottom:20px;">
                     🔍 분석 중...
@@ -67,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-        analyzeResult.style.display = 'block';
+        resultContainer.style.display = 'block';
         
         // 프로그레스 바 애니메이션
         const progressBar = document.getElementById('progressBar');
@@ -120,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-Session-ID': sessionId
                 },
-                body: JSON.stringify({ url, mode: selectedMode })
+                body: JSON.stringify({ ...requestBody, mode: selectedMode })
             });
             
             clearInterval(progressInterval);
@@ -146,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await new Promise(resolve => setTimeout(resolve, 500));
             
             const data = await response.json();
-            displayResults(data, analyzeResult);
+            displayResults(data, resultContainer);
         } catch (error) {
             clearInterval(progressInterval);
             console.error('❌ Error:', error);
@@ -170,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorSuggestion = '인터넷 연결을 확인하거나 나중에 다시 시도해주세요.';
             }
             
-            analyzeResult.innerHTML = `
+            resultContainer.innerHTML = `
                 <div style="background: linear-gradient(135deg, rgba(255, 87, 87, 0.1), rgba(255, 87, 87, 0.05)); border: 2px solid rgba(255, 87, 87, 0.3); border-radius: 16px; padding: 40px; margin: 20px 0; text-align: center;">
                     <div style="font-size: 3rem; margin-bottom: 20px;">😔</div>
                     <div style="color: #FF5F57; font-weight: 800; font-size: 1.5rem; margin-bottom: 15px;">${errorTitle}</div>
@@ -182,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         }
-    });
+    }
 });
 
 function displayResults(data, resultElement) {
@@ -527,7 +581,7 @@ function displayResults(data, resultElement) {
 }
 
 /**
- * 점수 수정 함수 (인라인 편집)
+ * 점수 및 진단 내용 수정 함수 (개선된 인라인 편집)
  */
 window.editScore = async function(itemId, itemIdValue, itemName, originalScore, url, originalDiagnosis) {
     console.log('🔍 editScore called with itemId:', itemId);
@@ -536,9 +590,11 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
     
     const scoreElementId = `${itemId}-score`;
     const scoreElement = document.getElementById(scoreElementId);
+    const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
     
     console.log('🔍 Looking for scoreElement with ID:', scoreElementId);
     console.log('📍 scoreElement:', scoreElement);
+    console.log('📍 diagnosisElement:', diagnosisElement);
     
     if (!scoreElement) {
         console.error('❌ scoreElement is NULL!');
@@ -547,77 +603,239 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
         return;
     }
     
-    // 현재 점수
+    // 현재 점수 및 진단
     const currentScore = parseFloat(scoreElement.textContent);
+    const currentDiagnosis = diagnosisElement ? diagnosisElement.textContent : '';
     
     // 모달 다이얼로그로 수정 UI 표시
-    const newScore = prompt(
-        `${itemName}\n\n현재 점수: ${currentScore.toFixed(1)}\n\n새로운 점수를 입력하세요 (0.0 ~ 5.0):`,
-        currentScore.toFixed(1)
-    );
+    const modal = document.createElement('div');
+    modal.id = 'editModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+        display: flex; align-items: center; justify-content: center; 
+        z-index: 10000; animation: fadeIn 0.2s;
+    `;
     
-    if (newScore === null) {
-        console.log('🚫 수정 취소됨');
-        return;
-    }
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #1a1f36 0%, #0d1117 100%);
+            border: 2px solid rgba(0, 102, 255, 0.3);
+            border-radius: 20px;
+            padding: 35px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s;
+        ">
+            <h3 style="color: #0066FF; margin-bottom: 25px; font-size: 1.4rem; font-weight: 700;">
+                <i class="fas fa-edit"></i> 평가 항목 수정
+            </h3>
+            
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 25px;">
+                <div style="color: var(--text); font-weight: 600; font-size: 1.05rem;">
+                    ${itemName}
+                </div>
+            </div>
+            
+            <!-- 점수 입력 -->
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; color: var(--text); margin-bottom: 10px; font-weight: 600;">
+                    <i class="fas fa-star" style="color: #FFD700;"></i> 점수 (0.0 ~ 5.0)
+                </label>
+                <input 
+                    type="number" 
+                    id="newScoreInput" 
+                    min="0" 
+                    max="5" 
+                    step="0.1" 
+                    value="${currentScore.toFixed(1)}"
+                    style="
+                        width: 100%; 
+                        padding: 12px 16px; 
+                        background: rgba(255, 255, 255, 0.05); 
+                        border: 2px solid var(--border); 
+                        border-radius: 10px; 
+                        color: var(--text); 
+                        font-size: 1.1rem;
+                        font-weight: 600;
+                    "
+                />
+            </div>
+            
+            <!-- 진단 내용 입력 -->
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; color: var(--text); margin-bottom: 10px; font-weight: 600;">
+                    <i class="fas fa-stethoscope" style="color: #00C9A7;"></i> 진단 내용
+                </label>
+                <textarea 
+                    id="newDescriptionInput"
+                    rows="3"
+                    style="
+                        width: 100%; 
+                        padding: 12px 16px; 
+                        background: rgba(255, 255, 255, 0.05); 
+                        border: 2px solid var(--border); 
+                        border-radius: 10px; 
+                        color: var(--text); 
+                        font-size: 0.95rem;
+                        resize: vertical;
+                        font-family: inherit;
+                        line-height: 1.6;
+                    "
+                    placeholder="진단 내용을 입력하세요..."
+                >${currentDiagnosis}</textarea>
+            </div>
+            
+            <!-- 권장 사항 입력 -->
+            <div style="margin-bottom: 30px;">
+                <label style="display: block; color: var(--text); margin-bottom: 10px; font-weight: 600;">
+                    <i class="fas fa-lightbulb" style="color: #F59E0B;"></i> 권장 사항
+                </label>
+                <textarea 
+                    id="newRecommendationInput"
+                    rows="3"
+                    style="
+                        width: 100%; 
+                        padding: 12px 16px; 
+                        background: rgba(255, 255, 255, 0.05); 
+                        border: 2px solid var(--border); 
+                        border-radius: 10px; 
+                        color: var(--text); 
+                        font-size: 0.95rem;
+                        resize: vertical;
+                        font-family: inherit;
+                        line-height: 1.6;
+                    "
+                    placeholder="권장 사항을 입력하세요..."
+                ></textarea>
+            </div>
+            
+            <!-- 버튼 -->
+            <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                <button 
+                    id="cancelEditBtn"
+                    style="
+                        padding: 12px 30px; 
+                        background: rgba(255, 255, 255, 0.05); 
+                        border: 2px solid var(--border); 
+                        border-radius: 10px; 
+                        color: var(--text); 
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    "
+                >
+                    <i class="fas fa-times"></i> 취소
+                </button>
+                <button 
+                    id="saveEditBtn"
+                    style="
+                        padding: 12px 30px; 
+                        background: linear-gradient(135deg, #0066FF, #00C9A7); 
+                        border: none; 
+                        border-radius: 10px; 
+                        color: white; 
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    "
+                >
+                    <i class="fas fa-save"></i> 저장
+                </button>
+            </div>
+        </div>
+    `;
     
-    const parsedScore = parseFloat(newScore);
+    document.body.appendChild(modal);
     
-    if (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 5) {
-        alert('❌ 유효하지 않은 점수입니다.\n0.0 ~ 5.0 사이의 숫자를 입력해주세요.');
-        return;
-    }
+    // 취소 버튼
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+        modal.remove();
+    });
     
-    // 점수 업데이트
-    scoreElement.textContent = parsedScore.toFixed(1);
+    // 모달 외부 클릭 시 닫기
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
     
-    // 상태 업데이트
-    const statusElement = document.getElementById(`${itemId}-status`);
-    if (statusElement) {
-        let statusColor, statusBg, statusText;
-        if (parsedScore < 0) {
-            // -1: 해당없음
-            statusColor = '#6B7280';
-            statusBg = 'rgba(107, 114, 128, 0.1)';
-            statusText = '➖ 해당없음';
-        } else if (parsedScore >= 4.5) {
-            statusColor = '#00C9A7';
-            statusBg = 'rgba(0, 201, 167, 0.1)';
-            statusText = '✅ 양호';
-        } else if (parsedScore >= 3.5) {
-            statusColor = '#0066FF';
-            statusBg = 'rgba(0, 102, 255, 0.1)';
-            statusText = '⚠️ 보통';
-        } else if (parsedScore >= 2.5) {
-            statusColor = '#FFA500';
-            statusBg = 'rgba(255, 165, 0, 0.1)';
-            statusText = '⚠️ 주의';
-        } else {
-            statusColor = '#FF5F57';
-            statusBg = 'rgba(255, 95, 87, 0.1)';
-            statusText = '❌ 개선필요';
+    // 저장 버튼
+    document.getElementById('saveEditBtn').addEventListener('click', () => {
+        const newScoreValue = parseFloat(document.getElementById('newScoreInput').value);
+        const newDescription = document.getElementById('newDescriptionInput').value.trim();
+        const newRecommendation = document.getElementById('newRecommendationInput').value.trim();
+        
+        if (isNaN(newScoreValue) || newScoreValue < 0 || newScoreValue > 5) {
+            alert('❌ 유효하지 않은 점수입니다.\n0.0 ~ 5.0 사이의 숫자를 입력해주세요.');
+            return;
         }
         
-        statusElement.textContent = statusText;
-        statusElement.style.background = statusBg;
-        statusElement.style.color = statusColor;
-    }
-    
-    // localStorage에 수정사항 저장
-    try {
-        const lastResult = JSON.parse(localStorage.getItem('lastAnalysisResult') || '{}');
-        if (lastResult.krds && lastResult.krds.scores) {
-            lastResult.krds.scores[itemId] = parsedScore;
-            localStorage.setItem('lastAnalysisResult', JSON.stringify(lastResult));
-            console.log('💾 Saved to localStorage:', itemId, parsedScore);
+        // 점수 업데이트
+        scoreElement.textContent = newScoreValue.toFixed(1);
+        
+        // 진단 내용 업데이트
+        if (diagnosisElement && newDescription) {
+            diagnosisElement.textContent = newDescription;
         }
-    } catch (e) {
-        console.warn('Failed to save to localStorage:', e);
-    }
-    
-    alert(`✅ 저장 완료!\n\n${itemName}\n원래 점수: ${currentScore.toFixed(1)} → 수정 점수: ${parsedScore.toFixed(1)}\n차이: ${(parsedScore - currentScore).toFixed(1)}`);
-    
-    console.log('✅ Score updated successfully');
+        
+        // 권장 사항 업데이트 (있는 경우)
+        const recommendationElement = document.getElementById(`${itemId}-recommendation`);
+        if (recommendationElement && newRecommendation) {
+            recommendationElement.textContent = newRecommendation;
+        }
+        
+        // 상태 업데이트
+        const statusElement = document.getElementById(`${itemId}-status`);
+        if (statusElement) {
+            let statusColor, statusBg, statusText;
+            if (newScoreValue < 0) {
+                // -1: 해당없음
+                statusColor = '#6B7280';
+                statusColor = '#6B7280';
+                statusBg = 'rgba(107, 114, 128, 0.1)';
+                statusText = '➖ 해당없음';
+            } else if (newScoreValue >= 4.5) {
+                statusColor = '#00C9A7';
+                statusBg = 'rgba(0, 201, 167, 0.1)';
+                statusText = '✅ 양호';
+            } else if (newScoreValue >= 3.5) {
+                statusColor = '#0066FF';
+                statusBg = 'rgba(0, 102, 255, 0.1)';
+                statusText = '⚠️ 보통';
+            } else if (newScoreValue >= 2.5) {
+                statusColor = '#FFA500';
+                statusBg = 'rgba(255, 165, 0, 0.1)';
+                statusText = '⚠️ 주의';
+            } else {
+                statusColor = '#FF5F57';
+                statusBg = 'rgba(255, 95, 87, 0.1)';
+                statusText = '❌ 개선필요';
+            }
+            
+            statusElement.textContent = statusText;
+            statusElement.style.background = statusBg;
+            statusElement.style.color = statusColor;
+        }
+        
+        // localStorage에 수정사항 저장
+        try {
+            const lastResult = JSON.parse(localStorage.getItem('lastAnalysisResult') || '{}');
+            if (lastResult.krds && lastResult.krds.scores) {
+                lastResult.krds.scores[itemId] = newScoreValue;
+                localStorage.setItem('lastAnalysisResult', JSON.stringify(lastResult));
+                console.log('💾 Saved to localStorage:', itemId, newScoreValue);
+            }
+        } catch (e) {
+            console.warn('Failed to save to localStorage:', e);
+        }
+        
+        modal.remove();
+        alert(`✅ 저장 완료!\n\n${itemName}\n원래 점수: ${currentScore.toFixed(1)} → 수정 점수: ${newScoreValue.toFixed(1)}\n차이: ${(newScoreValue - currentScore).toFixed(1)}`);
+        
+        console.log('✅ Score and diagnosis updated successfully');
+    });
 };
 
 /**

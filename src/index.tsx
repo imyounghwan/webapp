@@ -628,8 +628,305 @@ function aggregateResults(pageResults: any[]): any {
 // 실시간 URL 분석 API
 app.post('/api/analyze', authMiddleware, async (c) => {
   try {
-    const { url, mode = 'mgine', usePuppeteer = false, useAI = false } = await c.req.json() // useAI 옵션 추가
+    const { url, urls, mode = 'mgine', usePuppeteer = false, useAI = false } = await c.req.json()
 
+    // urls 배열이 제공된 경우 (사용자 직접 선별)
+    if (urls && Array.isArray(urls) && urls.length > 0) {
+      console.log('[Manual Selection] User provided', urls.length, 'URLs')
+      
+      // URL 유효성 검사
+      const validUrls = urls.filter((u: string) => u && u.startsWith('http'))
+      if (validUrls.length === 0) {
+        return c.json({ error: 'No valid URLs provided' }, 400)
+      }
+      
+      // 평가 모드 검증
+      if (mode !== 'mgine' && mode !== 'public') {
+        return c.json({ error: 'Invalid mode. Must be "mgine" or "public"' }, 400)
+      }
+      
+      // 1. 사용자 제공 URL들을 분석
+      let pageResults: any[] = []
+      
+      if (usePuppeteer && c.env.MYBROWSER) {
+        // Puppeteer로 각 URL 분석
+        console.log('[Puppeteer] Analyzing user-provided URLs')
+        const browser = await puppeteer.launch(c.env.MYBROWSER)
+        
+        try {
+          for (const pageUrl of validUrls) {
+            try {
+              const page = await browser.newPage()
+              await page.goto(pageUrl, { waitUntil: 'networkidle0', timeout: 30000 })
+              const html = await page.content()
+              await page.close()
+              
+              pageResults.push({
+                url: pageUrl,
+                structure: analyzeHTML(html, pageUrl),
+                isMainPage: pageUrl === validUrls[0]
+              })
+            } catch (error) {
+              console.error(`Failed to analyze ${pageUrl}:`, error)
+            }
+          }
+        } finally {
+          await browser.close()
+        }
+      } else {
+        // Fetch로 각 URL 분석
+        console.log('[Fetch] Analyzing user-provided URLs')
+        for (const pageUrl of validUrls) {
+          try {
+            const response = await fetch(pageUrl, {
+              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+              signal: AbortSignal.timeout(10000)
+            })
+            
+            if (response.ok) {
+              const html = await response.text()
+              pageResults.push({
+                url: pageUrl,
+                structure: analyzeHTML(html, pageUrl),
+                isMainPage: pageUrl === validUrls[0]
+              })
+            }
+          } catch (error) {
+            console.error(`Failed to analyze ${pageUrl}:`, error)
+          }
+        }
+      }
+      
+      if (pageResults.length === 0) {
+        return c.json({ error: 'Failed to analyze any provided URLs' }, 400)
+      }
+      
+      console.log(`[Manual Selection] Successfully analyzed ${pageResults.length}/${validUrls.length} URLs`)
+      
+      // 2. 결과 종합 및 평가로 진행
+      const structure = aggregateResults(pageResults)
+      const itemRelevance = evaluateItemRelevance(pageResults)
+      
+      // === 이후 기존 평가 로직과 동일하게 진행 ===
+      if (mode === 'public') {
+        let uiuxResult
+        
+        if (useAI) {
+          console.log('[AI] Using AI-based evaluation')
+          try {
+            const aiScores = await evaluateKRDSWithAI(structure.html, validUrls[0])
+            uiuxResult = convertAIScoresToKRDSFormat(aiScores)
+            uiuxResult.evaluation_method = 'AI (GPT-5)'
+          } catch (error) {
+            console.error('[AI] AI evaluation failed, falling back to HTML analysis:', error)
+            uiuxResult = evaluateUIUXKRDS(structure, pageResults)
+            uiuxResult.evaluation_method = 'HTML (AI failed)'
+          }
+        } else {
+          uiuxResult = evaluateUIUXKRDS(structure, pageResults)
+          uiuxResult.evaluation_method = 'HTML'
+        }
+        
+        return c.json({
+          mode: 'public',
+          mode_name: '공공 UI/UX 분석 (KRDS)',
+          evaluation_standard: '디지털정부서비스 UI/UX 가이드라인 43개 항목',
+          url: validUrls[0],
+          analyzed_at: new Date().toISOString(),
+          total_pages: pageResults.length,
+          analyzed_pages: pageResults.map(p => p.url),
+          manual_selection: true,
+          
+          krds: {
+            categories: uiuxResult.categories,
+            compliance_level: uiuxResult.compliance_level,
+            convenience_score: uiuxResult.convenience_score,
+            compliant_count: uiuxResult.compliant_count,
+            total_count: uiuxResult.total_count,
+            not_applicable_count: uiuxResult.not_applicable_count,
+            compliance_rate: uiuxResult.compliance_rate,
+            scores: uiuxResult.scores,
+            issues: uiuxResult.issues,
+          },
+          
+          structure: {
+            navigation: structure.navigation,
+            breadcrumb: structure.breadcrumb,
+            search: structure.search,
+            accessibility: structure.accessibility,
+            content: structure.content,
+            visual: structure.visual,
+          },
+          
+          metadata: {
+            category_count: 6,
+            item_count: 43,
+            evaluation_method: 'KRDS UI/UX (디지털정부서비스 가이드라인)',
+            categories: ['아이덴티티(5)', '탐색(5)', '방문(1)', '검색(12)', '로그인(7)', '신청(13)']
+          }
+        })
+      }
+      
+      // MGINE 모드 평가 계속 (아래 기존 로직으로)
+      const improvedScores = calculateImprovedNielsen(structure)
+      const improvedDiagnoses = generateImprovedDiagnoses(structure, improvedScores, validUrls[0])
+      
+      const convenienceItems = [
+        improvedScores.N1_1_current_location,
+        improvedScores.N1_2_loading_status,
+        improvedScores.N1_3_action_feedback,
+        improvedScores.N2_1_familiar_terms,
+        improvedScores.N2_2_natural_flow,
+        improvedScores.N3_1_undo_redo,
+        improvedScores.N3_3_flexible_navigation,
+        improvedScores.N4_2_terminology_consistency,
+        improvedScores.N4_3_standard_compliance,
+        improvedScores.N5_1_input_validation,
+        improvedScores.N5_2_confirmation_dialog,
+        improvedScores.N5_3_constraints,
+        improvedScores.N6_2_recognition_cues,
+        improvedScores.N6_3_memory_load,
+        improvedScores.N7_1_quick_access,
+        improvedScores.N7_2_customization,
+        improvedScores.N7_3_search_filter,
+        improvedScores.N9_2_recovery_support,
+        improvedScores.N9_4_error_guidance,
+        improvedScores.N10_1_help_visibility,
+        improvedScores.N10_2_documentation,
+      ]
+      
+      const designItems = [
+        improvedScores.N2_3_real_world_metaphor,
+        improvedScores.N4_1_visual_consistency,
+        improvedScores.N8_1_essential_info,
+        improvedScores.N8_2_clean_interface,
+        improvedScores.N8_3_visual_hierarchy,
+      ]
+      
+      const convenience = convenienceItems.reduce((sum, s) => sum + s, 0) / convenienceItems.length
+      const design = designItems.reduce((sum, s) => sum + s, 0) / designItems.length
+      const allItems = [...convenienceItems, ...designItems]
+      const overall = allItems.reduce((sum, s) => sum + s, 0) / allItems.length
+      
+      const convenience_items_detail: any[] = []
+      const design_items_detail: any[] = []
+      
+      const convenienceMapping = [
+        { key: 'N1.1_현재_위치', id: 'N1_1' },
+        { key: 'N1.2_로딩_상태', id: 'N1_2' },
+        { key: 'N1.3_행동_피드백', id: 'N1_3' },
+        { key: 'N2.1_친숙한_용어', id: 'N2_1' },
+        { key: 'N2.2_자연스러운_흐름', id: 'N2_2' },
+        { key: 'N3.1_실행_취소', id: 'N3_1' },
+        { key: 'N3.3_유연한_네비게이션', id: 'N3_3' },
+        { key: 'N4.2_용어_일관성', id: 'N4_2' },
+        { key: 'N4.3_표준_준수', id: 'N4_3' },
+        { key: 'N5.1_입력_검증', id: 'N5_1' },
+        { key: 'N5.2_확인_대화상자', id: 'N5_2' },
+        { key: 'N5.3_제약_조건_표시', id: 'N5_3' },
+        { key: 'N6.2_인식_단서', id: 'N6_2' },
+        { key: 'N6.3_기억_부담', id: 'N6_3' },
+        { key: 'N7.1_빠른_접근', id: 'N7_1' },
+        { key: 'N7.2_맞춤_설정', id: 'N7_2' },
+        { key: 'N7.3_검색_필터', id: 'N7_3' },
+        { key: 'N9.2_복구_지원', id: 'N9_2' },
+        { key: 'N9.4_오류_안내', id: 'N9_4' },
+        { key: 'N10.1_도움말_가시성', id: 'N10_1' },
+        { key: 'N10.2_문서화', id: 'N10_2' }
+      ]
+      
+      const convenienceDiagnosisKeys = [
+        'N1_1_current_location', 'N1_2_loading_status', 'N1_3_action_feedback',
+        'N2_1_familiar_terms', 'N2_2_natural_flow',
+        'N3_1_undo_redo', 'N3_3_flexible_navigation',
+        'N4_2_terminology_consistency', 'N4_3_standard_compliance',
+        'N5_1_input_validation', 'N5_2_confirmation_dialog', 'N5_3_constraints',
+        'N6_2_recognition_cues', 'N6_3_memory_load',
+        'N7_1_quick_access', 'N7_2_customization', 'N7_3_search_filter',
+        'N9_2_recovery_support', 'N9_4_error_guidance',
+        'N10_1_help_visibility', 'N10_2_documentation'
+      ]
+      
+      convenienceMapping.forEach((mapping, idx) => {
+        const id = mapping.id
+        const desc = getItemDescription(id)
+        const diagnosisKey = convenienceDiagnosisKeys[idx]
+        const relevantPages = itemRelevance.get(id) || [validUrls[0]]
+        
+        convenience_items_detail.push({
+          item: desc?.name || mapping.key,
+          item_id: id,
+          category: '편의성',
+          score: (improvedScores as any)[diagnosisKey] || 0,
+          description: (improvedDiagnoses as any)[diagnosisKey]?.description || '',
+          recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
+          affected_pages: relevantPages
+        })
+      })
+      
+      const designMapping = [
+        { key: 'N2.3_현실_은유', id: 'N2_3' },
+        { key: 'N4.1_시각_일관성', id: 'N4_1' },
+        { key: 'N8.1_핵심_정보', id: 'N8_1' },
+        { key: 'N8.2_깔끔한_인터페이스', id: 'N8_2' },
+        { key: 'N8.3_시각_계층', id: 'N8_3' }
+      ]
+      
+      const designDiagnosisKeys = [
+        'N2_3_real_world_metaphor',
+        'N4_1_visual_consistency',
+        'N8_1_essential_info',
+        'N8_2_clean_interface',
+        'N8_3_visual_hierarchy'
+      ]
+      
+      designMapping.forEach((mapping, idx) => {
+        const id = mapping.id
+        const desc = getItemDescription(id)
+        const diagnosisKey = designDiagnosisKeys[idx]
+        const relevantPages = itemRelevance.get(id) || [validUrls[0]]
+        
+        design_items_detail.push({
+          item: desc?.name || mapping.key,
+          item_id: id,
+          category: '디자인',
+          score: (improvedScores as any)[diagnosisKey] || 0,
+          description: (improvedDiagnoses as any)[diagnosisKey]?.description || '',
+          recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
+          affected_pages: relevantPages
+        })
+      })
+      
+      const summary = generateEvaluationSummary(convenience_items_detail, design_items_detail, overall, convenience, design)
+      
+      return c.json({
+        mode: 'mgine',
+        mode_name: 'MGINE UI/UX 분석',
+        evaluation_standard: 'Nielsen 10 Heuristics (26개 세부 항목)',
+        url: validUrls[0],
+        analysis_date: new Date().toISOString(),
+        version: '2.1',
+        manual_selection: true,
+        analyzed_pages: {
+          total_count: pageResults.length,
+          main_page: validUrls[0],
+          sub_pages: validUrls.slice(1),
+          note: `${pageResults.length}개 페이지를 종합 분석하여 평가했습니다.`
+        },
+        structure,
+        predicted_score: {
+          overall: Math.round(overall * 100) / 100,
+          convenience: Math.round(convenience * 100) / 100,
+          design: Math.round(design * 100) / 100
+        },
+        convenience_items: convenience_items_detail,
+        design_items: design_items_detail,
+        summary,
+        recommendations: improvedDiagnoses.recommendations || []
+      })
+    }
+    
+    // === 기존 로직: 단일 URL로 자동 수집 ===
     if (!url || !url.startsWith('http')) {
       return c.json({ error: 'Invalid URL' }, 400)
     }
