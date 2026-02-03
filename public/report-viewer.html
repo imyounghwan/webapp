@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>페이지-항목 매칭 분석 보고서</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #e5e7eb;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0066FF, #00C9A7);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: #0066FF;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0052CC;
+            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e5e7eb;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #9CA3AF;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #0066FF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+        
+        #content h1 {
+            color: #0066FF;
+            border-bottom: 3px solid #0066FF;
+            padding-bottom: 10px;
+            margin: 30px 0 20px 0;
+            font-size: 2rem;
+        }
+        
+        #content h2 {
+            color: #00C9A7;
+            margin: 25px 0 15px 0;
+            font-size: 1.5rem;
+        }
+        
+        #content h3 {
+            color: #9333EA;
+            margin: 20px 0 10px 0;
+            font-size: 1.2rem;
+        }
+        
+        #content h4 {
+            color: #F59E0B;
+            margin: 15px 0 10px 0;
+            font-size: 1.1rem;
+        }
+        
+        #content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #content th {
+            background: #0066FF;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        #content td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #content tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #00C9A7;
+            font-size: 0.9em;
+        }
+        
+        #content pre {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid #0066FF;
+        }
+        
+        #content pre code {
+            background: none;
+            padding: 0;
+            color: #e5e7eb;
+        }
+        
+        #content ul, #content ol {
+            margin: 10px 0 10px 30px;
+        }
+        
+        #content li {
+            margin: 5px 0;
+        }
+        
+        #content blockquote {
+            border-left: 4px solid #0066FF;
+            padding-left: 20px;
+            margin: 15px 0;
+            color: #9CA3AF;
+            font-style: italic;
+        }
+        
+        #content a {
+            color: #0066FF;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+        
+        #content a:hover {
+            border-bottom-color: #0066FF;
+        }
+        
+        #content strong {
+            color: #00C9A7;
+            font-weight: 700;
+        }
+        
+        .progress {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066FF, #00C9A7);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .header, .actions, .btn {
+                display: none;
+            }
+            
+            #content {
+                border: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 페이지-항목 매칭 분석 보고서</h1>
+            <p>MGINE UI/UX 평가 시스템 - Nielsen 10 Heuristics 기반</p>
+        </div>
+        
+        <div class="actions">
+            <button id="downloadPdfBtn" class="btn btn-primary" onclick="downloadPDF()">
+                <span>📥</span>
+                <span>PDF 다운로드</span>
+            </button>
+            <button id="downloadMdBtn" class="btn btn-secondary" onclick="downloadMarkdown()">
+                <span>📝</span>
+                <span>마크다운 다운로드</span>
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <span>🖨️</span>
+                <span>인쇄</span>
+            </button>
+        </div>
+        
+        <div id="progress" class="progress">
+            <div class="spinner"></div>
+            <p id="progressText">PDF 생성 중...</p>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill">0%</div>
+            </div>
+        </div>
+        
+        <div id="content" class="loading">
+            <div class="spinner"></div>
+            <p>보고서를 불러오는 중...</p>
+        </div>
+    </div>
+
+    <script>
+        let markdownContent = '';
+        
+        // 마크다운 파일 로드
+        async function loadMarkdown() {
+            try {
+                const response = await fetch('/페이지-항목-매칭-보고서.md');
+                if (!response.ok) throw new Error('보고서를 찾을 수 없습니다.');
+                
+                markdownContent = await response.text();
+                
+                // marked.js 설정
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    tables: true
+                });
+                
+                // HTML로 변환
+                const htmlContent = marked.parse(markdownContent);
+                
+                // 렌더링
+                document.getElementById('content').innerHTML = htmlContent;
+                
+                console.log('✅ 보고서 로드 완료');
+            } catch (error) {
+                document.getElementById('content').innerHTML = `
+                    <div style="color: #ef4444; padding: 40px; text-align: center;">
+                        <h2>❌ 보고서 로드 실패</h2>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 20px;">
+                            <a href="/페이지-항목-매칭-보고서.md" target="_blank" style="color: #0066FF;">
+                                마크다운 파일 직접 열기
+                            </a>
+                        </p>
+                    </div>
+                `;
+                console.error('❌ 보고서 로드 실패:', error);
+            }
+        }
+        
+        // PDF 다운로드
+        async function downloadPDF() {
+            const btn = document.getElementById('downloadPdfBtn');
+            const progress = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span><span>생성 중...</span>';
+            progress.style.display = 'block';
+            
+            try {
+                const element = document.getElementById('content');
+                
+                // PDF 생성 옵션
+                const opt = {
+                    margin: [15, 15, 15, 15],
+                    filename: 'MGINE_페이지-항목-매칭-분석-보고서.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true,
+                        logging: false
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait',
+                        compress: true
+                    },
+                    pagebreak: { 
+                        mode: ['avoid-all', 'css', 'legacy'],
+                        before: '.page-break-before',
+                        after: '.page-break-after',
+                        avoid: ['table', 'tr', 'img', 'pre']
+                    }
+                };
+                
+                // 진행률 업데이트
+                let progress_value = 0;
+                const interval = setInterval(() => {
+                    progress_value += 5;
+                    if (progress_value <= 90) {
+                        progressFill.style.width = progress_value + '%';
+                        progressFill.textContent = progress_value + '%';
+                    }
+                }, 200);
+                
+                progressText.textContent = 'PDF 생성 중... 잠시만 기다려주세요.';
+                
+                // PDF 생성 (약 5~10초 소요)
+                await html2pdf().set(opt).from(element).save();
+                
+                clearInterval(interval);
+                progressFill.style.width = '100%';
+                progressFill.textContent = '100%';
+                progressText.textContent = '✅ PDF 다운로드 완료!';
+                
+                setTimeout(() => {
+                    progress.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }, 2000);
+                
+                console.log('✅ PDF 다운로드 완료');
+            } catch (error) {
+                console.error('❌ PDF 생성 실패:', error);
+                alert('PDF 생성에 실패했습니다. 인쇄 기능을 사용해보세요.');
+                progress.style.display = 'none';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>📥</span><span>PDF 다운로드</span>';
+            }
+        }
+        
+        // 마크다운 다운로드
+        function downloadMarkdown() {
+            if (!markdownContent) {
+                alert('보고서가 아직 로드되지 않았습니다.');
+                return;
+            }
+            
+            const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'MGINE_페이지-항목-매칭-분석-보고서.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log('✅ 마크다운 다운로드 완료');
+        }
+        
+        // 페이지 로드 시 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMarkdown();
+        });
+    </script>
+</body>
+</html>
