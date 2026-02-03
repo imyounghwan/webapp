@@ -433,12 +433,12 @@ function displayResults(data, resultElement) {
                 </div>
                 
                 <div style="font-size:13px;color:#9CA3AF;margin-bottom:10px;font-weight:500;">
-                    🔗 <strong>평가 페이지 (${item.evaluated_pages ? item.evaluated_pages.length : 1}개):</strong><br>
-                    ${item.evaluated_pages ? 
-                        item.evaluated_pages.map((page, idx) => 
-                            `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;">${page}</a>`
-                        ).join('<br>') 
-                        : `<a href="${item.evaluated_url}" target="_blank" style="color:#2563eb;text-decoration:none;">${item.evaluated_url}</a>`
+                    🔗 <strong>평가 페이지 (${item.affected_pages ? item.affected_pages.length : 0}개):</strong><br>
+                    ${item.affected_pages && item.affected_pages.length > 0 ? 
+                        item.affected_pages.slice(0, 3).map((page, idx) => 
+                            `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;word-break:break-all;">${page.length > 60 ? page.substring(0, 60) + '...' : page}</a>`
+                        ).join('<br>') + (item.affected_pages.length > 3 ? `<br><span style="color:#6B7280;">외 ${item.affected_pages.length - 3}개</span>` : '')
+                        : `<span style="color:#6B7280;">전체 페이지</span>`
                     }
                 </div>
                 
@@ -508,12 +508,12 @@ function displayResults(data, resultElement) {
                 </div>
                 
                 <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">
-                    🔗 <strong>평가 페이지 (${item.evaluated_pages ? item.evaluated_pages.length : 1}개):</strong><br>
-                    ${item.evaluated_pages ? 
-                        item.evaluated_pages.map((page, idx) => 
-                            `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;">${page}</a>`
-                        ).join('<br>') 
-                        : `<a href="${item.evaluated_url}" target="_blank" style="color:#2563eb;text-decoration:none;">${item.evaluated_url}</a>`
+                    🔗 <strong>평가 페이지 (${item.affected_pages ? item.affected_pages.length : 0}개):</strong><br>
+                    ${item.affected_pages && item.affected_pages.length > 0 ? 
+                        item.affected_pages.slice(0, 3).map((page, idx) => 
+                            `${idx + 1}. <a href="${page}" target="_blank" style="color:#2563eb;text-decoration:none;word-break:break-all;">${page.length > 60 ? page.substring(0, 60) + '...' : page}</a>`
+                        ).join('<br>') + (item.affected_pages.length > 3 ? `<br><span style="color:#6B7280;">외 ${item.affected_pages.length - 3}개</span>` : '')
+                        : `<span style="color:#6B7280;">전체 페이지</span>`
                     }
                 </div>
                 
