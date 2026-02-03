@@ -1272,7 +1272,7 @@ function displayKRDSResults(data, resultElement) {
                                         <span style="display: inline-block; padding: 4px 12px; background: ${color}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin-right: 10px;">${label}</span>
                                         <span style="font-weight: 700; font-size: 1.05rem;">${issue.item}</span>
                                     </div>
-                                    <button onclick="editKRDSScore(${idx}, '${issue.item.replace(/'/g, "\\'")}'))" 
+                                    <button onclick="editKRDSScore(${idx}, \`${issue.item}\`)" 
                                             style="padding: 8px 16px; background: rgba(0, 102, 255, 0.2); color: #0066FF; border: 1px solid rgba(0, 102, 255, 0.4); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;">
                                         <i class="fas fa-edit"></i> 수정
                                     </button>
