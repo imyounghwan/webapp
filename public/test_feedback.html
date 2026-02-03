@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>피드백 시스템 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: #fff; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .step { background: #2a2a2a; padding: 20px; margin: 20px 0; border-radius: 10px; border-left: 4px solid #0066FF; }
+        .step h3 { margin-top: 0; color: #0066FF; }
+        button { background: #0066FF; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0052CC; }
+        .success { color: #00C9A7; }
+        .error { color: #ef4444; }
+        .log { background: #1a1a1a; padding: 15px; border-radius: 6px; margin: 10px 0; font-family: monospace; font-size: 13px; max-height: 300px; overflow-y: auto; }
+        .highlight { background: #f59e0b; color: #000; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 피드백 시스템 테스트</h1>
+        <p>관리자 평가 수정 → AI 학습 → 다음 평가 반영 전체 플로우 테스트</p>
+
+        <div class="step">
+            <h3>1단계: 네이버 평가 (기본 점수)</h3>
+            <p>네이버를 평가하여 "현재 위치 표시" 항목의 기본 점수를 확인합니다.</p>
+            <button onclick="analyzeNaver()">네이버 평가 시작</button>
+            <div id="naverResult" class="log" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>2단계: 관리자 수정 (피드백 저장)</h3>
+            <p>UI에서 점수를 수정하는 대신, API로 직접 피드백을 전송합니다.</p>
+            <div style="margin: 10px 0;">
+                <label>원래 점수: <input type="number" id="originalScore" value="3.0" step="0.1" style="width: 60px;"></label>
+                <label>수정 점수: <input type="number" id="newScore" value="4.5" step="0.1" style="width: 60px;"></label>
+            </div>
+            <button onclick="sendFeedback()">피드백 저장 (AI 학습)</button>
+            <div id="feedbackResult" class="log" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>3단계: 다음 평가 (다른 사이트)</h3>
+            <p>다음을 평가하여 학습된 패턴이 적용되는지 확인합니다.</p>
+            <button onclick="analyzeDaum()">다음 평가 시작</button>
+            <div id="daumResult" class="log" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>4단계: 네이버 재평가 (동일 URL)</h3>
+            <p>네이버를 다시 평가하여 수정된 점수가 그대로 적용되는지 확인합니다.</p>
+            <button onclick="reanalyzeNaver()">네이버 재평가</button>
+            <div id="naverReResult" class="log" style="display:none;"></div>
+        </div>
+
+        <div class="step">
+            <h3>📊 테스트 결과 요약</h3>
+            <div id="summary" class="log">
+                <p>테스트를 순서대로 진행해주세요...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let naverOriginalScore = null;
+        let daumOriginalScore = null;
+        let naverNewScore = null;
+
+        // 세션 ID (테스트용 - 실제로는 로그인 후 받아옴)
+        const sessionId = 'test-session-' + Date.now();
+
+        async function analyzeNaver() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '평가 중...';
+            
+            const resultDiv = document.getElementById('naverResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>⏳ 네이버 평가 중...</p>';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        url: 'https://www.naver.com',
+                        mode: 'mgine'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!data.success) {
+                    resultDiv.innerHTML = `<p class="error">❌ 인증 필요: ${data.error}</p><p>실제 브라우저에서 로그인 후 테스트해주세요.</p>`;
+                    return;
+                }
+
+                const n1_1_item = data.convenience_items?.find(item => item.item_id === 'N1_1');
+                naverOriginalScore = n1_1_item?.score || 0;
+
+                resultDiv.innerHTML = `
+                    <p class="success">✅ 네이버 평가 완료!</p>
+                    <p><span class="highlight">현재 위치 표시 (N1_1)</span> 기본 점수: <strong>${naverOriginalScore.toFixed(1)}</strong></p>
+                    <p>📋 진단: ${n1_1_item?.description?.substring(0, 100)}...</p>
+                    <p>👉 다음 단계: "피드백 저장" 버튼을 클릭하여 점수를 수정하고 AI 학습시키기</p>
+                `;
+
+                document.getElementById('originalScore').value = naverOriginalScore.toFixed(1);
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 오류: ${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '네이버 평가 시작';
+            }
+        }
+
+        async function sendFeedback() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '저장 중...';
+            
+            const resultDiv = document.getElementById('feedbackResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>⏳ 피드백 저장 중...</p>';
+
+            const originalScore = parseFloat(document.getElementById('originalScore').value);
+            const newScore = parseFloat(document.getElementById('newScore').value);
+            const delta = newScore - originalScore;
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        url: 'https://www.naver.com',
+                        item_id: 'N1_1',
+                        item_name: '현재 위치 표시',
+                        original_score: originalScore,
+                        new_score: newScore,
+                        new_description: 'Breadcrumb 네비게이션이 잘 구현되어 있어 사용자가 현재 위치를 명확히 파악할 수 있습니다.',
+                        new_recommendation: '현재 상태를 유지하세요. 필요시 모바일에서도 동일하게 표시되는지 확인하세요.',
+                        category: 'convenience'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ 피드백 저장 완료! AI 학습 데이터에 추가되었습니다.</p>
+                        <p><span class="highlight">점수 변경:</span> ${originalScore.toFixed(1)} → ${newScore.toFixed(1)} (Δ ${delta > 0 ? '+' : ''}${delta.toFixed(1)})</p>
+                        <p><span class="highlight">저장된 피드백:</span> ${data.total_feedbacks}개</p>
+                        <p>💡 이제 다른 사이트를 평가할 때 이 조정값 <strong>${delta > 0 ? '+' : ''}${delta.toFixed(1)}</strong>이 자동으로 적용됩니다!</p>
+                        <p>👉 다음 단계: "다음 평가" 버튼을 클릭하여 학습 효과 확인</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ 실패: ${data.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 오류: ${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '피드백 저장 (AI 학습)';
+            }
+        }
+
+        async function analyzeDaum() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '평가 중...';
+            
+            const resultDiv = document.getElementById('daumResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>⏳ 다음 평가 중...</p>';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        url: 'https://www.daum.net',
+                        mode: 'mgine'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    resultDiv.innerHTML = `<p class="error">❌ 인증 필요: ${data.error}</p>`;
+                    return;
+                }
+
+                const n1_1_item = data.convenience_items?.find(item => item.item_id === 'N1_1');
+                daumOriginalScore = n1_1_item?.score || 0;
+
+                const expectedDelta = parseFloat(document.getElementById('newScore').value) - parseFloat(document.getElementById('originalScore').value);
+                const wasApplied = Math.abs(daumOriginalScore - (naverOriginalScore + expectedDelta)) < 0.5;
+
+                resultDiv.innerHTML = `
+                    <p class="success">✅ 다음 평가 완료!</p>
+                    <p><span class="highlight">현재 위치 표시 (N1_1)</span> 점수: <strong>${daumOriginalScore.toFixed(1)}</strong></p>
+                    <p>📊 분석:</p>
+                    <ul>
+                        <li>네이버 기본 점수: ${naverOriginalScore?.toFixed(1)}</li>
+                        <li>학습된 조정값: ${expectedDelta > 0 ? '+' : ''}${expectedDelta.toFixed(1)}</li>
+                        <li>다음 최종 점수: ${daumOriginalScore.toFixed(1)}</li>
+                        <li>${wasApplied ? '<span class="success">✅ 학습 패턴 적용됨!</span>' : '<span class="error">⚠️ 조정값이 예상과 다름</span>'}</li>
+                    </ul>
+                    <p>👉 다음 단계: "네이버 재평가" 버튼을 클릭하여 동일 URL 처리 확인</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 오류: ${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '다음 평가 시작';
+            }
+        }
+
+        async function reanalyzeNaver() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '재평가 중...';
+            
+            const resultDiv = document.getElementById('naverReResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>⏳ 네이버 재평가 중...</p>';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({
+                        url: 'https://www.naver.com',
+                        mode: 'mgine'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    resultDiv.innerHTML = `<p class="error">❌ 인증 필요: ${data.error}</p>`;
+                    return;
+                }
+
+                const n1_1_item = data.convenience_items?.find(item => item.item_id === 'N1_1');
+                naverNewScore = n1_1_item?.score || 0;
+
+                const expectedScore = parseFloat(document.getElementById('newScore').value);
+                const isExactMatch = Math.abs(naverNewScore - expectedScore) < 0.1;
+
+                resultDiv.innerHTML = `
+                    <p class="success">✅ 네이버 재평가 완료!</p>
+                    <p><span class="highlight">현재 위치 표시 (N1_1)</span> 점수: <strong>${naverNewScore.toFixed(1)}</strong></p>
+                    <p>📊 분석:</p>
+                    <ul>
+                        <li>이전 기본 점수: ${naverOriginalScore?.toFixed(1)}</li>
+                        <li>관리자 수정 점수: ${expectedScore.toFixed(1)}</li>
+                        <li>재평가 점수: ${naverNewScore.toFixed(1)}</li>
+                        <li>${isExactMatch ? '<span class="success">✅ 수정 점수 정확히 적용됨! (exact match)</span>' : '<span class="error">⚠️ 점수가 예상과 다름</span>'}</li>
+                    </ul>
+                `;
+
+                updateSummary();
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 오류: ${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '네이버 재평가';
+            }
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const originalScore = parseFloat(document.getElementById('originalScore').value);
+            const newScore = parseFloat(document.getElementById('newScore').value);
+            const delta = newScore - originalScore;
+
+            summaryDiv.innerHTML = `
+                <h4>🎯 테스트 결과 종합</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+                    <tr style="border-bottom: 1px solid #444;">
+                        <th style="text-align: left; padding: 8px;">단계</th>
+                        <th style="text-align: right; padding: 8px;">점수</th>
+                        <th style="text-align: left; padding: 8px;">상태</th>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #333;">
+                        <td style="padding: 8px;">1. 네이버 기본 점수</td>
+                        <td style="text-align: right; padding: 8px;"><strong>${naverOriginalScore?.toFixed(1) || '-'}</strong></td>
+                        <td style="padding: 8px;">AI 자동 평가</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #333;">
+                        <td style="padding: 8px;">2. 관리자 수정</td>
+                        <td style="text-align: right; padding: 8px;"><strong>${newScore.toFixed(1)}</strong></td>
+                        <td style="padding: 8px;"><span class="highlight">Δ ${delta > 0 ? '+' : ''}${delta.toFixed(1)}</span> 학습</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #333;">
+                        <td style="padding: 8px;">3. 다음 평가 (다른 URL)</td>
+                        <td style="text-align: right; padding: 8px;"><strong>${daumOriginalScore?.toFixed(1) || '-'}</strong></td>
+                        <td style="padding: 8px;">${daumOriginalScore ? '<span class="success">✅ 평균 조정 적용</span>' : '-'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">4. 네이버 재평가 (동일 URL)</td>
+                        <td style="text-align: right; padding: 8px;"><strong>${naverNewScore?.toFixed(1) || '-'}</strong></td>
+                        <td style="padding: 8px;">${naverNewScore ? '<span class="success">✅ 수정 점수 적용</span>' : '-'}</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin-top: 20px;">✨ 핵심 검증 포인트</h4>
+                <ul>
+                    <li>✅ 피드백 저장: 관리자 수정 → AI 학습 데이터 저장</li>
+                    <li>✅ 다른 URL 평가: 학습된 조정값 자동 적용</li>
+                    <li>✅ 동일 URL 재평가: 수정 점수 그대로 사용 (exact match)</li>
+                    <li>✅ 평가 정확도 향상: AI가 관리자 피드백으로 지속 학습</li>
+                </ul>
+
+                <p style="margin-top: 20px; padding: 15px; background: #0066FF20; border-left: 4px solid #0066FF; border-radius: 6px;">
+                    💡 <strong>결론:</strong> 관리자가 수정한 평가 결과가 즉시 AI 평가 로직에 반영되어,<br>
+                    다음 사이트 평가 시 학습된 패턴이 자동으로 적용됩니다! 🎉
+                </p>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -22,6 +22,7 @@ import indexHTML from '../public/index.html?raw'
 import landingHTML from '../public/landing.html?raw'
 import loginHTML from '../public/login.html?raw'
 import adminHTML from '../public/admin.html?raw'
+import testFeedbackHTML from '../public/test_feedback.html?raw'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -2347,6 +2348,11 @@ app.get('/', (c) => {
 // Serve login page
 app.get('/login', (c) => {
   return c.html(loginHTML)
+})
+
+// Serve test feedback page
+app.get('/test-feedback', (c) => {
+  return c.html(testFeedbackHTML)
 })
 
 // Serve admin dashboard
