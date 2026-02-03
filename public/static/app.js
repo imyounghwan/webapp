@@ -407,7 +407,8 @@ function displayResults(data, resultElement) {
                             data-item-name="${item.item}"
                             data-original-score="${item.score}"
                             data-url="${url}"
-                            data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
+                            data-description="${(item.description || '').replace(/"/g, '&quot;')}"
+                            data-recommendation="${(item.recommendation || '').replace(/"/g, '&quot;')}"
                             style="background:#0066FF;color:white;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(0,102,255,0.3);position:relative;z-index:100;"
                             
                             
@@ -435,11 +436,19 @@ function displayResults(data, resultElement) {
                     </div>
                 </div>
                 
-                <div id="${itemId}-diagnosis" data-original="${(item.diagnosis || '').replace(/"/g, '&quot;')}" style="background:${item.score >= 4.0 ? 'rgba(0,201,167,0.1)' : item.score >= 3.0 ? 'rgba(0,102,255,0.1)' : 'rgba(239,68,68,0.1)'};padding:16px;border-radius:12px;margin-bottom:12px;border:2px solid ${item.score >= 4.0 ? '#00C9A7' : item.score >= 3.0 ? '#0066FF' : '#ef4444'};">
+                <div id="${itemId}-diagnosis" data-original="${(item.description || '').replace(/"/g, '&quot;')}" style="background:${item.score >= 4.0 ? 'rgba(0,201,167,0.1)' : item.score >= 3.0 ? 'rgba(0,102,255,0.1)' : 'rgba(239,68,68,0.1)'};padding:16px;border-radius:12px;margin-bottom:12px;border:2px solid ${item.score >= 4.0 ? '#00C9A7' : item.score >= 3.0 ? '#0066FF' : '#ef4444'};">
                     <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
-                        📊 <strong style="color:${scoreColor};">진단 결과:</strong> ${item.diagnosis || '진단 정보 없음'}
+                        📊 <strong style="color:${scoreColor};">진단 결과:</strong> ${item.description || '진단 정보 없음'}
                     </div>
                 </div>
+                
+                ${item.recommendation ? `
+                <div id="${itemId}-recommendation" style="background:rgba(0,102,255,0.05);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(0,102,255,0.2);">
+                    <div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">
+                        💡 <strong style="color:#0066FF;">권장사항:</strong> ${item.recommendation}
+                    </div>
+                </div>
+                ` : ''}
                 
                 <div style="font-size:13px;color:#9CA3AF;margin-bottom:10px;font-weight:500;">
                     🔗 <strong>평가 페이지 (${item.affected_pages ? item.affected_pages.length : 0}개):</strong><br>
@@ -482,7 +491,8 @@ function displayResults(data, resultElement) {
                             data-item-name="${item.item}"
                             data-original-score="${item.score}"
                             data-url="${url}"
-                            data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
+                            data-description="${(item.description || '').replace(/"/g, '&quot;')}"
+                            data-recommendation="${(item.recommendation || '').replace(/"/g, '&quot;')}"
                             style="background:#7c3aed;color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;transition:all 0.2s;"
                             onmouseover="this.style.background='#6d28d9'"
                             onmouseout="this.style.background='#7c3aed'"
@@ -510,11 +520,19 @@ function displayResults(data, resultElement) {
                     </div>
                 </div>
                 
-                <div id="${itemId}-diagnosis" data-original="${(item.diagnosis || '').replace(/"/g, '&quot;')}" style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
+                <div id="${itemId}-diagnosis" data-original="${(item.description || '').replace(/"/g, '&quot;')}" style="background:#${item.score >= 4.0 ? 'dcfce7' : item.score >= 3.0 ? 'dbeafe' : 'fee2e2'};padding:12px;border-radius:6px;margin-bottom:10px;">
                     <div style="font-size:13px;color:#${item.score >= 4.0 ? '166534' : item.score >= 3.0 ? '1e40af' : 'dc2626'};line-height:1.6;">
-                        📊 <strong>진단 결과:</strong> ${item.diagnosis || '진단 정보 없음'}
+                        📊 <strong>진단 결과:</strong> ${item.description || '진단 정보 없음'}
                     </div>
                 </div>
+                
+                ${item.recommendation ? `
+                <div id="${itemId}-recommendation" style="background:rgba(0,102,255,0.05);padding:12px;border-radius:6px;margin-bottom:10px;border:1px solid rgba(0,102,255,0.2);">
+                    <div style="font-size:13px;color:#1e40af;line-height:1.6;">
+                        💡 <strong>권장사항:</strong> ${item.recommendation}
+                    </div>
+                </div>
+                ` : ''}
                 
                 <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">
                     🔗 <strong>평가 페이지 (${item.affected_pages ? item.affected_pages.length : 0}개):</strong><br>
@@ -568,9 +586,10 @@ function displayResults(data, resultElement) {
             const itemName = this.getAttribute('data-item-name');
             const originalScore = parseFloat(this.getAttribute('data-original-score'));
             const url = this.getAttribute('data-url');
-            const diagnosis = this.getAttribute('data-diagnosis').replace(/&quot;/g, '"');
+            const description = this.getAttribute('data-description')?.replace(/&quot;/g, '"') || '';
+            const recommendation = this.getAttribute('data-recommendation')?.replace(/&quot;/g, '"') || '';
             
-            editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
+            editScore(itemId, itemIdValue, itemName, originalScore, url, description, recommendation);
         });
     });
     
@@ -594,7 +613,7 @@ function displayResults(data, resultElement) {
 /**
  * 점수 및 진단 내용 수정 함수 (개선된 인라인 편집)
  */
-window.editScore = async function(itemId, itemIdValue, itemName, originalScore, url, originalDiagnosis) {
+window.editScore = async function(itemId, itemIdValue, itemName, originalScore, url, originalDescription, originalRecommendation) {
     console.log('🔍 editScore called with itemId:', itemId);
     console.log('🔍 itemIdValue:', itemIdValue);
     console.log('🔍 itemName:', itemName);
@@ -602,10 +621,12 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
     const scoreElementId = `${itemId}-score`;
     const scoreElement = document.getElementById(scoreElementId);
     const diagnosisElement = document.getElementById(`${itemId}-diagnosis`);
+    const recommendationElement = document.getElementById(`${itemId}-recommendation`);
     
     console.log('🔍 Looking for scoreElement with ID:', scoreElementId);
     console.log('📍 scoreElement:', scoreElement);
     console.log('📍 diagnosisElement:', diagnosisElement);
+    console.log('📍 recommendationElement:', recommendationElement);
     
     if (!scoreElement) {
         console.error('❌ scoreElement is NULL!');
@@ -616,7 +637,8 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
     
     // 현재 점수 및 진단
     const currentScore = parseFloat(scoreElement.textContent);
-    const currentDiagnosis = diagnosisElement ? diagnosisElement.textContent : '';
+    const currentDescription = originalDescription || '';
+    const currentRecommendation = originalRecommendation || '';
     
     // 모달 다이얼로그로 수정 UI 표시
     const modal = document.createElement('div');
@@ -695,7 +717,7 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
                         line-height: 1.6;
                     "
                     placeholder="진단 내용을 입력하세요..."
-                >${currentDiagnosis}</textarea>
+                >${currentDescription}</textarea>
             </div>
             
             <!-- 권장 사항 입력 -->
@@ -719,7 +741,7 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
                         line-height: 1.6;
                     "
                     placeholder="권장 사항을 입력하세요..."
-                ></textarea>
+                >${currentRecommendation}</textarea>
             </div>
             
             <!-- 버튼 -->
@@ -788,13 +810,26 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
         
         // 진단 내용 업데이트
         if (diagnosisElement && newDescription) {
-            diagnosisElement.textContent = newDescription;
+            const diagnosisContent = diagnosisElement.querySelector('div');
+            if (diagnosisContent) {
+                const scoreColor = newScoreValue >= 4.5 ? '#00C9A7' : newScoreValue >= 3.5 ? '#0066FF' : newScoreValue >= 2.5 ? '#f59e0b' : '#ef4444';
+                diagnosisContent.innerHTML = `📊 <strong style="color:${scoreColor};">진단 결과:</strong> ${newDescription}`;
+            }
         }
         
-        // 권장 사항 업데이트 (있는 경우)
-        const recommendationElement = document.getElementById(`${itemId}-recommendation`);
+        // 권장 사항 업데이트
         if (recommendationElement && newRecommendation) {
-            recommendationElement.textContent = newRecommendation;
+            const recommendationContent = recommendationElement.querySelector('div');
+            if (recommendationContent) {
+                recommendationContent.innerHTML = `💡 <strong style="color:#0066FF;">권장사항:</strong> ${newRecommendation}`;
+            }
+        } else if (newRecommendation && !recommendationElement) {
+            // 권장사항 요소가 없으면 새로 생성
+            const newRecommendationDiv = document.createElement('div');
+            newRecommendationDiv.id = `${itemId}-recommendation`;
+            newRecommendationDiv.style.cssText = 'background:rgba(0,102,255,0.05);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(0,102,255,0.2);';
+            newRecommendationDiv.innerHTML = `<div style="font-size:15px;color:#E5E7EB;line-height:1.8;font-weight:500;">💡 <strong style="color:#0066FF;">권장사항:</strong> ${newRecommendation}</div>`;
+            diagnosisElement.parentElement.insertBefore(newRecommendationDiv, diagnosisElement.nextSibling);
         }
         
         // 상태 업데이트
@@ -1007,9 +1042,10 @@ window.cancelEdit = function(itemId, originalScore, originalDiagnosis) {
             const itemName = this.getAttribute('data-item-name');
             const originalScore = parseFloat(this.getAttribute('data-original-score'));
             const url = this.getAttribute('data-url');
-            const diagnosis = this.getAttribute('data-diagnosis').replace(/&quot;/g, '"');
+            const description = this.getAttribute('data-description')?.replace(/&quot;/g, '"') || '';
+            const recommendation = this.getAttribute('data-recommendation')?.replace(/&quot;/g, '"') || '';
             
-            editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
+            editScore(itemId, itemIdValue, itemName, originalScore, url, description, recommendation);
         });
     }
     

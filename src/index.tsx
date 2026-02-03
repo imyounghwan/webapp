@@ -858,8 +858,11 @@ app.post('/api/analyze', authMiddleware, async (c) => {
           item_id: id,
           category: '편의성',
           score: (improvedScores as any)[diagnosisKey] || 0,
-          description: (improvedDiagnoses as any)[diagnosisKey]?.description || '',
-          recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
+          description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '진단 정보가 없습니다.',
+          recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '추가 권장사항이 없습니다.',
+          principle: desc?.principle || '',
+          why_important: desc?.why_important || '',
+          evaluation_criteria: desc?.evaluation_criteria || '',
           affected_pages: relevantPages
         })
       })
@@ -891,8 +894,11 @@ app.post('/api/analyze', authMiddleware, async (c) => {
           item_id: id,
           category: '디자인',
           score: (improvedScores as any)[diagnosisKey] || 0,
-          description: (improvedDiagnoses as any)[diagnosisKey]?.description || '',
-          recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
+          description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '진단 정보가 없습니다.',
+          recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '추가 권장사항이 없습니다.',
+          principle: desc?.principle || '',
+          why_important: desc?.why_important || '',
+          evaluation_criteria: desc?.evaluation_criteria || '',
           affected_pages: relevantPages
         })
       })
