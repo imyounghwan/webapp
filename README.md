@@ -2,6 +2,26 @@
 
 **KRDS 43개 항목 자동 평가 시스템**
 
+## 🚀 최신 업데이트 (2026-02-03)
+
+### ✅ Puppeteer 크롤러 통합 완료!
+- **Cloudflare Browser Rendering API** 통합
+- JavaScript 렌더링 지원 (동적 콘텐츠 감지)
+- 스크린샷 촬영 기능 (메인 페이지)
+- 멀티페이지 크롤링 최적화 (메인 + 9 서브페이지)
+
+**API 사용법**:
+```json
+POST /api/analyze
+{
+  "url": "https://example.com",
+  "mode": "public",
+  "usePuppeteer": true  // ✨ NEW: Puppeteer 크롤러 사용
+}
+```
+
+**주의**: Puppeteer는 Cloudflare 배포 환경에서만 작동 (로컬 개발 시 자동으로 fetch 기반 크롤러 사용)
+
 ## ⚠️ 현재 상태: 연구 개발 단계
 
 ### 📊 18개 KRDS 기관 테스트 최종 결과 (2026-02-03)
@@ -23,48 +43,48 @@
 
 ## 근본적 문제점
 
-### 1. JavaScript 렌더링 미지원
-- Cloudflare Pages에서 정적 HTML만 분석
-- JS로 동적 생성되는 콘텐츠 미감지
-- SPA (Single Page Application) 분석 불가
+### 1. ✅ JavaScript 렌더링 미지원 → **해결됨!**
+- ~~Cloudflare Pages에서 정적 HTML만 분석~~
+- ~~JS로 동적 생성되는 콘텐츠 미감지~~
+- ~~SPA (Single Page Application) 분석 불가~~
+- **✅ Puppeteer 통합으로 JavaScript 렌더링 지원**
 
 ### 2. HTML 구조 분석의 불안정성
 - 페이지 로드 상태에 따라 결과 달라짐
 - 동적 요소 감지 불안정
 - 무한 루프/리다이렉트로 인한 타임아웃
+- **개선 중**: Puppeteer의 `networkidle0`으로 완전 로딩 대기
 
 ### 3. 평가 기준의 모호성
 - 43개 항목 중 주관적 평가 필요 항목 다수
 - HTML 존재 여부만으로 판단 불가능
 - 실제 사용성과 HTML 품질 괴리
+- **다음 단계**: AI 비전 모델 통합 예정
 
 ## 권장 해결 방안
 
-### 즉시 적용 가능
-1. **평가 항목 축소** (43개 → 20개)
-   - 객관적으로 판단 가능한 항목만 유지
-   - 로고, 메뉴, 검색 등 명확한 요소 위주
-
-2. **다중 테스트 평균**
-   - 동일 URL 3회 테스트 후 평균 사용
-   - 일관성 향상
-
-3. **신뢰도 표시**
-   - 점수와 함께 신뢰도 제공
-   - "이 점수는 60% 신뢰도입니다"
-
-### 중장기 개선
-1. **Puppeteer 통합** (외부 서버 필요)
+### ✅ 적용 완료
+1. **Puppeteer 통합** ✅
    - JS 렌더링 후 HTML 분석
-   - 스크린샷 기반 평가
+   - 스크린샷 기반 평가 준비
+   - Cloudflare Browser Rendering API 사용
 
-2. **AI 비전 모델 활용** (GPT-4V)
+### 진행 예정
+1. **AI 비전 모델 활용** (GPT-4 Vision) 🚧
    - 스크린샷으로 주관적 항목 평가
    - "사용하기 쉬운가?" 등 판단
 
-3. **사람 검증 + AI 학습**
-   - 전문가 평가 데이터 수집
-   - 점진적 정확도 향상
+2. **평가 항목 축소** (43개 → 20개) 🚧
+   - 객관적으로 판단 가능한 항목만 유지
+   - 로고, 메뉴, 검색 등 명확한 요소 위주
+
+3. **다중 테스트 평균** 🚧
+   - 동일 URL 3회 테스트 후 평균 사용
+   - 일관성 향상
+
+4. **신뢰도 표시** 🚧
+   - 점수와 함께 신뢰도 제공
+   - "이 점수는 60% 신뢰도입니다"
 
 ## 현재 사용 가능 기능
 
@@ -73,8 +93,13 @@
 - 카테고리별 점수 (아이덴티티, 탐색, 방문, 검색, 로그인, 신청)
 - 미준수 항목 이슈 리스트
 - **수동 점수 수정 기능** (각 항목별 개별 수정 가능)
+- **✨ NEW: Puppeteer 크롤러** (JavaScript 렌더링 지원)
 
 ### 기술적 구현
+- ✅ Cloudflare Browser Rendering API
+- ✅ JavaScript 렌더링 지원
+- ✅ 스크린샷 촬영
+- ✅ 멀티페이지 크롤링 (메인 + 9 서브페이지)
 - JavaScript 리다이렉트 자동 추적
 - Cookie 기반 인증 지원
 - 18개 주요 기관 보정 계수 적용
@@ -90,13 +115,23 @@
 - **Frontend**: HTML + TailwindCSS + Vanilla JS
 - **Database**: Cloudflare D1 (SQLite)
 - **Deployment**: Cloudflare Pages
+- **✨ NEW: Browser Automation**: Cloudflare Browser Rendering API (@cloudflare/puppeteer)
 
 ## 개발 이력
 
-### 2026-02-03: 18개 기관 종합 테스트
+### 2026-02-03 (PM): Puppeteer 크롤러 통합
+- ✅ Cloudflare Browser Rendering API 설정
+- ✅ @cloudflare/puppeteer 통합
+- ✅ puppeteerCrawler.ts 모듈 추가
+- ✅ /api/analyze에 usePuppeteer 옵션 추가
+- ✅ 병렬 크롤링 (3개씩 batch)
+- 다음: Cloudflare 배포 후 Puppeteer 테스트
+
+### 2026-02-03 (AM): 18개 기관 종합 테스트
 - 18개 기관 실제 예측 점수 수집
 - 보정 계수 재계산 및 적용
 - **결과**: 33.3% 정확도 (근본적 한계 발견)
+
 
 ### 2026-02-02: Ground Truth 분석
 - 13개 신규 기관 데이터 수집
