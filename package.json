@@ -11,7 +11,8 @@
     "clean-port": "fuser -k 3000/tcp 2>/dev/null || true"
   },
   "dependencies": {
-    "hono": "^4.11.7"
+    "hono": "^4.11.7",
+    "openai": "^6.17.0"
   },
   "devDependencies": {
     "@cloudflare/puppeteer": "^1.0.5",

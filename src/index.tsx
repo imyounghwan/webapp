@@ -9,6 +9,7 @@ import { evaluateItemRelevance } from './analyzer/itemRelevance'
 import { evaluateKRDS } from './analyzer/krdsEvaluator'
 import { evaluateUIUXKRDS } from './analyzer/uiuxKRDSEvaluator'
 import { crawlWebsiteWithPuppeteer } from './analyzer/puppeteerCrawler'
+import { evaluateKRDSWithAI } from './analyzer/aiEvaluator'
 import { loadWeights, getWeightsVersion, getWeightsLastUpdated, loadReferenceStatistics } from './config/weightsLoader'
 import { generateWeightAdjustments, applyWeightAdjustments } from './config/weightAdjuster'
 import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } from './types/database'
@@ -477,6 +478,89 @@ function generateEvaluationSummary(
 }
 
 /**
+ * AI 점수를 KRDS 포맷으로 변환
+ */
+function convertAIScoresToKRDSFormat(aiScores: any): any {
+  // AI 점수 매핑 (identity_1_1_1 형식)
+  const scores: any = {}
+  
+  // 모든 키를 변환
+  for (const [key, value] of Object.entries(aiScores)) {
+    if (key === 'reasoning') continue
+    
+    // identity_1_1_1 → identity_1_1_1_official_banner
+    const mappedKey = mapAIKeyToKRDSKey(key)
+    scores[mappedKey] = typeof value === 'number' ? value : 0
+  }
+  
+  // 유효한 점수만 추출 (0 이상)
+  const validScores = Object.values(scores).filter((s: any) => s >= 0) as number[]
+  const compliantCount = validScores.filter(s => s >= 4.5).length
+  const totalCount = validScores.length
+  const complianceRate = totalCount > 0 ? (compliantCount / totalCount) * 100 : 0
+  const convenience_score = Math.round(complianceRate)
+  
+  // 등급 계산
+  let compliance_level = 'F'
+  if (convenience_score >= 95) compliance_level = 'S'
+  else if (convenience_score >= 90) compliance_level = 'A'
+  else if (convenience_score >= 85) compliance_level = 'B'
+  else if (convenience_score >= 80) compliance_level = 'C'
+  
+  // 카테고리 점수 계산
+  const categories = {
+    identity: calculateCategoryScore(scores, 'identity'),
+    navigation: calculateCategoryScore(scores, 'navigation'),
+    visit: calculateCategoryScore(scores, 'visit'),
+    search: calculateCategoryScore(scores, 'search'),
+    login: calculateCategoryScore(scores, 'login'),
+    application: calculateCategoryScore(scores, 'application'),
+    overall: convenience_score
+  }
+  
+  return {
+    scores,
+    categories,
+    compliance_level,
+    convenience_score,
+    compliant_count: compliantCount,
+    total_count: totalCount,
+    not_applicable_count: Object.values(scores).filter((s: any) => s < 0).length,
+    compliance_rate: complianceRate,
+    issues: [] // AI는 issues를 생성하지 않음 (추후 구현 가능)
+  }
+}
+
+/**
+ * AI 키를 KRDS 키로 매핑
+ */
+function mapAIKeyToKRDSKey(aiKey: string): string {
+  // identity_1_1_1 → identity_1_1_1_official_banner
+  const keyMap: Record<string, string> = {
+    'identity_1_1_1': 'identity_1_1_1_official_banner',
+    'identity_1_2_1': 'identity_1_2_1_logo',
+    'identity_1_2_2': 'identity_1_2_2_home_button',
+    // ... (나머지 43개 항목 매핑)
+    // 간단하게 기본값 사용
+  }
+  
+  return keyMap[aiKey] || aiKey
+}
+
+/**
+ * 카테고리별 평균 점수 계산
+ */
+function calculateCategoryScore(scores: any, category: string): number {
+  const categoryScores = Object.entries(scores)
+    .filter(([key]) => key.startsWith(category))
+    .map(([, value]) => value as number)
+    .filter(s => s >= 0)
+  
+  if (categoryScores.length === 0) return 0
+  return categoryScores.reduce((sum, s) => sum + s, 0) / categoryScores.length
+}
+
+/**
  * 여러 페이지 결과를 종합 (10페이지 평균)
  */
 function aggregateResults(pageResults: any[]): any {
@@ -544,7 +628,7 @@ function aggregateResults(pageResults: any[]): any {
 // 실시간 URL 분석 API
 app.post('/api/analyze', authMiddleware, async (c) => {
   try {
-    const { url, mode = 'mgine', usePuppeteer = false } = await c.req.json() // mode: 'mgine' | 'public', usePuppeteer: boolean
+    const { url, mode = 'mgine', usePuppeteer = false, useAI = false } = await c.req.json() // useAI 옵션 추가
 
     if (!url || !url.startsWith('http')) {
       return c.json({ error: 'Invalid URL' }, 400)
@@ -617,7 +701,30 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       // 공공 UI/UX 분석 (KRDS 기반)
       // 디지털정부서비스 UI/UX 가이드라인 43개 항목
       // ========================================
-      const uiuxResult = evaluateUIUXKRDS(structure, pageResults)
+      
+      let uiuxResult
+      
+      if (useAI) {
+        // AI 기반 평가 (GPT-5)
+        console.log('[AI] Using AI-based evaluation')
+        try {
+          const aiScores = await evaluateKRDSWithAI(structure.html, url)
+          
+          // AI 점수를 기존 포맷으로 변환
+          uiuxResult = convertAIScoresToKRDSFormat(aiScores)
+          uiuxResult.evaluation_method = 'AI (GPT-5)'
+          
+        } catch (error) {
+          console.error('[AI] AI evaluation failed, falling back to HTML analysis:', error)
+          // AI 실패 시 기존 HTML 분석으로 폴백
+          uiuxResult = evaluateUIUXKRDS(structure, pageResults)
+          uiuxResult.evaluation_method = 'HTML (AI failed)'
+        }
+      } else {
+        // 기존 HTML 분석
+        uiuxResult = evaluateUIUXKRDS(structure, pageResults)
+        uiuxResult.evaluation_method = 'HTML'
+      }
       
       return c.json({
         mode: 'public',
