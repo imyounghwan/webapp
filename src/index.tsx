@@ -25,6 +25,40 @@ import adminHTML from '../public/admin.html?raw'
 
 const app = new Hono<{ Bindings: Env }>()
 
+// 피드백 데이터 저장소 (메모리 기반 - 추후 D1/KV로 이전)
+// key: item_id, value: 피드백 데이터 배열
+const feedbackStore: Map<string, Array<{
+  url: string;
+  original_score: number;
+  new_score: number;
+  score_delta: number;
+  new_description?: string;
+  new_recommendation?: string;
+  timestamp: string;
+}>> = new Map()
+
+// 피드백 데이터 기반 점수 조정 함수
+function applyFeedbackAdjustment(itemId: string, baseScore: number, url: string): number {
+  const feedbacks = feedbackStore.get(itemId)
+  if (!feedbacks || feedbacks.length === 0) {
+    return baseScore
+  }
+  
+  // 동일 URL의 피드백이 있으면 그대로 사용
+  const exactMatch = feedbacks.find(f => f.url === url)
+  if (exactMatch) {
+    console.log(`[Feedback] Exact match found for ${itemId} on ${url}: ${baseScore} → ${exactMatch.new_score}`)
+    return exactMatch.new_score
+  }
+  
+  // 다른 URL들의 평균 조정값 적용
+  const avgDelta = feedbacks.reduce((sum, f) => sum + f.score_delta, 0) / feedbacks.length
+  const adjustedScore = Math.max(0, Math.min(5, baseScore + avgDelta))
+  
+  console.log(`[Feedback] Applying avg adjustment for ${itemId}: ${baseScore} + ${avgDelta.toFixed(2)} = ${adjustedScore.toFixed(2)}`)
+  return adjustedScore
+}
+
 // API routes
 app.use('/api/*', cors())
 
@@ -625,6 +659,67 @@ function aggregateResults(pageResults: any[]): any {
   }
 }
 
+// 관리자 평가 피드백 API - AI 학습 데이터로 저장
+app.post('/api/feedback', authMiddleware, async (c) => {
+  try {
+    const { url, item_id, item_name, original_score, new_score, new_description, new_recommendation, category } = await c.req.json()
+    
+    // 유효성 검사
+    if (!url || !item_id || new_score === undefined) {
+      return c.json({ error: 'Missing required fields: url, item_id, new_score' }, 400)
+    }
+    
+    // 피드백 데이터 구조
+    const feedbackData = {
+      url,
+      item_id,
+      item_name,
+      category,
+      original_score,
+      new_score,
+      score_delta: new_score - (original_score || 0),
+      new_description,
+      new_recommendation,
+      timestamp: new Date().toISOString(),
+      session_id: c.get('sessionId') || 'anonymous'
+    }
+    
+    console.log('[Feedback] Received admin correction:', feedbackData)
+    
+    // 메모리에 피드백 데이터 저장
+    if (!feedbackStore.has(item_id)) {
+      feedbackStore.set(item_id, [])
+    }
+    const itemFeedbacks = feedbackStore.get(item_id)!
+    itemFeedbacks.push({
+      url,
+      original_score,
+      new_score,
+      score_delta: new_score - (original_score || 0),
+      new_description,
+      new_recommendation,
+      timestamp: new Date().toISOString()
+    })
+    
+    console.log(`[Feedback] Stored in memory: ${item_id} now has ${itemFeedbacks.length} feedback(s)`)
+    
+    // TODO: Cloudflare D1 또는 KV에 저장
+    // await c.env.DB.prepare('INSERT INTO feedback ...').bind(...).run()
+    
+    // 피드백 저장 성공 응답
+    return c.json({ 
+      success: true, 
+      message: 'Feedback saved successfully and will be applied to future evaluations',
+      feedback: feedbackData,
+      total_feedbacks: itemFeedbacks.length
+    })
+    
+  } catch (error: any) {
+    console.error('[Feedback] Error:', error)
+    return c.json({ error: 'Failed to save feedback', details: error.message }, 500)
+  }
+})
+
 // 실시간 URL 분석 API
 app.post('/api/analyze', authMiddleware, async (c) => {
   try {
@@ -853,11 +948,17 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         const diagnosisKey = convenienceDiagnosisKeys[idx]
         const relevantPages = itemRelevance.get(id) || [validUrls[0]]
         
+        // 기본 점수 계산
+        let baseScore = (improvedScores as any)[diagnosisKey] || 0
+        
+        // 피드백 데이터 적용 (AI 학습 반영)
+        const adjustedScore = applyFeedbackAdjustment(id, baseScore, validUrls[0])
+        
         convenience_items_detail.push({
           item: desc?.name || mapping.key,
           item_id: id,
           category: '편의성',
-          score: (improvedScores as any)[diagnosisKey] || 0,
+          score: adjustedScore,  // 피드백 반영된 점수 사용
           description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '진단 정보가 없습니다.',
           recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '추가 권장사항이 없습니다.',
           principle: desc?.principle || '',
@@ -889,11 +990,17 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         const diagnosisKey = designDiagnosisKeys[idx]
         const relevantPages = itemRelevance.get(id) || [validUrls[0]]
         
+        // 기본 점수 계산
+        let baseScore = (improvedScores as any)[diagnosisKey] || 0
+        
+        // 피드백 데이터 적용 (AI 학습 반영)
+        const adjustedScore = applyFeedbackAdjustment(id, baseScore, validUrls[0])
+        
         design_items_detail.push({
           item: desc?.name || mapping.key,
           item_id: id,
           category: '디자인',
-          score: (improvedScores as any)[diagnosisKey] || 0,
+          score: adjustedScore,  // 피드백 반영된 점수 사용
           description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '진단 정보가 없습니다.',
           recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '추가 권장사항이 없습니다.',
           principle: desc?.principle || '',
@@ -1165,11 +1272,17 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       const diagnosisKey = convenienceDiagnosisKeys[idx]
       const relevantPages = itemRelevance.get(id) || [url]
       
+      // 기본 점수
+      let baseScore = Math.round(score * 10) / 10
+      
+      // 피드백 데이터 적용 (AI 학습 반영)
+      const adjustedScore = applyFeedbackAdjustment(id, baseScore, url)
+      
       convenience_items_detail.push({
         item: desc?.name || key,
         item_id: id,
         category: '편의성',
-        score: Math.round(score * 10) / 10,
+        score: adjustedScore,  // 피드백 반영된 점수 사용
         description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '',
         recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
         principle: desc?.principle || '',
@@ -1200,11 +1313,17 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       const diagnosisKey = designDiagnosisKeys[idx]
       const relevantPages = itemRelevance.get(id) || [url]
       
+      // 기본 점수
+      let baseScore = Math.round(score * 10) / 10
+      
+      // 피드백 데이터 적용 (AI 학습 반영)
+      const adjustedScore = applyFeedbackAdjustment(id, baseScore, url)
+      
       design_items_detail.push({
         item: desc?.name || key,
         item_id: id,
         category: '디자인',
-        score: Math.round(score * 10) / 10,
+        score: adjustedScore,  // 피드백 반영된 점수 사용
         description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '',
         recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '',
         principle: desc?.principle || '',

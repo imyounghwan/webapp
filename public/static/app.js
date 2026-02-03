@@ -875,8 +875,39 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
             console.warn('Failed to save to localStorage:', e);
         }
         
+        // 백엔드에 피드백 데이터 전송 (AI 학습용)
+        fetch('/api/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-ID': sessionStorage.getItem('session_id') || ''
+            },
+            body: JSON.stringify({
+                url: url,
+                item_id: itemIdValue,
+                item_name: itemName,
+                original_score: currentScore,
+                new_score: newScoreValue,
+                new_description: newDescription,
+                new_recommendation: newRecommendation,
+                category: itemId.includes('conv') ? 'convenience' : 'design'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Feedback sent to backend for AI learning:', data.feedback);
+            } else {
+                console.warn('⚠️ Failed to send feedback:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error sending feedback:', error);
+            // 백엔드 저장 실패해도 UI 업데이트는 유지
+        });
+        
         modal.remove();
-        alert(`✅ 저장 완료!\n\n${itemName}\n원래 점수: ${currentScore.toFixed(1)} → 수정 점수: ${newScoreValue.toFixed(1)}\n차이: ${(newScoreValue - currentScore).toFixed(1)}`);
+        alert(`✅ 저장 완료!\n\n${itemName}\n원래 점수: ${currentScore.toFixed(1)} → 수정 점수: ${newScoreValue.toFixed(1)}\n차이: ${(newScoreValue - currentScore).toFixed(1)}\n\n💡 이 수정 내용은 AI 평가 로직에 반영됩니다.`);
         
         console.log('✅ Score and diagnosis updated successfully');
     });
