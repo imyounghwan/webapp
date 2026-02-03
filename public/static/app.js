@@ -344,7 +344,7 @@ function displayResults(data, resultElement) {
                             data-original-score="${item.score}"
                             data-url="${url}"
                             data-diagnosis="${(item.diagnosis || '').replace(/"/g, '&quot;')}"
-                            style="background:#0066FF;color:white;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(0,102,255,0.3);"
+                            style="background:#0066FF;color:white;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(0,102,255,0.3);position:relative;z-index:100;"
                             onmouseover="this.style.background='#00C9A7';this.style.transform='scale(1.05)'"
                             onmouseout="this.style.background='#0066FF';this.style.transform='scale(1)'"
                         >
@@ -484,8 +484,20 @@ function displayResults(data, resultElement) {
     console.log('✅ Results displayed successfully');
     
     // 수정 버튼에 이벤트 리스너 추가
-    document.querySelectorAll('.edit-score-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+    const editButtons = document.querySelectorAll('.edit-score-btn');
+    console.log(`🔍 Found ${editButtons.length} edit buttons`);
+    
+    editButtons.forEach((btn, index) => {
+        console.log(`🔘 Button ${index + 1}:`, {
+            itemId: btn.getAttribute('data-item-id'),
+            itemName: btn.getAttribute('data-item-name')
+        });
+        
+        btn.addEventListener('click', function(e) {
+            console.log('✅ Edit button clicked!', this.getAttribute('data-item-name'));
+            e.preventDefault();
+            e.stopPropagation();
+            
             const itemId = this.getAttribute('data-item-id');
             const itemIdValue = this.getAttribute('data-item-id-value');
             const itemName = this.getAttribute('data-item-name');
@@ -1114,6 +1126,7 @@ function displayKRDSResults(data, resultElement) {
                                 <th style="padding: 12px; text-align: left; font-weight: 700;">항목</th>
                                 <th style="padding: 12px; text-align: center; font-weight: 700; width: 100px;">점수</th>
                                 <th style="padding: 12px; text-align: center; font-weight: 700; width: 120px;">상태</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 700; width: 120px;">수정</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1189,6 +1202,22 @@ function displayKRDSResults(data, resultElement) {
                                             <span style="display: inline-block; padding: 4px 12px; background: ${statusBg}; color: ${statusColor}; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
                                                 ${statusText}
                                             </span>
+                                        </td>
+                                        <td style="padding: 12px; text-align: center;">
+                                            <button 
+                                                class="edit-score-btn"
+                                                data-item-id="${key}"
+                                                data-item-id-value="${key}"
+                                                data-item-name="${itemName}"
+                                                data-original-score="${scoreValue}"
+                                                data-url="${url}"
+                                                data-diagnosis=""
+                                                style="background:#0066FF;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.3s;box-shadow:0 4px 12px rgba(0,102,255,0.3);"
+                                                onmouseover="this.style.background='#00C9A7';this.style.transform='scale(1.05)'"
+                                                onmouseout="this.style.background='#0066FF';this.style.transform='scale(1)'"
+                                            >
+                                                ✏️ 수정
+                                            </button>
                                         </td>
                                     </tr>
                                 `;
@@ -1298,6 +1327,29 @@ function displayKRDSResults(data, resultElement) {
             </div>
         </div>
     `;
+    
+    // 수정 버튼에 이벤트 리스너 추가
+    setTimeout(() => {
+        const editButtons = resultElement.querySelectorAll('.edit-score-btn');
+        console.log('🔍 Found edit buttons:', editButtons.length);
+        
+        editButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const itemIdValue = this.getAttribute('data-item-id-value');
+                const itemName = this.getAttribute('data-item-name');
+                const originalScore = parseFloat(this.getAttribute('data-original-score'));
+                const url = this.getAttribute('data-url');
+                const diagnosis = this.getAttribute('data-diagnosis');
+                
+                console.log('📝 Edit button clicked:', {
+                    itemId, itemIdValue, itemName, originalScore, url
+                });
+                
+                editScore(itemId, itemIdValue, itemName, originalScore, url, diagnosis);
+            });
+        });
+    }, 100);
 }
 
 // ==========================================
