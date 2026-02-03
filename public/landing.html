@@ -182,58 +182,7 @@
             z-index: 1;
         }
         
-        .floating-elements {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            max-width: min(1400px, 100%);
-            height: 100%;
-            pointer-events: none;
-            z-index: 2;
-            overflow: hidden;
-        }
-        
-        .floating-card {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(0, 102, 255, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 40px rgba(0, 102, 255, 0.2);
-        }
-        
-        .floating-card.card-1 {
-            top: 10%;
-            right: 5%;
-        }
-        
-        .floating-card.card-2 {
-            top: 60%;
-            left: 5%;
-        }
-        
-        .floating-card.card-3 {
-            bottom: 15%;
-            right: 10%;
-        }
-        
-        /* 떠다니는 애니메이션 제거 - 정적 표시 */
-        
-        .mini-chart {
-            display: flex;
-            gap: 3px;
-            align-items: flex-end;
-            height: 30px;
-        }
-        
-        .bar {
-            width: 4px;
-            background: linear-gradient(180deg, #0066FF, #00C9A7);
-            border-radius: 2px;
-        }
+        /* Floating elements 완전 제거 */
         
         .hero-container {
             max-width: 1400px;
@@ -774,34 +723,6 @@
     <!-- Hero -->
     <section class="hero">
         <div class="grid-overlay"></div>
-        
-        <!-- Floating Analytics Elements -->
-        <div class="floating-elements">
-            <div class="floating-card card-1">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">편의성 점수</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: #0066FF;">4.5</div>
-                <div class="mini-chart" style="margin-top: 12px;">
-                    <div class="bar" style="height: 60%;"></div>
-                    <div class="bar" style="height: 80%;"></div>
-                    <div class="bar" style="height: 90%;"></div>
-                    <div class="bar" style="height: 75%;"></div>
-                    <div class="bar" style="height: 95%;"></div>
-                    <div class="bar" style="height: 85%;"></div>
-                </div>
-            </div>
-            
-            <div class="floating-card card-2">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">분석 완료</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: #00C9A7;">347건</div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px;">↑ 23% from last month</div>
-            </div>
-            
-            <div class="floating-card card-3">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">AI 분석</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: #9333EA;">26항목</div>
-                <div style="font-size: 0.7rem; color: #00C9A7; margin-top: 8px;">✓ 심층 평가</div>
-            </div>
-        </div>
         
         <div class="hero-container">
             <div class="hero-badge">✨ AI 기반 전문 UI/UX 분석</div>
