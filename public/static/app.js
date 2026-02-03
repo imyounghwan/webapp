@@ -1353,9 +1353,17 @@ window.editKRDSScore = async function(issueIndex, itemName) {
     
     const issue = krds.issues[issueIndex];
     
-    // 해당 이슈의 item_id 찾기 (예: P1_1_1_alt_text)
-    // itemName 예시: "1.1.1 적절한 대체 텍스트 제공" → "P1_1_1_alt_text"
-    const itemCode = itemName.match(/[\d.]+/)[0]; // "1.1.1"
+    // 이슈 항목명이 "최근 검색어" 같은 경우 (숫자 없음) → itemId 직접 찾기
+    const itemCodeMatch = issue.item.match(/[\d.]+/);
+    
+    if (!itemCodeMatch) {
+        // 숫자가 없는 이슈 (예: "최근 검색어", "자동완성")
+        // 이런 항목은 KRDS 43개 항목에 없으므로 수정 불가
+        alert(`${issue.item}\n\n이 항목은 KRDS 43개 평가 항목에 포함되지 않아 수정할 수 없습니다.\n\n"발견된 이슈"는 참고용입니다.`);
+        return;
+    }
+    
+    const itemCode = itemCodeMatch[0]; // "1.1.1"
     const itemId = Object.keys(krds.scores).find(key => {
         // key 예시: "P1_1_1_alt_text"
         const keyCode = key.match(/[A-Z](\d+_\d+_\d+)/)?.[1]?.replace(/_/g, '.'); // "1.1.1"
