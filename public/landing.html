@@ -1337,29 +1337,47 @@ ${contactData.message}
         
         // Smooth Scroll for Anchor Links
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Smooth scroll initialized');
+            
             // 모든 앵커 링크에 부드러운 스크롤 적용
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
                     const href = this.getAttribute('href');
+                    console.log('Clicked anchor:', href);
                     
                     // 빈 앵커나 #만 있는 경우 무시
                     if (href === '#' || href === '') {
-                        e.preventDefault();
                         return;
                     }
                     
                     const targetId = href.substring(1);
                     const targetElement = document.getElementById(targetId);
                     
+                    console.log('Target element:', targetElement);
+                    
                     if (targetElement) {
-                        e.preventDefault();
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
+                        // header 높이 계산
+                        const header = document.querySelector('.header');
+                        const headerHeight = header ? header.offsetHeight : 80;
+                        
+                        // 타겟 위치에서 header 높이만큼 빼기
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                        
+                        console.log('Scrolling to:', targetPosition);
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
                         });
+                    } else {
+                        console.log('Element not found:', targetId);
                     }
                 });
             });
+            
+            console.log('Found anchor links:', document.querySelectorAll('a[href^="#"]').length);
         });
     </script>
 </body>
