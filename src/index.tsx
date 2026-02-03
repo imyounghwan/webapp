@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import puppeteer from '@cloudflare/puppeteer'
 import { analyzeHTML } from './analyzer/htmlAnalyzer'
 import { findSimilarSites, calculatePredictedScore } from './analyzer/similarityCalculator'
 import { calculateImprovedNielsen, generateImprovedDiagnoses } from './analyzer/nielsenImproved'
@@ -7,6 +8,7 @@ import { nielsenDescriptions, getItemDescription } from './analyzer/nielsenDescr
 import { evaluateItemRelevance } from './analyzer/itemRelevance'
 import { evaluateKRDS } from './analyzer/krdsEvaluator'
 import { evaluateUIUXKRDS } from './analyzer/uiuxKRDSEvaluator'
+import { crawlWebsiteWithPuppeteer } from './analyzer/puppeteerCrawler'
 import { loadWeights, getWeightsVersion, getWeightsLastUpdated, loadReferenceStatistics } from './config/weightsLoader'
 import { generateWeightAdjustments, applyWeightAdjustments } from './config/weightAdjuster'
 import type { Env, CorrectionRequest, AdminCorrection, LearningDataSummary } from './types/database'
@@ -542,7 +544,7 @@ function aggregateResults(pageResults: any[]): any {
 // 실시간 URL 분석 API
 app.post('/api/analyze', authMiddleware, async (c) => {
   try {
-    const { url, mode = 'mgine' } = await c.req.json() // mode: 'mgine' | 'public'
+    const { url, mode = 'mgine', usePuppeteer = false } = await c.req.json() // mode: 'mgine' | 'public', usePuppeteer: boolean
 
     if (!url || !url.startsWith('http')) {
       return c.json({ error: 'Invalid URL' }, 400)
@@ -554,7 +556,54 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     }
 
     // 1. 메인 + 서브 페이지 분석
-    const pageResults = await analyzeMultiplePages(url)
+    let pageResults: any[]
+    let screenshots: string[] = []
+    
+    if (usePuppeteer && c.env.MYBROWSER) {
+      // Puppeteer 기반 크롤링 (JavaScript 렌더링 지원)
+      console.log('[Puppeteer] Using Puppeteer crawler')
+      const browser = await puppeteer.launch(c.env.MYBROWSER)
+      
+      try {
+        const crawlResult = await crawlWebsiteWithPuppeteer(browser, {
+          url,
+          maxSubPages: 9, // 메인 + 9 서브페이지 = 10개
+          timeout: 30000,
+          followRedirects: true
+        })
+        
+        // Puppeteer 결과를 기존 포맷으로 변환
+        pageResults = [
+          {
+            url: crawlResult.mainPage.url,
+            structure: analyzeHTML(crawlResult.mainPage.html, crawlResult.mainPage.url),
+            isMainPage: true
+          },
+          ...crawlResult.subPages.map(page => ({
+            url: page.url,
+            structure: analyzeHTML(page.html, page.url),
+            isMainPage: false
+          }))
+        ]
+        
+        // 스크린샷 저장 (메인 페이지만)
+        if (crawlResult.mainPage.screenshot) {
+          screenshots.push(crawlResult.mainPage.screenshot)
+        }
+        
+        console.log(`[Puppeteer] Crawled ${pageResults.length} pages (${crawlResult.totalTime}ms)`)
+        if (crawlResult.errors.length > 0) {
+          console.warn(`[Puppeteer] Errors: ${crawlResult.errors.join(', ')}`)
+        }
+        
+      } finally {
+        await browser.close()
+      }
+    } else {
+      // 기존 fetch 기반 크롤링
+      console.log('[Fetch] Using traditional crawler')
+      pageResults = await analyzeMultiplePages(url)
+    }
     
     // 2. 결과 종합
     const structure = aggregateResults(pageResults)

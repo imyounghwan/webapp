@@ -12,7 +12,11 @@
       "database_name": "webapp-db",
       "database_id": "local-development-db"
     }
-  ]
+  ],
+  // Browser Rendering API binding for Puppeteer
+  "browser": {
+    "binding": "MYBROWSER"
+  }
   // Note: Use --local flag for local development
   // Production database_id will be added after deployment
 }
