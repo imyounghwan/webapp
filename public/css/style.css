@@ -99,11 +99,10 @@ body {
     border-radius: 15px;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -153,12 +152,11 @@ body {
     padding: 25px;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    transition: box-shadow 0.3s ease;
     position: relative;
 }
 
 .ranking-card:hover {
-    transform: translateY(-5px);
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -459,17 +457,16 @@ body {
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: box-shadow 0.2s;
     white-space: nowrap;
 }
 
 .analyze-btn:hover {
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
 }
 
 .analyze-btn:active {
-    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2);
 }
 
 .analyze-status {
