@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+    
+    <!-- Homepage -->
+    <url>
+        <loc>https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/</loc>
+        <lastmod>2026-02-05</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    
+    <!-- Features Section -->
+    <url>
+        <loc>https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/#features</loc>
+        <lastmod>2026-02-05</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- Process Section -->
+    <url>
+        <loc>https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/#process</loc>
+        <lastmod>2026-02-05</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- About Section -->
+    <url>
+        <loc>https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/#about</loc>
+        <lastmod>2026-02-05</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+    <!-- Contact Section -->
+    <url>
+        <loc>https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/#contact</loc>
+        <lastmod>2026-02-05</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+</urlset>
