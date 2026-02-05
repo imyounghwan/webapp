@@ -2264,6 +2264,32 @@ app.get('/api/admin/contacts', adminMiddleware, async (c) => {
   }
 })
 
+// 문의 상세 조회 (관리자 전용)
+app.get('/api/admin/contacts/:id', adminMiddleware, async (c) => {
+  const db = c.env.DB
+  const { id } = c.req.param()
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const contact = await db.prepare(`
+      SELECT * FROM contact_inquiries WHERE id = ?
+    `).bind(id).first()
+    
+    if (!contact) {
+      return c.json({ error: 'Contact not found' }, 404)
+    }
+    
+    return c.json({ contact })
+    
+  } catch (error: any) {
+    console.error('Error fetching contact:', error)
+    return c.json({ error: 'Failed to fetch contact' }, 500)
+  }
+})
+
 // 문의 상태 업데이트 (관리자 전용)
 app.patch('/api/admin/contacts/:id', adminMiddleware, async (c) => {
   const db = c.env.DB

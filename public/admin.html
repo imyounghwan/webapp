@@ -252,6 +252,47 @@
         </div>
     </div>
 
+    <!-- 문의 상세보기 모달 -->
+    <div id="contactModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeContactModal()">
+        <div class="bg-gray-900 rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-white">문의 상세 정보</h3>
+                <button onclick="closeContactModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div id="contactDetail" class="space-y-6">
+                <!-- 문의 정보가 여기에 로드됩니다 -->
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-white/20">
+                <h4 class="text-lg font-semibold text-white mb-4">상태 관리</h4>
+                <div class="flex gap-4">
+                    <select id="contactStatus" class="flex-1 bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20">
+                        <option value="pending">대기중</option>
+                        <option value="processing">처리중</option>
+                        <option value="completed">완료</option>
+                        <option value="rejected">거절</option>
+                    </select>
+                    <button onclick="updateContactStatus()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
+                        상태 업데이트
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-gray-300 mb-2">관리자 메모</label>
+                    <textarea id="contactAdminNote" rows="3" class="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-blue-500 focus:outline-none" placeholder="내부 메모를 입력하세요..."></textarea>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeContactModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentUser = null;
 
@@ -704,8 +745,169 @@
             }
         }
 
-        function viewContact(id) {
-            alert('문의 상세 보기 기능은 추후 구현 예정입니다.\n문의 ID: ' + id);
+        let currentContactId = null;
+
+        async function viewContact(id) {
+            currentContactId = id;
+            const sessionId = localStorage.getItem('session_id');
+            
+            try {
+                const response = await fetch(`/api/admin/contacts/${id}`, {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                
+                const data = await response.json();
+                
+                if (!data.contact) {
+                    alert('문의를 불러올 수 없습니다.');
+                    return;
+                }
+                
+                const contact = data.contact;
+                
+                // 상태 배지 색상
+                const statusColors = {
+                    pending: 'yellow',
+                    processing: 'blue',
+                    completed: 'green',
+                    rejected: 'red'
+                };
+                const statusNames = {
+                    pending: '대기중',
+                    processing: '처리중',
+                    completed: '완료',
+                    rejected: '거절'
+                };
+                const color = statusColors[contact.status] || 'gray';
+                const statusBadge = `<span class="px-3 py-1 bg-${color}-500/20 text-${color}-400 rounded-full text-sm font-semibold">${statusNames[contact.status] || contact.status}</span>`;
+                
+                // 상세 정보 렌더링
+                document.getElementById('contactDetail').innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">문의 ID: #${contact.id}</p>
+                            <p class="text-gray-400 text-sm mt-1">접수일시: ${new Date(contact.created_at).toLocaleString('ko-KR')}</p>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    
+                    <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                        <h4 class="text-lg font-semibold text-white mb-4"><i class="fas fa-user mr-2 text-blue-400"></i>의뢰인 정보</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-gray-400 text-sm">회사명</p>
+                                <p class="text-white font-semibold">${contact.company}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">담당자</p>
+                                <p class="text-white font-semibold">${contact.name}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">직위</p>
+                                <p class="text-white">${contact.position || '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">연락처</p>
+                                <p class="text-white">${contact.phone}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-gray-400 text-sm">이메일</p>
+                                <p class="text-white"><a href="mailto:${contact.email}" class="text-blue-400 hover:text-blue-300">${contact.email}</a></p>
+                            </div>
+                            ${contact.url ? `
+                            <div class="col-span-2">
+                                <p class="text-gray-400 text-sm">웹사이트</p>
+                                <p class="text-white"><a href="${contact.url}" target="_blank" class="text-blue-400 hover:text-blue-300">${contact.url}</a></p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                        <h4 class="text-lg font-semibold text-white mb-4"><i class="fas fa-project-diagram mr-2 text-cyan-400"></i>프로젝트 정보</h4>
+                        <div class="space-y-3">
+                            ${contact.project_type ? `
+                            <div>
+                                <p class="text-gray-400 text-sm">희망 프로젝트 형태</p>
+                                <p class="text-white">${contact.project_type}</p>
+                            </div>
+                            ` : ''}
+                            ${contact.budget ? `
+                            <div>
+                                <p class="text-gray-400 text-sm">프로젝트 예산</p>
+                                <p class="text-white">${contact.budget}</p>
+                            </div>
+                            ` : ''}
+                            ${contact.schedule ? `
+                            <div>
+                                <p class="text-gray-400 text-sm">프로젝트 일정</p>
+                                <p class="text-white">${contact.schedule}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                        <h4 class="text-lg font-semibold text-white mb-4"><i class="fas fa-comment-dots mr-2 text-green-400"></i>의뢰 내용</h4>
+                        <p class="text-white whitespace-pre-wrap">${contact.message}</p>
+                    </div>
+                    
+                    ${contact.admin_note ? `
+                    <div class="bg-yellow-500/10 rounded-xl p-6 border border-yellow-500/20">
+                        <h4 class="text-lg font-semibold text-yellow-400 mb-2"><i class="fas fa-sticky-note mr-2"></i>관리자 메모</h4>
+                        <p class="text-gray-300 whitespace-pre-wrap">${contact.admin_note}</p>
+                    </div>
+                    ` : ''}
+                `;
+                
+                // 상태와 메모 설정
+                document.getElementById('contactStatus').value = contact.status;
+                document.getElementById('contactAdminNote').value = contact.admin_note || '';
+                
+                // 모달 표시
+                document.getElementById('contactModal').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error loading contact:', error);
+                alert('문의 정보를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.add('hidden');
+            currentContactId = null;
+        }
+
+        async function updateContactStatus() {
+            if (!currentContactId) return;
+            
+            const sessionId = localStorage.getItem('session_id');
+            const status = document.getElementById('contactStatus').value;
+            const admin_note = document.getElementById('contactAdminNote').value;
+            
+            try {
+                const response = await fetch(`/api/admin/contacts/${currentContactId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify({ status, admin_note })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('문의 상태가 업데이트되었습니다.');
+                    closeContactModal();
+                    loadContacts();
+                } else {
+                    alert('오류: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error updating contact:', error);
+                alert('문의 상태 업데이트 중 오류가 발생했습니다.');
+            }
         }
     </script>
 </body>
