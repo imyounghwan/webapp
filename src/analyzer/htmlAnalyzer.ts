@@ -27,6 +27,7 @@ export interface AccessibilityScore {
   headingStructure: boolean
   langAttribute: boolean
   skipLinkExists: boolean
+  loadingIndicatorExists: boolean
 }
 
 export interface ContentStructure {
@@ -128,6 +129,9 @@ function analyzeAccessibility(html: string): AccessibilityScore {
   const langAttribute = /<html[^>]*lang\s*=/i.test(html)
   const skipLinkExists = /skip[\s-]*(to[\s-]*)?content|skip[\s-]*navigation/i.test(html)
 
+  // 로딩 인디케이터 감지
+  const loadingIndicatorExists = detectLoadingIndicator(html)
+
   // alt 텍스트 비율
   const altTextRatio = imgMatches.length > 0 
     ? imgWithAltMatches.length / imgMatches.length 
@@ -141,8 +145,58 @@ function analyzeAccessibility(html: string): AccessibilityScore {
     ariaLabelCount: ariaLabelMatches.length,
     headingStructure,
     langAttribute,
-    skipLinkExists
+    skipLinkExists,
+    loadingIndicatorExists
   }
+}
+
+/**
+ * 로딩 인디케이터 감지
+ * 스피너, 프로그레스 바, 로딩 상태 표시 등을 다양한 방법으로 탐지
+ */
+function detectLoadingIndicator(html: string): boolean {
+  // 1. ARIA 로딩 속성
+  const hasAriaLoading = 
+    /aria-busy\s*=\s*["']true["']/i.test(html) ||
+    /role\s*=\s*["']status["']/i.test(html) ||
+    /role\s*=\s*["']progressbar["']/i.test(html) ||
+    /aria-live\s*=\s*["'](polite|assertive)["']/i.test(html)
+
+  // 2. HTML5 progress/meter 태그
+  const hasProgressTag = 
+    /<progress[^>]*>/i.test(html) ||
+    /<meter[^>]*>/i.test(html)
+
+  // 3. 로딩 관련 클래스/ID (다양한 패턴)
+  const hasLoadingClass = 
+    /(class|id)\s*=\s*["'][^"']*loading[^"']*["']/i.test(html) ||
+    /(class|id)\s*=\s*["'][^"']*loader[^"']*["']/i.test(html) ||
+    /(class|id)\s*=\s*["'][^"']*spinner[^"']*["']/i.test(html) ||
+    /(class|id)\s*=\s*["'][^"']*progress[^"']*["']/i.test(html) ||
+    /(class|id)\s*=\s*["'][^"']*load[^"']*["']/i.test(html)
+
+  // 4. 로딩 관련 텍스트 (한글/영문)
+  const hasLoadingText = 
+    /로딩\s*중|처리\s*중|잠시만\s*기다려|loading|processing|please\s+wait/i.test(html)
+
+  // 5. CSS 애니메이션 키프레임 (스피너 회전 등)
+  const hasSpinAnimation = 
+    /@keyframes\s+(spin|rotate|loading)/i.test(html) ||
+    /animation\s*:\s*[^;]*(spin|rotate|loading)/i.test(html)
+
+  // 6. Font Awesome 또는 Material Icons 로딩 아이콘
+  const hasLoadingIcon = 
+    /fa-spinner|fa-circle-notch|fa-sync/i.test(html) ||
+    /material-icons[^>]*>\s*(hourglass|sync|autorenew)/i.test(html)
+
+  // 7. 일반적인 로딩 구조 (div/span with loading)
+  const hasLoadingStructure = 
+    /<(div|span)[^>]*(loading|spinner|loader)[^>]*>/i.test(html)
+
+  // 하나라도 발견되면 true
+  return hasAriaLoading || hasProgressTag || hasLoadingClass || 
+         hasLoadingText || hasSpinAnimation || hasLoadingIcon || 
+         hasLoadingStructure
 }
 
 function analyzeContent(html: string): ContentStructure {

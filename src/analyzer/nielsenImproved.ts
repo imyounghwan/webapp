@@ -215,12 +215,12 @@ export function generateImprovedDiagnoses(structure: HTMLStructure, scores: Impr
     },
     
     N1_2_loading_status: {
-      description: accessibility.ariaLabelCount > 3
-        ? `ARIA 레이블 ${accessibility.ariaLabelCount}개가 발견되어 접근성과 상태 피드백이 제공됩니다.`
-        : `ARIA 레이블이 부족하여 스크린 리더 사용자에게 상태 정보가 제한적입니다.`,
-      recommendation: accessibility.ariaLabelCount > 3
-        ? 'ARIA 레이블 ${accessibility. 현재 상태를 유지하세요.'
-        : 'ARIA 레이블이 부족하여 스크린 리더 사용자에게 상태 정보가 제한적입니다 개선이 필요합니다.'
+      description: accessibility.loadingIndicatorExists
+        ? `로딩 인디케이터가 발견되어 사용자에게 처리 상태를 알려줍니다. (스피너, 프로그레스 바, "로딩중" 텍스트 등)`
+        : `로딩 인디케이터를 찾을 수 없습니다. HTML에서 로딩 상태를 알려주는 시각적 표시나 텍스트가 없어 사용자가 페이지 로딩 중인지 파악하기 어렵습니다.`,
+      recommendation: accessibility.loadingIndicatorExists
+        ? '로딩 표시가 잘 구현되어 있습니다. 현재 상태를 유지하세요.'
+        : '페이지 로딩 중이거나 데이터 처리 중일 때 스피너(빙글빙글 도는 아이콘), 프로그레스 바, 또는 "처리중..." 메시지를 추가하여 사용자가 시스템이 작동 중임을 알 수 있도록 개선하세요. ARIA role="status"나 aria-live 속성을 함께 사용하면 스크린 리더 사용자에게도 도움이 됩니다.'
     },
     
     N1_3_action_feedback: {
