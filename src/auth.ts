@@ -61,12 +61,36 @@ export async function authMiddleware(c: Context<{ Bindings: Env }>, next: () => 
 }
 
 /**
- * 관리자 권한 체크 미들웨어
+ * 관리자 권한 체크 미들웨어 (인증 포함)
  */
 export async function adminMiddleware(c: Context<{ Bindings: Env }>, next: () => Promise<void>) {
-  const user = c.get('user') as User | undefined
+  // 먼저 인증 체크
+  const sessionId = c.req.header('X-Session-ID') || c.req.query('session_id')
   
-  if (!user || user.role !== 'admin') {
+  if (!sessionId) {
+    return c.json({ success: false, error: '인증이 필요합니다.' }, 401)
+  }
+
+  const { DB } = c.env
+  const session = await DB.prepare(
+    'SELECT s.*, u.id as user_id, u.email, u.name, u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = ? AND s.expires_at > datetime("now")'
+  ).bind(sessionId).first()
+
+  if (!session) {
+    return c.json({ success: false, error: '유효하지 않은 세션입니다.' }, 401)
+  }
+
+  // 세션 정보를 컨텍스트에 저장
+  const user = {
+    id: session.user_id,
+    email: session.email,
+    name: session.name,
+    role: session.role
+  }
+  c.set('user', user)
+  
+  // 관리자 권한 체크
+  if (user.role !== 'admin') {
     return c.json({ success: false, error: '관리자 권한이 필요합니다.' }, 403)
   }
 
@@ -84,18 +108,18 @@ export function validateEmail(email: string): boolean {
 /**
  * 비밀번호 강도 검증
  */
-export function validatePassword(password: string): { valid: boolean; message?: string } {
+export function validatePassword(password: string): boolean {
   if (password.length < 8) {
-    return { valid: false, message: '비밀번호는 최소 8자 이상이어야 합니다.' }
+    return false
   }
   if (!/[A-Z]/.test(password)) {
-    return { valid: false, message: '비밀번호에 대문자가 포함되어야 합니다.' }
+    return false
   }
   if (!/[a-z]/.test(password)) {
-    return { valid: false, message: '비밀번호에 소문자가 포함되어야 합니다.' }
+    return false
   }
   if (!/[0-9]/.test(password)) {
-    return { valid: false, message: '비밀번호에 숫자가 포함되어야 합니다.' }
+    return false
   }
-  return { valid: true }
+  return true
 }
