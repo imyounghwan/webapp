@@ -33,8 +33,25 @@
             <p class="text-gray-400">평가 보정 데이터 관리 및 학습 데이터 현황</p>
         </div>
 
-        <!-- 통계 카드 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- 탭 네비게이션 -->
+        <div class="mb-6">
+            <div class="flex gap-4 border-b border-white/20">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-button active px-6 py-3 text-white font-semibold border-b-2 border-blue-500 transition-colors">
+                    <i class="fas fa-chart-line mr-2"></i>대시보드
+                </button>
+                <button onclick="switchTab('accounts')" id="tab-accounts" class="tab-button px-6 py-3 text-gray-400 font-semibold border-b-2 border-transparent hover:text-white transition-colors">
+                    <i class="fas fa-users mr-2"></i>계정 관리
+                </button>
+                <button onclick="switchTab('contacts')" id="tab-contacts" class="tab-button px-6 py-3 text-gray-400 font-semibold border-b-2 border-transparent hover:text-white transition-colors">
+                    <i class="fas fa-envelope mr-2"></i>문의 관리
+                </button>
+            </div>
+        </div>
+
+        <!-- 대시보드 탭 -->
+        <div id="content-dashboard" class="tab-content">
+            <!-- 통계 카드 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="text-gray-300 text-sm">총 보정 건수</h3>
@@ -102,7 +119,138 @@
                 </p>
             </div>
         </div>
+        </div>
+
+        <!-- 계정 관리 탭 -->
+        <div id="content-accounts" class="tab-content hidden">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white">계정 목록</h3>
+                    <button onclick="showCreateAccountModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>계정 추가
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-white/20">
+                                <th class="pb-3 text-gray-300 font-semibold">이메일</th>
+                                <th class="pb-3 text-gray-300 font-semibold">이름</th>
+                                <th class="pb-3 text-gray-300 font-semibold">역할</th>
+                                <th class="pb-3 text-gray-300 font-semibold">상태</th>
+                                <th class="pb-3 text-gray-300 font-semibold">생성일</th>
+                                <th class="pb-3 text-gray-300 font-semibold">마지막 로그인</th>
+                                <th class="pb-3 text-gray-300 font-semibold">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsTable">
+                            <tr>
+                                <td colspan="7" class="text-center text-gray-400 py-8">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>계정을 불러오는 중...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 문의 관리 탭 -->
+        <div id="content-contacts" class="tab-content hidden">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white">문의 목록</h3>
+                    <div class="flex gap-2">
+                        <select id="contactStatusFilter" onchange="loadContacts()" class="bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20">
+                            <option value="all">전체</option>
+                            <option value="pending">대기중</option>
+                            <option value="processing">처리중</option>
+                            <option value="completed">완료</option>
+                            <option value="rejected">거절</option>
+                        </select>
+                        <button onclick="loadContacts()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i>새로고침
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-white/20">
+                                <th class="pb-3 text-gray-300 font-semibold">날짜</th>
+                                <th class="pb-3 text-gray-300 font-semibold">회사명</th>
+                                <th class="pb-3 text-gray-300 font-semibold">담당자</th>
+                                <th class="pb-3 text-gray-300 font-semibold">연락처</th>
+                                <th class="pb-3 text-gray-300 font-semibold">이메일</th>
+                                <th class="pb-3 text-gray-300 font-semibold">상태</th>
+                                <th class="pb-3 text-gray-300 font-semibold">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contactsTable">
+                            <tr>
+                                <td colspan="7" class="text-center text-gray-400 py-8">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>문의를 불러오는 중...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <!-- 계정 생성/수정 모달 -->
+    <div id="accountModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onclick="if(event.target === this) closeAccountModal()">
+        <div class="bg-gray-900 rounded-2xl p-8 max-w-md w-full mx-4 border border-white/20">
+            <h3 id="modalTitle" class="text-2xl font-bold text-white mb-6">계정 추가</h3>
+            <form id="accountForm" onsubmit="saveAccount(event)">
+                <input type="hidden" id="accountId" value="">
+                
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">이메일 *</label>
+                    <input type="email" id="accountEmail" required class="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-blue-500 focus:outline-none">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">이름 *</label>
+                    <input type="text" id="accountName" required class="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-blue-500 focus:outline-none">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">비밀번호 <span id="passwordHint" class="text-sm text-gray-400">(8자 이상, 대소문자 + 숫자)</span></label>
+                    <input type="password" id="accountPassword" class="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-blue-500 focus:outline-none">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">역할 *</label>
+                    <select id="accountRole" required class="w-full bg-white/10 text-white px-4 py-2 rounded-lg border border-white/20 focus:border-blue-500 focus:outline-none">
+                        <option value="user">일반 사용자</option>
+                        <option value="admin">관리자</option>
+                    </select>
+                </div>
+                
+                <div id="accountStatusDiv" class="mb-6 hidden">
+                    <label class="flex items-center gap-2 text-gray-300">
+                        <input type="checkbox" id="accountIsActive" class="w-5 h-5">
+                        <span>계정 활성화</span>
+                    </label>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeAccountModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
+                        취소
+                    </button>
+                    <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
+                        저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         let currentUser = null;
@@ -281,6 +429,283 @@
                 localStorage.removeItem('user');
                 window.location.href = '/';
             });
+        }
+
+        // ==================== 탭 전환 ====================
+        function switchTab(tabName) {
+            // 모든 탭 버튼 비활성화
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active', 'border-blue-500', 'text-white');
+                btn.classList.add('text-gray-400', 'border-transparent');
+            });
+            
+            // 선택된 탭 버튼 활성화
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.add('active', 'border-blue-500', 'text-white');
+            activeBtn.classList.remove('text-gray-400', 'border-transparent');
+            
+            // 모든 탭 콘텐츠 숨기기
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // 선택된 탭 콘텐츠 표시
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            
+            // 탭별 데이터 로드
+            if (tabName === 'accounts') {
+                loadAccounts();
+            } else if (tabName === 'contacts') {
+                loadContacts();
+            }
+        }
+
+        // ==================== 계정 관리 ====================
+        async function loadAccounts() {
+            const sessionId = localStorage.getItem('session_id');
+            const tbody = document.getElementById('accountsTable');
+            
+            try {
+                const response = await fetch('/api/admin/accounts', {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                
+                const data = await response.json();
+                
+                if (!data.accounts || data.accounts.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-gray-400 py-8">
+                                계정이 없습니다.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = data.accounts.map(account => {
+                    const isCurrentUser = currentUser && currentUser.id === account.id;
+                    const statusBadge = account.is_active 
+                        ? '<span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">활성</span>'
+                        : '<span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">비활성</span>';
+                    
+                    const roleBadge = account.role === 'admin'
+                        ? '<span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">관리자</span>'
+                        : '<span class="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">사용자</span>';
+                    
+                    return `
+                        <tr class="border-b border-white/10">
+                            <td class="py-3 text-white">${account.email}</td>
+                            <td class="py-3 text-white">${account.name}</td>
+                            <td class="py-3">${roleBadge}</td>
+                            <td class="py-3">${statusBadge}</td>
+                            <td class="py-3 text-gray-400 text-sm">${new Date(account.created_at).toLocaleDateString('ko-KR')}</td>
+                            <td class="py-3 text-gray-400 text-sm">${account.last_login_at ? new Date(account.last_login_at).toLocaleDateString('ko-KR') : '-'}</td>
+                            <td class="py-3">
+                                <div class="flex gap-2">
+                                    <button onclick="editAccount(${account.id}, '${account.email}', '${account.name}', '${account.role}', ${account.is_active})" 
+                                            class="text-blue-400 hover:text-blue-300">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    ${!isCurrentUser ? `
+                                        <button onclick="deleteAccount(${account.id}, '${account.email}')" 
+                                                class="text-red-400 hover:text-red-300">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-red-400 py-8">
+                            계정을 불러오는 중 오류가 발생했습니다.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function showCreateAccountModal() {
+            document.getElementById('modalTitle').textContent = '계정 추가';
+            document.getElementById('accountId').value = '';
+            document.getElementById('accountEmail').value = '';
+            document.getElementById('accountEmail').disabled = false;
+            document.getElementById('accountName').value = '';
+            document.getElementById('accountPassword').value = '';
+            document.getElementById('accountPassword').required = true;
+            document.getElementById('passwordHint').textContent = '(8자 이상, 대소문자 + 숫자) *';
+            document.getElementById('accountRole').value = 'user';
+            document.getElementById('accountStatusDiv').classList.add('hidden');
+            document.getElementById('accountModal').classList.remove('hidden');
+        }
+
+        function editAccount(id, email, name, role, is_active) {
+            document.getElementById('modalTitle').textContent = '계정 수정';
+            document.getElementById('accountId').value = id;
+            document.getElementById('accountEmail').value = email;
+            document.getElementById('accountEmail').disabled = true;
+            document.getElementById('accountName').value = name;
+            document.getElementById('accountPassword').value = '';
+            document.getElementById('accountPassword').required = false;
+            document.getElementById('passwordHint').textContent = '(변경하지 않으려면 비워두세요)';
+            document.getElementById('accountRole').value = role;
+            document.getElementById('accountIsActive').checked = is_active;
+            document.getElementById('accountStatusDiv').classList.remove('hidden');
+            document.getElementById('accountModal').classList.remove('hidden');
+        }
+
+        function closeAccountModal() {
+            document.getElementById('accountModal').classList.add('hidden');
+        }
+
+        async function saveAccount(event) {
+            event.preventDefault();
+            const sessionId = localStorage.getItem('session_id');
+            const id = document.getElementById('accountId').value;
+            const email = document.getElementById('accountEmail').value;
+            const name = document.getElementById('accountName').value;
+            const password = document.getElementById('accountPassword').value;
+            const role = document.getElementById('accountRole').value;
+            const is_active = document.getElementById('accountIsActive').checked;
+            
+            const isEdit = !!id;
+            const url = isEdit ? `/api/admin/accounts/${id}` : '/api/admin/accounts';
+            const method = isEdit ? 'PATCH' : 'POST';
+            
+            const body = { name, role };
+            if (!isEdit) body.email = email;
+            if (password) body.password = password;
+            if (isEdit) body.is_active = is_active;
+            
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-ID': sessionId
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(isEdit ? '계정이 수정되었습니다.' : '계정이 생성되었습니다.');
+                    closeAccountModal();
+                    loadAccounts();
+                } else {
+                    alert('오류: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error saving account:', error);
+                alert('계정 저장 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function deleteAccount(id, email) {
+            if (!confirm(`정말로 ${email} 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+                return;
+            }
+            
+            const sessionId = localStorage.getItem('session_id');
+            
+            try {
+                const response = await fetch(`/api/admin/accounts/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('계정이 삭제되었습니다.');
+                    loadAccounts();
+                } else {
+                    alert('오류: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('계정 삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        // ==================== 문의 관리 ====================
+        async function loadContacts() {
+            const sessionId = localStorage.getItem('session_id');
+            const tbody = document.getElementById('contactsTable');
+            const status = document.getElementById('contactStatusFilter').value;
+            
+            try {
+                const response = await fetch(`/api/admin/contacts?status=${status}&limit=50`, {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                
+                const data = await response.json();
+                
+                if (!data.contacts || data.contacts.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-gray-400 py-8">
+                                문의가 없습니다.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = data.contacts.map(contact => {
+                    const statusColors = {
+                        pending: 'yellow',
+                        processing: 'blue',
+                        completed: 'green',
+                        rejected: 'red'
+                    };
+                    const statusNames = {
+                        pending: '대기중',
+                        processing: '처리중',
+                        completed: '완료',
+                        rejected: '거절'
+                    };
+                    const color = statusColors[contact.status] || 'gray';
+                    const statusBadge = `<span class="px-2 py-1 bg-${color}-500/20 text-${color}-400 rounded text-xs">${statusNames[contact.status] || contact.status}</span>`;
+                    
+                    return `
+                        <tr class="border-b border-white/10 cursor-pointer hover:bg-white/5" onclick="viewContact(${contact.id})">
+                            <td class="py-3 text-gray-400 text-sm">${new Date(contact.created_at).toLocaleDateString('ko-KR')}</td>
+                            <td class="py-3 text-white">${contact.company}</td>
+                            <td class="py-3 text-white">${contact.name}</td>
+                            <td class="py-3 text-gray-400 text-sm">${contact.phone}</td>
+                            <td class="py-3 text-gray-400 text-sm">${contact.email}</td>
+                            <td class="py-3">${statusBadge}</td>
+                            <td class="py-3">
+                                <button onclick="event.stopPropagation(); viewContact(${contact.id})" class="text-blue-400 hover:text-blue-300">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-red-400 py-8">
+                            문의를 불러오는 중 오류가 발생했습니다.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function viewContact(id) {
+            alert('문의 상세 보기 기능은 추후 구현 예정입니다.\n문의 ID: ' + id);
         }
     </script>
 </body>

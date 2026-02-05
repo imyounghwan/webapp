@@ -1576,184 +1576,7 @@ app.post('/api/corrections', async (c) => {
   }
 })
 
-/**
- * 문의하기 이메일 발송 API
- * POST /api/contact
- */
-app.post('/api/contact', async (c) => {
-  try {
-    const body = await c.req.json()
-    
-    const {
-      company,
-      position,
-      name,
-      phone,
-      email,
-      url,
-      project_types,
-      message,
-      budget,
-      schedule
-    } = body
-    
-    // 이메일 제목
-    const emailSubject = `[AutoAnalyzer] ${company} - 프로젝트 문의`
-    
-    // 이메일 본문 생성 (HTML)
-    const emailHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: 'Noto Sans KR', sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #0066FF 0%, #00C9A7 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-    .section { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-    .section-title { font-weight: bold; color: #0066FF; margin-bottom: 10px; border-bottom: 2px solid #0066FF; padding-bottom: 5px; }
-    .info-row { margin: 8px 0; }
-    .label { display: inline-block; width: 140px; font-weight: 600; color: #555; }
-    .value { color: #333; }
-    .message-box { background: white; padding: 15px; border-left: 4px solid #00C9A7; border-radius: 4px; }
-    .footer { text-align: center; color: #888; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h2 style="margin: 0;">🚀 MGINE AutoAnalyzer 프로젝트 문의</h2>
-    </div>
-    
-    <div class="section">
-      <div class="section-title">👤 의뢰인 정보</div>
-      <div class="info-row"><span class="label">회사명</span><span class="value">${company}</span></div>
-      <div class="info-row"><span class="label">직위</span><span class="value">${position || '-'}</span></div>
-      <div class="info-row"><span class="label">이름</span><span class="value">${name}</span></div>
-      <div class="info-row"><span class="label">연락처</span><span class="value">${phone}</span></div>
-      <div class="info-row"><span class="label">이메일</span><span class="value"><a href="mailto:${email}">${email}</a></span></div>
-      <div class="info-row"><span class="label">웹사이트</span><span class="value">${url || '-'}</span></div>
-    </div>
-    
-    <div class="section">
-      <div class="section-title">📋 프로젝트 정보</div>
-      <div class="info-row"><span class="label">희망 프로젝트 형태</span><span class="value">${project_types?.join(', ') || '-'}</span></div>
-      <div class="info-row"><span class="label">프로젝트 예산</span><span class="value">${budget || '-'}</span></div>
-      <div class="info-row"><span class="label">프로젝트 일정</span><span class="value">${schedule || '-'}</span></div>
-    </div>
-    
-    <div class="section">
-      <div class="section-title">💬 의뢰 내용</div>
-      <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
-    </div>
-    
-    <div class="footer">
-      이 메일은 MGINE AutoAnalyzer 홈페이지(https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai)에서 자동 발송되었습니다.<br>
-      발신 시간: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}<br>
-      © 2026 MGINE Interactive. All rights reserved.
-    </div>
-  </div>
-</body>
-</html>
-    `.trim()
-    
-    // Resend API를 fetch로 직접 호출 (Cloudflare Workers 호환)
-    const resendApiKey = c.env.RESEND_API_KEY
-    
-    // API 키가 없으면 로그만 남기고 성공 응답
-    if (!resendApiKey || resendApiKey === 're_YOUR_API_KEY_HERE') {
-      console.log('⚠️ Resend API key not configured. Email not sent.')
-      console.log('Contact form data:', {
-        company,
-        name,
-        email,
-        phone,
-        message,
-        timestamp: new Date().toISOString()
-      })
-      
-      return c.json({
-        success: true,
-        message: '문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다.',
-        data: {
-          company,
-          name,
-          email,
-          timestamp: new Date().toISOString()
-        },
-        warning: 'Email API key not configured. Contact saved to logs.'
-      })
-    }
-    
-    try {
-      // Resend API 호출 (fetch 사용)
-      const emailResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'AutoAnalyzer <onboarding@resend.dev>',
-          to: ['ceo@mgine.co.kr'],
-          reply_to: email,
-          subject: emailSubject,
-          html: emailHTML
-        })
-      })
-      
-      const result = await emailResponse.json()
-      
-      if (!emailResponse.ok) {
-        throw new Error(`Resend API error: ${JSON.stringify(result)}`)
-      }
-      
-      console.log('✅ Email sent successfully:', result)
-      
-      return c.json({
-        success: true,
-        message: '문의가 성공적으로 접수되었습니다. 빠른 시일 내에 담당자가 연락드리겠습니다.',
-        data: {
-          company,
-          name,
-          email,
-          timestamp: new Date().toISOString(),
-          emailId: result.id
-        }
-      })
-      
-    } catch (emailError) {
-      console.error('❌ Resend email error:', emailError)
-      
-      // 이메일 발송 실패 시에도 폼 제출은 성공으로 처리 (로그는 남김)
-      console.log('Contact form data saved to logs:', {
-        company,
-        name,
-        email,
-        timestamp: new Date().toISOString()
-      })
-      
-      return c.json({
-        success: true,
-        message: '문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다.',
-        data: {
-          company,
-          name,
-          email,
-          timestamp: new Date().toISOString()
-        },
-        warning: '이메일 발송에 일시적인 문제가 있을 수 있습니다.'
-      })
-    }
-    
-  } catch (error) {
-    console.error('Error processing contact form:', error)
-    return c.json({ 
-      success: false,
-      error: 'Failed to process contact form' 
-    }, 500)
-  }
-})
+
 
 /**
  * 특정 URL의 수정 이력 조회 API
@@ -2337,6 +2160,367 @@ app.get('/api/krds/learning-summary', async (c) => {
   } catch (error: any) {
     console.error('Error fetching KRDS learning summary:', error)
     return c.json({ error: 'Failed to fetch learning summary' }, 500)
+  }
+})
+
+// ==================== Contact Form API ====================
+// 문의하기 폼 제출
+app.post('/api/contact', async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ success: false, error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const body = await c.req.json()
+    const {
+      company,
+      position,
+      name,
+      phone,
+      email,
+      url,
+      project_type, // 배열
+      message,
+      budget,
+      schedule,
+      privacy_agreed
+    } = body
+    
+    // 필수 항목 검증
+    if (!company || !name || !phone || !email || !message || !privacy_agreed) {
+      return c.json({ 
+        success: false, 
+        error: '필수 항목을 모두 입력해주세요.' 
+      }, 400)
+    }
+    
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return c.json({ 
+        success: false, 
+        error: '올바른 이메일 형식이 아닙니다.' 
+      }, 400)
+    }
+    
+    // 전화번호 검증 (숫자와 하이픈만)
+    const phoneRegex = /^[0-9-]+$/
+    if (!phoneRegex.test(phone)) {
+      return c.json({ 
+        success: false, 
+        error: '올바른 전화번호 형식이 아닙니다.' 
+      }, 400)
+    }
+    
+    // 프로젝트 타입 배열을 문자열로 변환
+    const projectTypeStr = Array.isArray(project_type) 
+      ? project_type.join(', ') 
+      : project_type || ''
+    
+    // 데이터베이스에 저장
+    await db.prepare(`
+      INSERT INTO contact_inquiries (
+        company, position, name, phone, email, url,
+        project_type, message, budget, schedule,
+        privacy_agreed, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))
+    `).bind(
+      company,
+      position || null,
+      name,
+      phone,
+      email,
+      url || null,
+      projectTypeStr,
+      message,
+      budget || null,
+      schedule || null,
+      privacy_agreed ? 1 : 0
+    ).run()
+    
+    return c.json({ 
+      success: true, 
+      message: '문의가 성공적으로 접수되었습니다.' 
+    })
+    
+  } catch (error: any) {
+    console.error('Contact form error:', error)
+    return c.json({ 
+      success: false, 
+      error: '문의 접수 중 오류가 발생했습니다.' 
+    }, 500)
+  }
+})
+
+// 문의 목록 조회 (관리자 전용)
+app.get('/api/admin/contacts', adminMiddleware, async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const { page = '1', limit = '20', status = 'all' } = c.req.query()
+    const pageNum = parseInt(page)
+    const limitNum = parseInt(limit)
+    const offset = (pageNum - 1) * limitNum
+    
+    let query = `SELECT * FROM contact_inquiries`
+    let countQuery = `SELECT COUNT(*) as total FROM contact_inquiries`
+    
+    if (status !== 'all') {
+      query += ` WHERE status = ?`
+      countQuery += ` WHERE status = ?`
+    }
+    
+    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    
+    // 데이터 조회
+    const stmt = status !== 'all' 
+      ? db.prepare(query).bind(status, limitNum, offset)
+      : db.prepare(query).bind(limitNum, offset)
+    
+    const countStmt = status !== 'all'
+      ? db.prepare(countQuery).bind(status)
+      : db.prepare(countQuery)
+    
+    const [contactsResult, countResult] = await Promise.all([
+      stmt.all(),
+      countStmt.first()
+    ])
+    
+    return c.json({
+      contacts: contactsResult.results,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: countResult?.total || 0,
+        totalPages: Math.ceil((countResult?.total || 0) / limitNum)
+      }
+    })
+    
+  } catch (error: any) {
+    console.error('Error fetching contacts:', error)
+    return c.json({ error: 'Failed to fetch contacts' }, 500)
+  }
+})
+
+// 문의 상태 업데이트 (관리자 전용)
+app.patch('/api/admin/contacts/:id', adminMiddleware, async (c) => {
+  const db = c.env.DB
+  const { id } = c.req.param()
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const { status, admin_note } = await c.req.json()
+    
+    if (!['pending', 'processing', 'completed', 'rejected'].includes(status)) {
+      return c.json({ error: 'Invalid status' }, 400)
+    }
+    
+    await db.prepare(`
+      UPDATE contact_inquiries 
+      SET status = ?, admin_note = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(status, admin_note || null, id).run()
+    
+    return c.json({ success: true, message: 'Contact status updated' })
+    
+  } catch (error: any) {
+    console.error('Error updating contact:', error)
+    return c.json({ error: 'Failed to update contact' }, 500)
+  }
+})
+
+// ==================== Admin Account Management API ====================
+// 관리자 계정 목록 조회
+app.get('/api/admin/accounts', adminMiddleware, async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const result = await db.prepare(`
+      SELECT id, email, name, role, is_active, created_at, last_login_at
+      FROM users
+      ORDER BY created_at DESC
+    `).all()
+    
+    return c.json({ accounts: result.results })
+    
+  } catch (error: any) {
+    console.error('Error fetching accounts:', error)
+    return c.json({ error: 'Failed to fetch accounts' }, 500)
+  }
+})
+
+// 관리자 계정 생성
+app.post('/api/admin/accounts', adminMiddleware, async (c) => {
+  const db = c.env.DB
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const { email, password, name, role } = await c.req.json()
+    
+    // 유효성 검증
+    if (!email || !password || !name || !role) {
+      return c.json({ error: 'All fields are required' }, 400)
+    }
+    
+    if (!validateEmail(email)) {
+      return c.json({ error: 'Invalid email format' }, 400)
+    }
+    
+    if (!validatePassword(password)) {
+      return c.json({ 
+        error: 'Password must be at least 8 characters with uppercase, lowercase, and number' 
+      }, 400)
+    }
+    
+    if (!['user', 'admin'].includes(role)) {
+      return c.json({ error: 'Invalid role' }, 400)
+    }
+    
+    // 이메일 중복 확인
+    const existing = await db.prepare(`
+      SELECT id FROM users WHERE email = ?
+    `).bind(email).first()
+    
+    if (existing) {
+      return c.json({ error: 'Email already exists' }, 400)
+    }
+    
+    // 비밀번호 해시
+    const passwordHash = await hashPassword(password)
+    
+    // 계정 생성
+    await db.prepare(`
+      INSERT INTO users (email, password_hash, name, role, is_active, created_at)
+      VALUES (?, ?, ?, ?, 1, datetime('now'))
+    `).bind(email, passwordHash, name, role).run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'Account created successfully' 
+    })
+    
+  } catch (error: any) {
+    console.error('Error creating account:', error)
+    return c.json({ error: 'Failed to create account' }, 500)
+  }
+})
+
+// 관리자 계정 수정
+app.patch('/api/admin/accounts/:id', adminMiddleware, async (c) => {
+  const db = c.env.DB
+  const { id } = c.req.param()
+  
+  if (!db) {
+    return c.json({ error: 'Database not configured' }, 500)
+  }
+  
+  try {
+    const { name, role, is_active, password } = await c.req.json()
+    
+    // 기본 정보 업데이트
+    if (name || role !== undefined || is_active !== undefined) {
+      const updates: string[] = []
+      const bindings: any[] = []
+      
+      if (name) {
+        updates.push('name = ?')
+        bindings.push(name)
+      }
+      if (role && ['user', 'admin'].includes(role)) {
+        updates.push('role = ?')
+        bindings.push(role)
+      }
+      if (is_active !== undefined) {
+        updates.push('is_active = ?')
+        bindings.push(is_active ? 1 : 0)
+      }
+      
+      bindings.push(id)
+      
+      await db.prepare(`
+        UPDATE users SET ${updates.join(', ')} WHERE id = ?
+      `).bind(...bindings).run()
+    }
+    
+    // 비밀번호 변경
+    if (password) {
+      if (!validatePassword(password)) {
+        return c.json({ 
+          error: 'Password must be at least 8 characters with uppercase, lowercase, and number' 
+        }, 400)
+      }
+      
+      const passwordHash = await hashPassword(password)
+      await db.prepare(`
+        UPDATE users SET password_hash = ? WHERE id = ?
+      `).bind(passwordHash, id).run()
+    }
+    
+    return c.json({ 
+      success: true, 
+      message: 'Account updated successfully' 
+    })
+    
+  } catch (error: any) {
+    console.error('Error updating account:', error)
+    return c.json({ error: 'Failed to update account' }, 500)
+  }
+})
+
+// 관리자 계정 삭제
+app.delete('/api/admin/accounts/:id', adminMiddleware, async (c) => {
+  const db = c.env.DB
+  const { id } = c.req.param()
+  const sessionId = c.req.header('X-Session-ID')
+  
+  if (!db || !sessionId) {
+    return c.json({ error: 'Database not configured or session missing' }, 500)
+  }
+  
+  try {
+    // 현재 로그인한 사용자 확인
+    const session = await db.prepare(`
+      SELECT user_id FROM sessions WHERE id = ? AND expires_at > datetime('now')
+    `).bind(sessionId).first()
+    
+    if (!session) {
+      return c.json({ error: 'Invalid session' }, 401)
+    }
+    
+    // 자기 자신을 삭제하려는지 확인
+    if (session.user_id.toString() === id) {
+      return c.json({ error: 'Cannot delete your own account' }, 400)
+    }
+    
+    // 계정 삭제 (세션도 함께 삭제됨 - CASCADE)
+    await db.prepare(`
+      DELETE FROM users WHERE id = ?
+    `).bind(id).run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'Account deleted successfully' 
+    })
+    
+  } catch (error: any) {
+    console.error('Error deleting account:', error)
+    return c.json({ error: 'Failed to delete account' }, 500)
   }
 })
 
