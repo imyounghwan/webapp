@@ -224,12 +224,12 @@ export function generateImprovedDiagnoses(structure: HTMLStructure, scores: Impr
     },
     
     N1_3_action_feedback: {
-      description: forms.validationExists
-        ? `폼 검증 기능이 있어 사용자 입력에 대한 즉각적인 피드백을 제공합니다.`
-        : `폼 검증이 없어 사용자가 입력 결과를 즉시 확인하기 어렵습니다.`,
-      recommendation: forms.validationExists
-        ? '폼 검증 기능이 있어 사용자 입력에 대한 즉각적인 피드백을 제공합니다. 현재 상태를 유지하세요.'
-        : '폼 검증이 없어 사용자가 입력 결과를 즉시 확인하기 어렵습니다 개선이 필요합니다.'
+      description: forms.interactiveFeedbackExists
+        ? `사용자 행동에 대한 즉각적인 피드백이 구현되어 있습니다. 버튼 호버 효과, 클릭 반응, 폼 입력 피드백 등이 발견되었습니다.`
+        : `사용자 행동에 대한 시각적 피드백을 찾을 수 없습니다. HTML/CSS에서 호버 효과(:hover), 포커스 스타일(:focus), 클릭 반응(:active), 또는 폼 검증 피드백이 없어 사용자가 자신의 행동에 대한 즉각적인 반응을 확인하기 어렵습니다.`,
+      recommendation: forms.interactiveFeedbackExists
+        ? '사용자 행동에 대한 피드백이 잘 구현되어 있습니다. 현재 상태를 유지하세요.'
+        : `다음과 같은 피드백 메커니즘을 추가하세요:\n\n1. **버튼/링크 호버 효과**: CSS :hover로 색상 변화, 밑줄, 그림자 효과 추가\n   예: button:hover { background-color: #0056b3; transform: scale(1.05); }\n\n2. **포커스 스타일**: 키보드 사용자를 위한 :focus 스타일 추가\n   예: button:focus { outline: 2px solid #007bff; }\n\n3. **클릭 반응**: :active로 버튼 눌림 효과 추가\n   예: button:active { transform: scale(0.95); }\n\n4. **폼 입력 피드백**: required, pattern 속성과 :valid/:invalid 스타일 추가\n   예: input:invalid { border-color: red; }\n\n5. **실시간 에러 메시지**: JavaScript로 입력 오류 즉시 표시`
     },
     
     N2_1_familiar_terms: {

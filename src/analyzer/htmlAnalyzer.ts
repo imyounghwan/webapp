@@ -42,6 +42,7 @@ export interface FormStructure {
   inputCount: number
   labelRatio: number
   validationExists: boolean
+  interactiveFeedbackExists: boolean  // 호버/포커스/클릭 피드백 존재 여부
 }
 
 export interface VisualStructure {
@@ -199,6 +200,56 @@ function detectLoadingIndicator(html: string): boolean {
          hasLoadingStructure
 }
 
+/**
+ * 상호작용 피드백 감지 (호버/포커스/클릭 반응)
+ * 버튼, 링크, 폼 요소 등에 대한 시각적 피드백 존재 여부 확인
+ */
+function detectInteractiveFeedback(html: string): boolean {
+  // 1. CSS 호버 효과 (:hover 스타일)
+  const hasHoverEffect = 
+    /:hover/i.test(html) ||
+    /\.hover|--hover|_hover/i.test(html)  // Tailwind/BEM 네이밍 패턴
+
+  // 2. CSS 포커스 효과 (:focus, :focus-visible)
+  const hasFocusEffect = 
+    /:focus/i.test(html) ||
+    /focus-visible|focus-within/i.test(html)
+
+  // 3. CSS 액티브 효과 (:active, 클릭 시 반응)
+  const hasActiveEffect = 
+    /:active/i.test(html) ||
+    /\.active|--active|_active/i.test(html)
+
+  // 4. JavaScript 이벤트 리스너 (onclick, onmouseover 등)
+  const hasJSInteraction = 
+    /on(click|mouseover|mouseenter|focus|blur)/i.test(html) ||
+    /addEventListener\s*\(\s*['"](click|mouseover|mouseenter|focus|blur)/i.test(html)
+
+  // 5. 폼 검증 스타일 (:valid, :invalid, .error, .success)
+  const hasValidationFeedback = 
+    /:valid|:invalid/i.test(html) ||
+    /(class|id)\s*=\s*["'][^"']*(error|success|valid|invalid)[^"']*["']/i.test(html)
+
+  // 6. 인터랙티브 요소 존재 여부 (버튼, 링크, input)
+  const hasInteractiveElements = 
+    /<button[^>]*>/i.test(html) ||
+    /<a[^>]*href/i.test(html) ||
+    /<input[^>]*type\s*=\s*["'](button|submit|checkbox|radio)["']/i.test(html)
+
+  // 7. transition/animation 효과 (상호작용 시 애니메이션)
+  const hasTransition = 
+    /transition\s*:/i.test(html) ||
+    /transform\s*:/i.test(html)
+
+  // 인터랙티브 요소가 있고, 피드백 메커니즘이 하나라도 있으면 true
+  if (!hasInteractiveElements) {
+    return false  // 인터랙티브 요소 자체가 없으면 false
+  }
+
+  return hasHoverEffect || hasFocusEffect || hasActiveEffect || 
+         hasJSInteraction || hasValidationFeedback || hasTransition
+}
+
 function analyzeContent(html: string): ContentStructure {
   const headingCount = (html.match(/<h[1-6][^>]*>/gi) || []).length
   const paragraphCount = (html.match(/<p[^>]*>/gi) || []).length
@@ -218,6 +269,7 @@ function analyzeForms(html: string): FormStructure {
   const inputMatches = html.match(/<input[^>]*>/gi) || []
   const labelMatches = html.match(/<label[^>]*>/gi) || []
   const validationExists = /required|pattern|minlength|maxlength/i.test(html)
+  const interactiveFeedbackExists = detectInteractiveFeedback(html)
 
   const labelRatio = inputMatches.length > 0 
     ? labelMatches.length / inputMatches.length 
@@ -227,7 +279,8 @@ function analyzeForms(html: string): FormStructure {
     formCount: formMatches.length,
     inputCount: inputMatches.length,
     labelRatio,
-    validationExists
+    validationExists,
+    interactiveFeedbackExists
   }
 }
 
