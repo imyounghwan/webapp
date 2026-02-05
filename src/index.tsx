@@ -1889,50 +1889,6 @@ app.post('/api/weight-suggestions/apply', async (c) => {
  * 회원가입 API
  * POST /api/auth/signup
  */
-app.post('/api/auth/signup', async (c) => {
-  try {
-    const { DB } = c.env
-    const { email, password, name } = await c.req.json() as SignupRequest
-
-    // 입력 검증
-    if (!validateEmail(email)) {
-      return c.json({ success: false, error: '유효하지 않은 이메일 형식입니다.' }, 400)
-    }
-
-    const passwordValidation = validatePassword(password)
-    if (!passwordValidation.valid) {
-      return c.json({ success: false, error: passwordValidation.message }, 400)
-    }
-
-    if (!name || name.trim().length < 2) {
-      return c.json({ success: false, error: '이름은 최소 2자 이상이어야 합니다.' }, 400)
-    }
-
-    // 이메일 중복 체크
-    const existingUser = await DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first()
-    if (existingUser) {
-      return c.json({ success: false, error: '이미 사용 중인 이메일입니다.' }, 400)
-    }
-
-    // 비밀번호 해시
-    const passwordHash = await hashPassword(password)
-
-    // 사용자 생성
-    const result = await DB.prepare(
-      'INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)'
-    ).bind(email, passwordHash, name.trim(), 'user').run()
-
-    return c.json({
-      success: true,
-      message: '회원가입이 완료되었습니다.',
-      user_id: result.meta.last_row_id
-    })
-  } catch (error) {
-    console.error('Signup error:', error)
-    return c.json({ success: false, error: '회원가입 처리 중 오류가 발생했습니다.' }, 500)
-  }
-})
-
 /**
  * 로그인 API
  * POST /api/auth/login
