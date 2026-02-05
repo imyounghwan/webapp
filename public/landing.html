@@ -1169,10 +1169,11 @@
                 phone: formData.get('phone'),
                 email: formData.get('email'),
                 url: formData.get('url'),
-                project_types: projectTypes,
+                project_type: projectTypes,
                 message: formData.get('message'),
                 budget: formData.get('budget'),
-                schedule: formData.get('schedule')
+                schedule: formData.get('schedule'),
+                privacy_agreed: formData.get('privacy') === 'on' ? true : false
             };
             
             try {
