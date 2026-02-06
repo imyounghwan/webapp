@@ -26,7 +26,7 @@ import testFeedbackHTML from '../public/test_feedback.html?raw'
 
 const app = new Hono<{ Bindings: Env }>()
 
-// 피드백 데이터 저장소 (메모리 기반 - 추후 D1/KV로 이전)
+// 피드백 데이터 저장소 (메모리 기반 - D1으로 이전 완료)
 // key: item_id, value: 피드백 데이터 배열
 const feedbackStore: Map<string, Array<{
   url: string;
@@ -37,6 +37,83 @@ const feedbackStore: Map<string, Array<{
   new_recommendation?: string;
   timestamp: string;
 }>> = new Map()
+
+// D1 피드백 로드 완료 플래그 (서버리스 환경에서 중복 로드 방지)
+let feedbackLoaded = false
+
+// D1에서 피드백 데이터 로드 함수
+async function loadFeedbackFromD1(db: D1Database, itemId?: string) {
+  try {
+    let query
+    if (itemId) {
+      // 특정 항목의 피드백만 로드
+      query = db.prepare('SELECT * FROM feedbacks WHERE item_id = ? ORDER BY timestamp DESC').bind(itemId)
+    } else {
+      // 모든 피드백 로드
+      query = db.prepare('SELECT * FROM feedbacks ORDER BY timestamp DESC')
+    }
+    
+    const result = await query.all()
+    
+    if (result.results && result.results.length > 0) {
+      // feedbackStore에 로드
+      feedbackStore.clear()
+      result.results.forEach((row: any) => {
+        if (!feedbackStore.has(row.item_id)) {
+          feedbackStore.set(row.item_id, [])
+        }
+        feedbackStore.get(row.item_id)!.push({
+          url: row.url,
+          original_score: row.original_score,
+          new_score: row.new_score,
+          score_delta: row.score_delta,
+          new_description: row.new_description || undefined,
+          new_recommendation: row.new_recommendation || undefined,
+          timestamp: row.timestamp
+        })
+      })
+      console.log(`[Feedback] Loaded ${result.results.length} feedback(s) from D1`)
+    }
+  } catch (error) {
+    console.error('[Feedback] Failed to load from D1:', error)
+  }
+}
+
+// D1에 피드백 데이터 저장 함수
+async function saveFeedbackToD1(db: D1Database, feedback: {
+  item_id: string
+  url: string
+  original_score: number
+  new_score: number
+  score_delta: number
+  new_description?: string
+  new_recommendation?: string
+  timestamp: string
+}) {
+  try {
+    await db.prepare(`
+      INSERT INTO feedbacks (
+        item_id, url, original_score, new_score, score_delta,
+        new_description, new_recommendation, timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      feedback.item_id,
+      feedback.url,
+      feedback.original_score,
+      feedback.new_score,
+      feedback.score_delta,
+      feedback.new_description || null,
+      feedback.new_recommendation || null,
+      feedback.timestamp
+    ).run()
+    
+    console.log(`[Feedback] Saved to D1: ${feedback.item_id} for ${feedback.url}`)
+    return true
+  } catch (error) {
+    console.error('[Feedback] Failed to save to D1:', error)
+    return false
+  }
+}
 
 // 피드백 데이터 기반 점수 조정 함수
 function applyFeedbackAdjustment(itemId: string, baseScore: number, url: string): number {
@@ -707,8 +784,21 @@ app.post('/api/feedback', authMiddleware, async (c) => {
     
     console.log(`[Feedback] Stored in memory: ${item_id} now has ${itemFeedbacks.length} feedback(s)`)
     
-    // TODO: Cloudflare D1 또는 KV에 저장
-    // await c.env.DB.prepare('INSERT INTO feedback ...').bind(...).run()
+    // D1 데이터베이스에 피드백 저장
+    if (c.env.DB) {
+      await saveFeedbackToD1(c.env.DB, {
+        item_id,
+        url,
+        original_score,
+        new_score,
+        score_delta: new_score - (original_score || 0),
+        new_description,
+        new_recommendation,
+        timestamp: new Date().toISOString()
+      })
+    } else {
+      console.warn('[Feedback] DB binding not available, skipping D1 save')
+    }
     
     // 피드백 저장 성공 응답
     return c.json({ 
@@ -727,6 +817,12 @@ app.post('/api/feedback', authMiddleware, async (c) => {
 // 실시간 URL 분석 API
 app.post('/api/analyze', authMiddleware, async (c) => {
   try {
+    // D1에서 피드백 데이터 로드 (첫 요청 시 한 번만)
+    if (!feedbackLoaded && c.env.DB) {
+      await loadFeedbackFromD1(c.env.DB)
+      feedbackLoaded = true
+    }
+    
     const { url, urls, mode = 'mgine', usePuppeteer = false, useAI = false } = await c.req.json()
 
     // urls 배열이 제공된 경우 (사용자 직접 선별)
