@@ -421,7 +421,7 @@ function displayResults(data, resultElement) {
     // ✅ 재분석 시에는 백엔드에서 이미 피드백이 적용된 점수를 받으므로 localStorage 점수를 사용하지 않음
     // localStorage는 수정 후 재분석 전까지만 임시로 사용됨
     
-    let convenienceHTML = '<h3 style="color:#00C9A7;font-size:24px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
+    let convenienceHTML = '<h3 style="color:#00C9A7;font-size:24px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid #00C9A7;">📊 편의성 항목 (22개)</h3>';
     convenienceItemsList.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-conv-${itemIndex}`;
@@ -527,7 +527,7 @@ function displayResults(data, resultElement) {
         console.error('❌ localStorage 점수 로드 실패 (디자인):', e);
     }
     
-    let designHTML = '<h3 style="color:#9333EA;font-size:24px;font-weight:800;margin-bottom:25px;margin-top:50px;padding-bottom:15px;border-bottom:3px solid #9333EA;">🎨 디자인 항목 (5개)</h3>';
+    let designHTML = '<h3 style="color:#9333EA;font-size:24px;font-weight:800;margin-bottom:25px;margin-top:50px;padding-bottom:15px;border-bottom:3px solid #9333EA;">🎨 디자인 항목 (4개)</h3>';
     designItemsList.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
         const itemId = `item-design-${itemIndex}`;
