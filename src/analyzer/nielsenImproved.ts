@@ -626,30 +626,110 @@ button:active {
     })(),
     
     N2_1_familiar_terms: {
-      description: accessibility.langAttribute
-        ? `HTML lang 속성이 설정되어 언어 친화적 환경을 제공합니다.`
-        : `lang 속성이 없어 브라우저가 자동 번역 등의 기능을 제공하기 어렵습니다.`,
-      recommendation: accessibility.langAttribute
-        ? 'HTML lang 속성이 설정되어 언어 친화적 환경을 제공합니다. 현재 상태를 유지하세요.'
-        : 'lang 속성이 없어 브라우저가 자동 번역 등의 기능을 제공하기 어렵습니다 개선이 필요합니다.'
+      description: (() => {
+        const rwm = structure.realWorldMatch
+        const lf = rwm.languageFriendliness
+        
+        if (lf.score >= 8) {
+          return `✅ 친숙한 용어 사용: 전문용어 밀도 ${lf.jargonDensity}%, 평균 문장 길이 ${lf.avgSentenceLength}단어로 이해하기 쉽습니다.`
+        } else if (lf.score >= 6) {
+          return `😊 대체로 친숙한 용어: 전문용어 밀도 ${lf.jargonDensity}%, 평균 문장 길이 ${lf.avgSentenceLength}단어입니다.`
+        } else if (lf.score >= 4) {
+          return `⚠️ 다소 어려운 용어: 전문용어 밀도 ${lf.jargonDensity}%, 평균 문장 길이 ${lf.avgSentenceLength}단어로 개선 여지가 있습니다.`
+        } else {
+          return `❌ 어려운 전문용어 과다: 전문용어 밀도 ${lf.jargonDensity}%, 평균 문장 길이 ${lf.avgSentenceLength}단어로 일반 사용자가 이해하기 어렵습니다.`
+        }
+      })(),
+      recommendation: (() => {
+        const rwm = structure.realWorldMatch
+        const lf = rwm.languageFriendliness
+        
+        if (lf.score >= 6) {
+          return '현재 상태를 유지하세요. 사용자 친화적인 언어를 잘 사용하고 있습니다.'
+        } else {
+          const suggestions = []
+          if (lf.jargonDensity > 5) {
+            suggestions.push('전문용어를 일상적 표현으로 바꾸세요 (예: "솔루션" → "해결책", "프로세스" → "절차")')
+          }
+          if (lf.avgSentenceLength > 25) {
+            suggestions.push('긴 문장을 짧게 나누세요 (목표: 10-20단어)')
+          }
+          if (suggestions.length === 0) {
+            suggestions.push('친숙한 용어를 더 많이 사용하여 가독성을 높이세요')
+          }
+          return suggestions.join('. ') + '.'
+        }
+      })()
     },
     
     N2_2_natural_flow: {
-      description: content.headingCount >= 3
-        ? `헤딩 ${content.headingCount}개로 자연스러운 문서 구조를 형성합니다.`
-        : `헤딩이 부족하여 콘텐츠 흐름이 명확하지 않습니다.`,
-      recommendation: content.headingCount >= 3
-        ? '현재 상태를 유지하세요.'
-        : '헤딩이 부족하여 콘텐츠 흐름이 명확하지 않습니다 개선이 필요합니다.'
+      description: (() => {
+        const rwm = structure.realWorldMatch
+        const dn = rwm.dataNaturalness
+        
+        if (dn.score >= 8) {
+          return `✅ 자연스러운 데이터 표현: 자연스러운 표현 비율 ${dn.naturalRatio}%로 현실 세계 표현을 잘 활용합니다.`
+        } else if (dn.score >= 6) {
+          return `😊 대체로 자연스러움: 자연스러운 표현 비율 ${dn.naturalRatio}%입니다.`
+        } else if (dn.score >= 4) {
+          return `⚠️ 시스템 데이터 노출: 자연스러운 표현 비율 ${dn.naturalRatio}%로 개선 필요합니다.`
+        } else {
+          return `❌ 부자연스러운 시스템 코드: 원시 데이터 ${dn.rawDataCount}개가 그대로 노출되어 있습니다.`
+        }
+      })(),
+      recommendation: (() => {
+        const rwm = structure.realWorldMatch
+        const dn = rwm.dataNaturalness
+        
+        if (dn.score >= 6) {
+          return '현재 상태를 유지하세요. 데이터를 자연스럽게 표현하고 있습니다.'
+        } else {
+          const suggestions = []
+          if (dn.rawDataCount > 10) {
+            suggestions.push('시스템 코드를 숨기고 사용자 친화적으로 표현하세요 (예: "20240206" → "2024년 2월 6일")')
+          }
+          suggestions.push('큰 숫자에 콤마를 추가하세요 (예: "1000000" → "1,000,000")')
+          suggestions.push('ISO 날짜를 한국식으로 표현하세요')
+          return suggestions.join('. ') + '.'
+        }
+      })()
     },
     
     N2_3_real_world_metaphor: {
-      description: visuals.iconCount > 5
-        ? `아이콘 ${visuals.iconCount}개가 실제 세계의 은유를 효과적으로 사용합니다.`
-        : `아이콘이 부족하여 시각적 은유가 제한적입니다.`,
-      recommendation: visuals.iconCount > 5
-        ? '현재 상태를 유지하세요.'
-        : '아이콘이 부족하여 시각적 은유가 제한적입니다 개선이 필요합니다.'
+      description: (() => {
+        const rwm = structure.realWorldMatch
+        const inf = rwm.interfaceFriendliness
+        
+        if (inf.score >= 8) {
+          return `✅ 현실 은유 활용: 행동 중심 동사 ${inf.actionWords}개, 현실 은유 ${inf.metaphors}개로 직관적입니다.`
+        } else if (inf.score >= 6) {
+          return `😊 대체로 직관적: 행동 중심 동사 ${inf.actionWords}개, 현실 은유 ${inf.metaphors}개 사용.`
+        } else if (inf.score >= 4) {
+          return `⚠️ 시스템 중심 언어 과다: 시스템 용어 ${inf.systemWords}개, 사용자 중심 표현 부족.`
+        } else {
+          return `❌ 비직관적 인터페이스: 현실 은유 ${inf.metaphors}개로 매우 부족, 시스템 용어 ${inf.systemWords}개로 과다.`
+        }
+      })(),
+      recommendation: (() => {
+        const rwm = structure.realWorldMatch
+        const inf = rwm.interfaceFriendliness
+        
+        if (inf.score >= 6) {
+          return '현재 상태를 유지하세요. 현실 세계 은유를 잘 활용하고 있습니다.'
+        } else {
+          const suggestions = []
+          if (inf.actionWords < 5) {
+            suggestions.push('명확한 행동 동사를 사용하세요 (예: "제출", "저장", "검색")')
+          }
+          if (inf.metaphors < 3) {
+            suggestions.push('현실 세계 은유를 활용하세요 (예: "장바구니", "폴더", "휴지통")')
+          }
+          if (inf.systemWords > 5) {
+            suggestions.push('시스템 중심 언어를 줄이세요 (예: "처리" → "진행", "실행" → "시작")')
+          }
+          return suggestions.join('. ') + '.'
+        }
+      })()
     },
     
     N3_1_undo_redo: {
