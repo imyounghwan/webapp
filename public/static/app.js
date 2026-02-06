@@ -880,7 +880,7 @@ window.editScore = async function(itemId, itemIdValue, itemName, originalScore, 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Session-ID': sessionStorage.getItem('session_id') || ''
+                'X-Session-ID': localStorage.getItem('session_id') || ''
             },
             body: JSON.stringify({
                 url: url,
