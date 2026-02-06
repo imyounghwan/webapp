@@ -41,7 +41,7 @@ const feedbackStore: Map<string, Array<{
 // D1 피드백 로드 완료 플래그 (서버리스 환경에서 중복 로드 방지)
 let feedbackLoaded = false
 
-// D1에서 피드백 데이터 로드 함수
+// D1에서 피드백 데이터 로드 함수 (각 item_id + url 조합마다 최신 것만 로드)
 async function loadFeedbackFromD1(db: D1Database, itemId?: string) {
   try {
     let query
@@ -56,9 +56,18 @@ async function loadFeedbackFromD1(db: D1Database, itemId?: string) {
     const result = await query.all()
     
     if (result.results && result.results.length > 0) {
-      // feedbackStore에 로드
+      // feedbackStore 초기화 후 로드 (중복 제거: 각 item_id + url 조합마다 최신 것만)
       feedbackStore.clear()
+      const seen = new Set<string>()  // "item_id:url" 조합 추적
+      
       result.results.forEach((row: any) => {
+        const key = `${row.item_id}:${row.url}`
+        if (seen.has(key)) {
+          // 이미 더 최신 피드백이 있으면 스킵
+          return
+        }
+        seen.add(key)
+        
         if (!feedbackStore.has(row.item_id)) {
           feedbackStore.set(row.item_id, [])
         }
@@ -72,14 +81,14 @@ async function loadFeedbackFromD1(db: D1Database, itemId?: string) {
           timestamp: row.timestamp
         })
       })
-      console.log(`[Feedback] Loaded ${result.results.length} feedback(s) from D1`)
+      console.log(`[Feedback] Loaded ${seen.size} unique feedback(s) from D1 (${result.results.length} total)`)
     }
   } catch (error) {
     console.error('[Feedback] Failed to load from D1:', error)
   }
 }
 
-// D1에 피드백 데이터 저장 함수
+// D1에 피드백 데이터 저장 함수 (UPSERT 방식: 같은 item_id + url이면 이전 것 삭제)
 async function saveFeedbackToD1(db: D1Database, feedback: {
   item_id: string
   url: string
@@ -91,6 +100,12 @@ async function saveFeedbackToD1(db: D1Database, feedback: {
   timestamp: string
 }) {
   try {
+    // 1. 같은 item_id + url 조합이 있으면 삭제
+    await db.prepare(`
+      DELETE FROM feedbacks WHERE item_id = ? AND url = ?
+    `).bind(feedback.item_id, feedback.url).run()
+    
+    // 2. 새 피드백 INSERT
     await db.prepare(`
       INSERT INTO feedbacks (
         item_id, url, original_score, new_score, score_delta,
@@ -107,7 +122,7 @@ async function saveFeedbackToD1(db: D1Database, feedback: {
       feedback.timestamp
     ).run()
     
-    console.log(`[Feedback] Saved to D1: ${feedback.item_id} for ${feedback.url}`)
+    console.log(`[Feedback] Saved to D1 (UPSERT): ${feedback.item_id} for ${feedback.url} → ${feedback.new_score}`)
     return true
   } catch (error) {
     console.error('[Feedback] Failed to save to D1:', error)
@@ -767,11 +782,20 @@ app.post('/api/feedback', authMiddleware, async (c) => {
     
     console.log('[Feedback] Received admin correction:', feedbackData)
     
-    // 메모리에 피드백 데이터 저장
+    // 메모리에 피드백 데이터 저장 (UPSERT 방식)
     if (!feedbackStore.has(item_id)) {
       feedbackStore.set(item_id, [])
     }
     const itemFeedbacks = feedbackStore.get(item_id)!
+    
+    // 같은 URL의 피드백이 있으면 제거
+    const existingIndex = itemFeedbacks.findIndex(f => f.url === url)
+    if (existingIndex !== -1) {
+      itemFeedbacks.splice(existingIndex, 1)
+      console.log(`[Feedback] Removed existing feedback for ${item_id} on ${url}`)
+    }
+    
+    // 새 피드백 추가
     itemFeedbacks.push({
       url,
       original_score,
@@ -782,7 +806,7 @@ app.post('/api/feedback', authMiddleware, async (c) => {
       timestamp: new Date().toISOString()
     })
     
-    console.log(`[Feedback] Stored in memory: ${item_id} now has ${itemFeedbacks.length} feedback(s)`)
+    console.log(`[Feedback] Stored in memory (UPSERT): ${item_id} now has ${itemFeedbacks.length} feedback(s), latest: ${new_score}`)
     
     // D1 데이터베이스에 피드백 저장
     if (c.env.DB) {
