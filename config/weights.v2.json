@@ -23,15 +23,15 @@
     },
     
     "N1_2_loading_status": {
-      "base_score": 2.0,
+      "base_score": 3.5,
       "conditions": [
-        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 8, "adjustment": 3.0},
-        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 6, "adjustment": 2.0},
-        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 4, "adjustment": 1.0},
-        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 2, "adjustment": 0.5}
+        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 8, "adjustment": 1.5},
+        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 6, "adjustment": 1.0},
+        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 4, "adjustment": 0.5},
+        {"field": "accessibility.loadingUI.score", "operator": ">=", "value": 2, "adjustment": 0}
       ],
-      "default_adjustment": 0,
-      "description": "로딩 UI 하이브리드 점수 기반 평가 (8점 이상: +3.0, 6점 이상: +2.0, 4점 이상: +1.0, 2점 이상: +0.5)"
+      "default_adjustment": -1.0,
+      "description": "로딩 UI 하이브리드 점수 기반 평가 (base 3.5점, 8점 이상: +1.5, 6점 이상: +1.0, 4점 이상: +0.5, 2점 미만: -1.0)"
     },
     
     "N1_3_action_feedback": {
