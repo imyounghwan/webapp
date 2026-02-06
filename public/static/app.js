@@ -613,7 +613,13 @@ function displayResults(data, resultElement) {
         score: item.score
     })));
     
-    resultElement.innerHTML = `
+    // ✅ DOM을 완전히 초기화해서 재분석 시 이전 데이터가 남지 않도록 함
+    resultElement.innerHTML = '';
+    resultElement.style.display = 'none';
+    
+    // 다음 프레임에서 새 HTML 렌더링 (브라우저가 DOM 변경을 인식하도록)
+    setTimeout(() => {
+        resultElement.innerHTML = `
         <div style="max-width:1200px;margin:0 auto;padding:20px;">
             ${analyzedPagesHTML}
             ${improvementsHTML}
@@ -670,6 +676,9 @@ function displayResults(data, resultElement) {
             downloadPPT(data);
         });
     }
+    
+    console.log('✅ DOM rendering completed with setTimeout');
+    }, 0);  // setTimeout 닫는 괄호
 }
 
 /**
