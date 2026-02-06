@@ -115,7 +115,10 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
       else if (rwm.languageFriendliness.score >= 2) adjustment = 0
       else adjustment = -1.0
       
-      return calculateScore(baseScore, adjustment)
+      const finalScore = calculateScore(baseScore, adjustment)
+      console.log(`[N2.1 Nielsen] languageFriendliness: ${rwm.languageFriendliness.score}, baseScore: ${baseScore}, adjustment: ${adjustment}, final: ${finalScore}`)
+      
+      return finalScore
     })(),
     N2_2_natural_flow: (() => {
       const rwm = structure.realWorldMatch

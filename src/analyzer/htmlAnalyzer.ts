@@ -809,10 +809,11 @@ function analyzeLanguageFriendliness(text: string, details: string[]): RealWorld
   }
   // 10~20단어는 100점
   
-  const languageScore = (jargonScore + complexityScore) / 2
+  // 최종 점수: 전문용어가 더 중요하므로 70:30 가중치
+  const languageScore = (jargonScore * 0.7 + complexityScore * 0.3)
   
   // 🔍 디버깅: 점수 계산
-  console.log(`[N2.1 Language] jargonScore: ${jargonScore}, complexityScore: ${complexityScore}, final: ${languageScore / 10}`)
+  console.log(`[N2.1 Language] jargonScore: ${jargonScore}, complexityScore: ${complexityScore}, weighted: ${languageScore}, final: ${languageScore / 10}`)
   
   // 디테일 추가
   if (jargonDensity > 5) {
