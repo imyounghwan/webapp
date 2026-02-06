@@ -756,7 +756,7 @@ function aggregateResults(pageResults: any[]): any {
 }
 
 // 관리자 평가 피드백 API - AI 학습 데이터로 저장
-app.post('/api/feedback', authMiddleware, async (c) => {
+app.post('/api/feedback', async (c) => {
   try {
     const { url, item_id, item_name, original_score, new_score, new_description, new_recommendation, category } = await c.req.json()
     
