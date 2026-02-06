@@ -77,11 +77,19 @@ export interface VisualStructure {
 /**
  * HTML 텍스트를 파싱하여 구조 분석
  */
-export function analyzeHTML(html: string, url: string): HTMLStructure {
+export function analyzeHTML(
+  html: string, 
+  url: string, 
+  dynamicLoadingUI?: {  // Puppeteer에서 전달되는 동적 분석 결과
+    loadingScreenFound: boolean
+    loadingDuration: number
+    loadingElements: string[]
+  }
+): HTMLStructure {
   // 간단한 정규식 기반 파싱 (Cloudflare Workers에서 DOM 파서 없이 작동)
   
   const navigation = analyzeNavigation(html)
-  const accessibility = analyzeAccessibility(html)
+  const accessibility = analyzeAccessibility(html, dynamicLoadingUI)
   const content = analyzeContent(html)
   const forms = analyzeForms(html)
   const visuals = analyzeVisuals(html)
@@ -145,7 +153,14 @@ function analyzeNavigation(html: string): NavigationStructure {
   }
 }
 
-function analyzeAccessibility(html: string): AccessibilityScore {
+function analyzeAccessibility(
+  html: string,
+  dynamicLoadingUI?: {
+    loadingScreenFound: boolean
+    loadingDuration: number
+    loadingElements: string[]
+  }
+): AccessibilityScore {
   const imgMatches = html.match(/<img[^>]*>/gi) || []
   const imgWithAltMatches = html.match(/<img[^>]*alt\s*=/gi) || []
   const ariaLabelMatches = html.match(/aria-label\s*=/gi) || []
@@ -155,6 +170,21 @@ function analyzeAccessibility(html: string): AccessibilityScore {
 
   // 로딩 UI 하이브리드 분석
   const loadingUI = detectLoadingUIHybrid(html)
+  
+  // 동적 분석 결과 병합 (Puppeteer 사용 시)
+  if (dynamicLoadingUI) {
+    loadingUI.dynamicDetection = dynamicLoadingUI
+    
+    // 동적 분석에서 로딩 UI를 발견했으면 점수 상향
+    if (dynamicLoadingUI.loadingScreenFound) {
+      loadingUI.score += 3  // 동적 분석 보너스 +3점
+      loadingUI.score = Math.min(loadingUI.score, 10)  // 최대 10점
+      loadingUI.hasLoadingUI = true
+      loadingUI.details.push(`동적 분석: 로딩 UI 발견 (지속시간: ${dynamicLoadingUI.loadingDuration}ms)`)
+      loadingUI.details.push(...dynamicLoadingUI.loadingElements.map(el => `동적 요소: ${el}`))
+    }
+  }
+  
   const loadingIndicatorExists = loadingUI.hasLoadingUI  // 하위 호환성
 
   // alt 텍스트 비율

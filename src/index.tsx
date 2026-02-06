@@ -1071,12 +1071,20 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         pageResults = [
           {
             url: crawlResult.mainPage.url,
-            structure: analyzeHTML(crawlResult.mainPage.html, crawlResult.mainPage.url),
+            structure: analyzeHTML(
+              crawlResult.mainPage.html, 
+              crawlResult.mainPage.url,
+              crawlResult.mainPage.loadingUIDetection  // 동적 로딩 UI 탐지 결과 전달
+            ),
             isMainPage: true
           },
           ...crawlResult.subPages.map(page => ({
             url: page.url,
-            structure: analyzeHTML(page.html, page.url),
+            structure: analyzeHTML(
+              page.html, 
+              page.url,
+              page.loadingUIDetection  // 서브페이지도 전달
+            ),
             isMainPage: false
           }))
         ]

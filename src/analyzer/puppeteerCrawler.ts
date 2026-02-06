@@ -17,6 +17,11 @@ export interface CrawledPage {
   isMainPage: boolean
   loadTime: number
   error?: string
+  loadingUIDetection?: {  // 동적 로딩 UI 탐지 결과
+    loadingScreenFound: boolean
+    loadingDuration: number
+    loadingElements: string[]
+  }
 }
 
 export interface PuppeteerCrawlerResult {
@@ -129,6 +134,116 @@ export async function crawlWebsiteWithPuppeteer(
 }
 
 /**
+ * 동적 로딩 UI 탐지 (Puppeteer 실행 중)
+ * 
+ * 페이지 로드 과정에서 나타났다가 사라지는 로딩 UI를 감지합니다.
+ * 전략:
+ * 1. 페이지 로드 시작 직후 로딩 관련 요소 찾기
+ * 2. 일정 시간 후 해당 요소가 사라졌는지 확인
+ * 3. 로딩 UI 특성 (클래스명, 애니메이션, opacity 변화 등) 감지
+ */
+async function detectDynamicLoadingUI(page: Page): Promise<{
+  loadingScreenFound: boolean
+  loadingDuration: number
+  loadingElements: string[]
+}> {
+  const loadingElements: string[] = []
+  let loadingScreenFound = false
+  let loadingDuration = 0
+  
+  try {
+    const startTime = Date.now()
+    
+    // 로딩 UI 감지 스크립트를 페이지에 주입
+    const detectionResult = await page.evaluate(() => {
+      const found: string[] = []
+      
+      // 1. 현재 보이는 로딩 관련 요소 찾기
+      const loadingSelectors = [
+        '[class*="loading"]',
+        '[class*="spinner"]',
+        '[class*="loader"]',
+        '[class*="skeleton"]',
+        '[id*="loading"]',
+        '[id*="spinner"]',
+        '[aria-busy="true"]',
+        '[role="progressbar"]',
+        '.loading-overlay',
+        '.loading-screen',
+        '.preloader'
+      ]
+      
+      for (const selector of loadingSelectors) {
+        const elements = document.querySelectorAll(selector)
+        elements.forEach((el) => {
+          const computed = window.getComputedStyle(el as HTMLElement)
+          const isVisible = computed.display !== 'none' && 
+                           computed.visibility !== 'hidden' &&
+                           parseFloat(computed.opacity) > 0
+          
+          if (isVisible) {
+            found.push(selector)
+          }
+        })
+      }
+      
+      return found
+    })
+    
+    if (detectionResult.length > 0) {
+      loadingScreenFound = true
+      loadingElements.push(...detectionResult)
+      
+      // 로딩 UI가 사라질 때까지 대기 (최대 5초)
+      const maxWaitTime = 5000
+      const checkInterval = 500
+      let elapsed = 0
+      
+      while (elapsed < maxWaitTime) {
+        await new Promise(resolve => setTimeout(resolve, checkInterval))
+        elapsed += checkInterval
+        
+        // 로딩 요소가 여전히 보이는지 확인
+        const stillVisible = await page.evaluate((selectors) => {
+          for (const selector of selectors) {
+            const elements = document.querySelectorAll(selector)
+            for (const el of elements) {
+              const computed = window.getComputedStyle(el as HTMLElement)
+              const isVisible = computed.display !== 'none' && 
+                               computed.visibility !== 'hidden' &&
+                               parseFloat(computed.opacity) > 0
+              if (isVisible) {
+                return true
+              }
+            }
+          }
+          return false
+        }, detectionResult)
+        
+        if (!stillVisible) {
+          loadingDuration = elapsed
+          break
+        }
+      }
+      
+      // 만약 5초 후에도 여전히 보이면 전체 시간 기록
+      if (elapsed >= maxWaitTime) {
+        loadingDuration = maxWaitTime
+      }
+    }
+    
+  } catch (err) {
+    console.error('[Puppeteer] Error detecting loading UI:', err)
+  }
+  
+  return {
+    loadingScreenFound,
+    loadingDuration,
+    loadingElements
+  }
+}
+
+/**
  * 단일 페이지 크롤링 (Puppeteer)
  */
 async function crawlSinglePage(
@@ -150,11 +265,28 @@ async function crawlSinglePage(
       await page.setUserAgent(options.userAgent)
     }
     
+    // 동적 로딩 UI 탐지 준비 (페이지 로드 전)
+    let loadingUIDetection: {
+      loadingScreenFound: boolean
+      loadingDuration: number
+      loadingElements: string[]
+    } | undefined
+    
     // 페이지 로드
     await page.goto(options.url, {
-      waitUntil: 'networkidle0', // 네트워크가 완전히 idle 될 때까지 대기
+      waitUntil: 'domcontentloaded', // DOM 로드 완료 시점에 체크 (더 빠른 감지)
       timeout: options.timeout
     })
+    
+    // 로딩 UI 동적 탐지 (DOM 로드 직후)
+    loadingUIDetection = await detectDynamicLoadingUI(page)
+    
+    // 네트워크가 완전히 idle 될 때까지 추가 대기
+    try {
+      await page.waitForNetworkIdle({ timeout: 5000 })
+    } catch {
+      console.warn('[Puppeteer] Network idle timeout')
+    }
     
     // 특정 선택자 대기 (옵션)
     if (options.waitForSelector) {
@@ -191,6 +323,7 @@ async function crawlSinglePage(
       screenshot,
       isMainPage: options.isMainPage,
       loadTime: Date.now() - startTime,
+      loadingUIDetection
     }
     
   } catch (err) {
