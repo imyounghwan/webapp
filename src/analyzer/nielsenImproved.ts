@@ -81,10 +81,21 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
       weights.N1_2_loading_status.base_score,
       calculateAdjustment(structure, weights.N1_2_loading_status)
     ),
-    N1_3_action_feedback: calculateScore(
-      weights.N1_3_action_feedback.base_score,
-      calculateAdjustment(structure, weights.N1_3_action_feedback)
-    ),
+    N1_3_action_feedback: (() => {
+      // 새로운 3차원 측정 시스템 사용
+      const actionFeedback = accessibility.actionFeedback
+      const baseScore = weights.N1_3_action_feedback.base_score
+      
+      // actionFeedback.score (0-10점)를 기반으로 가중치 적용
+      let adjustment = 0
+      if (actionFeedback.score >= 8) adjustment = 1.5    // 8점 이상: +1.5 (만점 5.0)
+      else if (actionFeedback.score >= 6) adjustment = 1.0  // 6점 이상: +1.0 (4.5)
+      else if (actionFeedback.score >= 4) adjustment = 0.5  // 4점 이상: +0.5 (4.0)
+      else if (actionFeedback.score >= 2) adjustment = 0    // 2점 이상: ±0 (3.5)
+      else adjustment = -1.0                                // 2점 미만: -1.0 (2.5)
+      
+      return Math.max(1, Math.min(5, baseScore + adjustment))
+    })(),
     
     // N2: 현실 세계 일치
     N2_1_familiar_terms: calculateScore(
@@ -328,14 +339,256 @@ HTML에서 로딩 상태를 알려주는 시각적 표시나 텍스트가 거의
       })()
     },
     
-    N1_3_action_feedback: {
-      description: forms.interactiveFeedbackExists
-        ? `사용자 행동에 대한 즉각적인 피드백이 구현되어 있습니다. 버튼 호버 효과, 클릭 반응, 폼 입력 피드백 등이 발견되었습니다.`
-        : `사용자 행동에 대한 시각적 피드백을 찾을 수 없습니다. HTML/CSS에서 호버 효과(:hover), 포커스 스타일(:focus), 클릭 반응(:active), 또는 폼 검증 피드백이 없어 사용자가 자신의 행동에 대한 즉각적인 반응을 확인하기 어렵습니다.`,
-      recommendation: forms.interactiveFeedbackExists
-        ? '사용자 행동에 대한 피드백이 잘 구현되어 있습니다. 현재 상태를 유지하세요.'
-        : `다음과 같은 피드백 메커니즘을 추가하세요:\n\n1. **버튼/링크 호버 효과**: CSS :hover로 색상 변화, 밑줄, 그림자 효과 추가\n   예: button:hover { background-color: #0056b3; transform: scale(1.05); }\n\n2. **포커스 스타일**: 키보드 사용자를 위한 :focus 스타일 추가\n   예: button:focus { outline: 2px solid #007bff; }\n\n3. **클릭 반응**: :active로 버튼 눌림 효과 추가\n   예: button:active { transform: scale(0.95); }\n\n4. **폼 입력 피드백**: required, pattern 속성과 :valid/:invalid 스타일 추가\n   예: input:invalid { border-color: red; }\n\n5. **실시간 에러 메시지**: JavaScript로 입력 오류 즉시 표시`
-    },
+    N1_3_action_feedback: (() => {
+      const actionFeedback = accessibility.actionFeedback
+      const score = actionFeedback.score
+      
+      // 5단계 점수 구간별 진단
+      if (score >= 8) {
+        return {
+          description: `🌟 행동 피드백 우수 (점수: ${score.toFixed(1)}/10)
+
+**발견된 우수한 피드백 시스템:**
+${actionFeedback.details.slice(0, 10).join('\n')}
+
+**3차원 분석 결과:**
+- 즉시 피드백: ${actionFeedback.immediateFeedback.microInteractions.toFixed(1)}/3점
+- 상태 변화 능력: ${actionFeedback.stateManagement.stateInteractionScore.toFixed(1)}/4점
+- 사용자 도움: ${actionFeedback.userAssistance.assistanceScore.toFixed(1)}/3점
+- 인터랙션 밀도: ${(actionFeedback.interactionDensity * 100).toFixed(0)}%`,
+          recommendation: `✅ 행동 피드백이 매우 우수합니다! (${score.toFixed(1)}/10)
+
+**현재 구현된 강점:**
+- 호버, 포커스, 클릭에 대한 즉각적인 시각적 반응
+- 상태 변화를 명확히 표현하는 인터랙티브 요소
+- 사용자 입력을 돕는 자동완성 및 실시간 알림
+
+**유지 권장사항:**
+- 현재 수준의 피드백 시스템 유지
+- 새로운 기능 추가 시에도 동일한 수준의 반응성 적용
+- 정기적으로 인터랙션 밀도 모니터링`
+        }
+      } else if (score >= 6) {
+        return {
+          description: `✅ 행동 피드백 양호 (점수: ${score.toFixed(1)}/10)
+
+**발견된 피드백 요소:**
+${actionFeedback.details.slice(0, 8).join('\n')}
+
+**3차원 분석 결과:**
+- 즉시 피드백: ${actionFeedback.immediateFeedback.microInteractions.toFixed(1)}/3점
+- 상태 변화 능력: ${actionFeedback.stateManagement.stateInteractionScore.toFixed(1)}/4점
+- 사용자 도움: ${actionFeedback.userAssistance.assistanceScore.toFixed(1)}/3점`,
+          recommendation: `✅ 행동 피드백이 양호합니다 (${score.toFixed(1)}/10)
+
+**추가 개선 방향:**
+
+${actionFeedback.immediateFeedback.microInteractions < 2 ? `**1. 즉시 피드백 강화 (현재: ${actionFeedback.immediateFeedback.microInteractions.toFixed(1)}/3)**
+\`\`\`css
+/* 호버 효과 개선 */
+button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+/* 포커스 스타일 추가 */
+button:focus-visible {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
+\`\`\`
+` : ''}
+
+${actionFeedback.stateManagement.stateInteractionScore < 2.5 ? `**2. 상태 관리 개선 (현재: ${actionFeedback.stateManagement.stateInteractionScore.toFixed(1)}/4)**
+\`\`\`html
+<!-- 접기/펼치기 UI -->
+<details>
+  <summary>자세히 보기</summary>
+  <p>추가 내용...</p>
+</details>
+
+<!-- 토글 버튼 -->
+<button aria-pressed="false" onclick="this.setAttribute('aria-pressed', this.getAttribute('aria-pressed') === 'false')">
+  알림 켜기/끄기
+</button>
+\`\`\`
+` : ''}
+
+${actionFeedback.userAssistance.assistanceScore < 1.5 ? `**3. 사용자 도움 강화 (현재: ${actionFeedback.userAssistance.assistanceScore.toFixed(1)}/3)**
+\`\`\`html
+<!-- 자동완성 -->
+<input autocomplete="name" />
+
+<!-- 데이터리스트 -->
+<input list="browsers" />
+<datalist id="browsers">
+  <option value="Chrome">
+  <option value="Firefox">
+</datalist>
+
+<!-- 실시간 알림 -->
+<div aria-live="polite" role="status"></div>
+\`\`\`
+` : ''}`
+        }
+      } else if (score >= 4) {
+        return {
+          description: `⚠️ 행동 피드백 보통 (점수: ${score.toFixed(1)}/10)
+
+기본적인 피드백이 일부 구현되어 있지만, 개선이 필요합니다.
+
+**현재 발견된 요소:**
+${actionFeedback.details.slice(0, 5).join('\n') || '- 피드백 요소가 거의 없습니다'}
+
+**3차원 분석 결과:**
+- 즉시 피드백: ${actionFeedback.immediateFeedback.microInteractions.toFixed(1)}/3점
+- 상태 변화 능력: ${actionFeedback.stateManagement.stateInteractionScore.toFixed(1)}/4점
+- 사용자 도움: ${actionFeedback.userAssistance.assistanceScore.toFixed(1)}/3점`,
+          recommendation: `⚠️ 행동 피드백 개선 필요 (현재: ${score.toFixed(1)}/10)
+
+**우선순위 개선 작업:**
+
+**1단계: 기본 호버/포커스 효과 추가**
+\`\`\`css
+/* 모든 클릭 가능 요소에 호버 효과 */
+a, button, [role="button"] {
+  transition: all 0.2s ease;
+}
+
+a:hover, button:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+/* 포커스 링 (키보드 접근성) */
+*:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+\`\`\`
+
+**2단계: 상태 변화 ARIA 속성 추가**
+\`\`\`html
+<!-- 아코디언 메뉴 -->
+<button aria-expanded="false">메뉴 펼치기</button>
+
+<!-- 탭 UI -->
+<button role="tab" aria-selected="true">탭 1</button>
+<button role="tab" aria-selected="false">탭 2</button>
+\`\`\`
+
+**3단계: 폼 입력 도움**
+\`\`\`html
+<input type="email" 
+       autocomplete="email" 
+       inputmode="email"
+       aria-describedby="email-help" />
+<div id="email-help" aria-live="polite"></div>
+\`\`\``
+        }
+      } else if (score >= 2) {
+        return {
+          description: `❌ 행동 피드백 미흡 (점수: ${score.toFixed(1)}/10)
+
+사용자 행동에 대한 피드백이 거의 없어 인터랙션이 불명확합니다.
+
+**발견된 제한적 요소:**
+${actionFeedback.details.slice(0, 3).join('\n') || '- 피드백 시스템이 거의 없습니다'}`,
+          recommendation: `❌ 행동 피드백 즉시 개선 필요 (현재: ${score.toFixed(1)}/10)
+
+**긴급 개선 사항:**
+
+**1단계: 최소한의 시각적 피드백**
+\`\`\`css
+/* 전역 호버 효과 */
+button:hover, a:hover {
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+/* 클릭 반응 */
+button:active {
+  transform: scale(0.98);
+}
+
+/* 포커스 표시 */
+:focus-visible {
+  outline: 2px solid #000;
+}
+\`\`\`
+
+**2단계: 기본 상태 관리**
+\`\`\`html
+<!-- 버튼 상태 표시 -->
+<button class="active">선택됨</button>
+<button class="inactive">미선택</button>
+\`\`\`
+
+**3단계: 접근성 필수 속성**
+\`\`\`html
+<!-- ARIA 레이블 -->
+<button aria-label="메뉴 열기">☰</button>
+
+<!-- 실시간 알림 영역 -->
+<div aria-live="polite" role="status"></div>
+\`\`\`
+
+**참고: 행동 피드백은 사용성의 핵심입니다. 즉시 개선을 권장합니다.**`
+        }
+      } else {
+        return {
+          description: `❌ 행동 피드백 거의 없음 (점수: ${score.toFixed(1)}/10)
+
+HTML에서 사용자 행동에 대한 시각적 피드백을 거의 찾을 수 없습니다. 호버 효과, 포커스 스타일, 상태 변화 표시가 없어 사용자가 자신의 행동이 시스템에 인식되었는지 알기 어렵습니다.`,
+          recommendation: `❌ 행동 피드백 시스템 구축 필요 (현재: ${score.toFixed(1)}/10)
+
+**즉시 구현 가이드:**
+
+**1단계: 기본 CSS 피드백**
+\`\`\`css
+/* 최소한의 인터랙션 피드백 */
+a, button {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+a:hover, button:hover {
+  filter: brightness(1.1);
+}
+
+button:active {
+  filter: brightness(0.9);
+}
+
+:focus {
+  outline: 2px solid blue;
+}
+\`\`\`
+
+**2단계: HTML 구조 개선**
+\`\`\`html
+<!-- 명확한 버튼 -->
+<button type="button">클릭</button>
+
+<!-- 접근 가능한 링크 -->
+<a href="#" aria-label="자세히 보기">더보기</a>
+\`\`\`
+
+**3단계: 상태 표시**
+\`\`\`html
+<!-- 현재 페이지 표시 -->
+<a href="#" aria-current="page">홈</a>
+
+<!-- 로딩 상태 -->
+<button aria-busy="true">처리중...</button>
+\`\`\`
+
+**⚠️ 주의: 피드백 없는 인터페이스는 사용자 경험을 크게 저하시킵니다.**`
+        }
+      }
+    })(),
     
     N2_1_familiar_terms: {
       description: accessibility.langAttribute

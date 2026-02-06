@@ -626,7 +626,8 @@ function aggregateResults(pageResults: any[]): any {
     langAttribute: allPages.some(s => s.accessibility.langAttribute),
     skipLinkExists: allPages.some(s => s.accessibility.skipLinkExists),
     loadingIndicatorExists: allPages.some(s => s.accessibility.loadingIndicatorExists),  // 하위 호환성
-    loadingUI: mainPage.structure.accessibility.loadingUI  // 메인 페이지의 로딩 UI 분석 결과 사용
+    loadingUI: mainPage.structure.accessibility.loadingUI,  // 메인 페이지의 로딩 UI 분석 결과 사용
+    actionFeedback: mainPage.structure.accessibility.actionFeedback  // 메인 페이지의 행동 피드백 분석 결과 사용
   }
   
   // Content 종합 (평균)
@@ -975,6 +976,11 @@ app.post('/api/analyze', authMiddleware, async (c) => {
           itemData.loadingUI = structure.accessibility.loadingUI
         }
         
+        // N1_3 행동 피드백: actionFeedback 상세 정보 추가
+        if (id === 'N1_3' && structure?.accessibility?.actionFeedback) {
+          itemData.actionFeedback = structure.accessibility.actionFeedback
+        }
+        
         convenience_items_detail.push(itemData)
       })
       
@@ -1312,6 +1318,11 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       // N1_2 로딩 상태: loadingUI 상세 정보 추가
       if (id === 'N1_2' && structure?.accessibility?.loadingUI) {
         itemData.loadingUI = structure.accessibility.loadingUI
+      }
+      
+      // N1_3 행동 피드백: actionFeedback 상세 정보 추가
+      if (id === 'N1_3' && structure?.accessibility?.actionFeedback) {
+        itemData.actionFeedback = structure.accessibility.actionFeedback
       }
       
       convenience_items_detail.push(itemData)

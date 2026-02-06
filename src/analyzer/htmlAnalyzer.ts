@@ -25,6 +25,53 @@ export interface LoadingUIDetection {
   details: string[]          // 발견된 패턴 상세 목록
 }
 
+/**
+ * 행동 피드백 분석 결과 (3차원 측정)
+ * Responsiveness Score = 즉시 피드백 + 상태 변화 능력 + 사용자 도움 수준
+ */
+export interface ActionFeedback {
+  score: number                    // 0-10점: 종합 반응성 점수
+  hasActionFeedback: boolean       // 행동 피드백 존재 여부
+  
+  // 1차원: 즉시 피드백 (Immediate Feedback)
+  immediateFeedback: {
+    hoverEffects: number           // 호버 효과 요소 개수
+    focusEffects: number           // 포커스 효과 요소 개수
+    activeEffects: number          // 클릭 액티브 효과 개수
+    transitions: number            // CSS 트랜지션/애니메이션 개수
+    microInteractions: number      // 마이크로 인터랙션 총점
+  }
+  
+  // 2차원: 상태 변화 능력 (Dynamic State Management)
+  stateManagement: {
+    ariaExpanded: number           // 접기/펼치기 요소 (아코디언, 메뉴)
+    ariaPressed: number            // 토글 버튼
+    ariaSelected: number           // 탭, 선택 가능 요소
+    ariaChecked: number            // 체크박스/라디오 (ARIA)
+    detailsElements: number        // <details> 네이티브 접기/펼치기
+    dialogElements: number         // <dialog> 모달
+    stateInteractionScore: number  // 상태 기반 인터랙션 총점
+  }
+  
+  // 3차원: 사용자 도움 수준 (User Assistance)
+  userAssistance: {
+    autocomplete: number           // 자동완성 입력 개수
+    inputmode: number              // 모바일 키패드 최적화
+    datalist: number               // HTML5 데이터리스트
+    combobox: number               // ARIA 콤보박스
+    ariaLive: number               // 실시간 알림 영역
+    roleAlert: number              // 경고/알림
+    ariaBusy: number               // 로딩 상태 관리
+    progressbar: number            // 진행 상태 표시
+    assistanceScore: number        // 사용자 도움 총점
+  }
+  
+  // 인터랙션 밀도 (Interaction Density)
+  interactionDensity: number       // 반응형 요소 / 전체 클릭 가능 요소
+  
+  details: string[]                // 발견된 패턴 상세 목록
+}
+
 export interface HTMLStructure {
   url: string
   html?: string  // 원본 HTML (KRDS 평가용)
@@ -51,6 +98,7 @@ export interface AccessibilityScore {
   skipLinkExists: boolean
   loadingIndicatorExists: boolean  // 하위 호환성을 위해 유지
   loadingUI: LoadingUIDetection    // 새로운 상세 분석 결과
+  actionFeedback: ActionFeedback   // 행동 피드백 상세 분석 결과
 }
 
 export interface ContentStructure {
@@ -171,6 +219,9 @@ function analyzeAccessibility(
   // 로딩 UI 하이브리드 분석
   const loadingUI = detectLoadingUIHybrid(html)
   
+  // 행동 피드백 3차원 측정
+  const actionFeedback = detectActionFeedback(html)
+  
   // 동적 분석 결과 병합 (Puppeteer 사용 시)
   if (dynamicLoadingUI) {
     loadingUI.dynamicDetection = dynamicLoadingUI
@@ -202,7 +253,8 @@ function analyzeAccessibility(
     langAttribute,
     skipLinkExists,
     loadingIndicatorExists,
-    loadingUI  // 새로운 상세 분석 결과
+    loadingUI,          // 새로운 상세 분석 결과
+    actionFeedback      // 행동 피드백 상세 분석 결과
   }
 }
 
@@ -360,50 +412,209 @@ function detectLoadingIndicator(html: string): boolean {
  * 상호작용 피드백 감지 (호버/포커스/클릭 반응)
  * 버튼, 링크, 폼 요소 등에 대한 시각적 피드백 존재 여부 확인
  */
-function detectInteractiveFeedback(html: string): boolean {
-  // 1. CSS 호버 효과 (:hover 스타일)
-  const hasHoverEffect = 
-    /:hover/i.test(html) ||
-    /\.hover|--hover|_hover/i.test(html)  // Tailwind/BEM 네이밍 패턴
-
-  // 2. CSS 포커스 효과 (:focus, :focus-visible)
-  const hasFocusEffect = 
-    /:focus/i.test(html) ||
-    /focus-visible|focus-within/i.test(html)
-
-  // 3. CSS 액티브 효과 (:active, 클릭 시 반응)
-  const hasActiveEffect = 
-    /:active/i.test(html) ||
-    /\.active|--active|_active/i.test(html)
-
-  // 4. JavaScript 이벤트 리스너 (onclick, onmouseover 등)
-  const hasJSInteraction = 
-    /on(click|mouseover|mouseenter|focus|blur)/i.test(html) ||
-    /addEventListener\s*\(\s*['"](click|mouseover|mouseenter|focus|blur)/i.test(html)
-
-  // 5. 폼 검증 스타일 (:valid, :invalid, .error, .success)
-  const hasValidationFeedback = 
-    /:valid|:invalid/i.test(html) ||
-    /(class|id)\s*=\s*["'][^"']*(error|success|valid|invalid)[^"']*["']/i.test(html)
-
-  // 6. 인터랙티브 요소 존재 여부 (버튼, 링크, input)
-  const hasInteractiveElements = 
-    /<button[^>]*>/i.test(html) ||
-    /<a[^>]*href/i.test(html) ||
-    /<input[^>]*type\s*=\s*["'](button|submit|checkbox|radio)["']/i.test(html)
-
-  // 7. transition/animation 효과 (상호작용 시 애니메이션)
-  const hasTransition = 
-    /transition\s*:/i.test(html) ||
-    /transform\s*:/i.test(html)
-
-  // 인터랙티브 요소가 있고, 피드백 메커니즘이 하나라도 있으면 true
-  if (!hasInteractiveElements) {
-    return false  // 인터랙티브 요소 자체가 없으면 false
+/**
+ * 행동 피드백 3차원 측정 시스템
+ * Responsiveness Score = 즉시 피드백 + 상태 변화 능력 + 사용자 도움 수준
+ */
+function detectActionFeedback(html: string): ActionFeedback {
+  const details: string[] = []
+  
+  // ========================================
+  // 1차원: 즉시 피드백 (Immediate Feedback)
+  // ========================================
+  
+  // 호버 효과
+  const hoverPatterns = [
+    /:hover/gi,
+    /\.hover|--hover|_hover/gi,
+    /class\s*=\s*["'][^"']*hover[^"']*["']/gi
+  ]
+  const hoverEffects = hoverPatterns.reduce((count, pattern) => {
+    const matches = html.match(pattern) || []
+    return count + matches.length
+  }, 0)
+  
+  // 포커스 효과
+  const focusPatterns = [
+    /:focus(-visible|-within)?/gi,
+    /\.focus|--focus|_focus/gi,
+    /class\s*=\s*["'][^"']*focus[^"']*["']/gi
+  ]
+  const focusEffects = focusPatterns.reduce((count, pattern) => {
+    const matches = html.match(pattern) || []
+    return count + matches.length
+  }, 0)
+  
+  // 액티브 효과 (클릭 시)
+  const activePatterns = [
+    /:active/gi,
+    /\.active|--active|_active/gi,
+    /class\s*=\s*["'][^"']*active[^"']*["']/gi
+  ]
+  const activeEffects = activePatterns.reduce((count, pattern) => {
+    const matches = html.match(pattern) || []
+    return count + matches.length
+  }, 0)
+  
+  // CSS 트랜지션/애니메이션
+  const transitionPatterns = [
+    /transition\s*:/gi,
+    /transform\s*:/gi,
+    /animation\s*:/gi,
+    /@keyframes/gi
+  ]
+  const transitions = transitionPatterns.reduce((count, pattern) => {
+    const matches = html.match(pattern) || []
+    return count + matches.length
+  }, 0)
+  
+  // 마이크로 인터랙션 점수 계산
+  const microInteractions = Math.min(
+    hoverEffects * 0.3 + 
+    focusEffects * 0.4 + 
+    activeEffects * 0.2 + 
+    transitions * 0.1,
+    3.0  // 최대 3점
+  )
+  
+  if (hoverEffects > 0) details.push(`✓ 호버 효과: ${hoverEffects}개`)
+  if (focusEffects > 0) details.push(`✓ 포커스 효과: ${focusEffects}개`)
+  if (activeEffects > 0) details.push(`✓ 클릭 액티브 효과: ${activeEffects}개`)
+  if (transitions > 0) details.push(`✓ CSS 트랜지션/애니메이션: ${transitions}개`)
+  
+  // ========================================
+  // 2차원: 상태 변화 능력 (Dynamic State Management)
+  // ========================================
+  
+  const ariaExpanded = (html.match(/aria-expanded\s*=\s*["'](true|false)["']/gi) || []).length
+  const ariaPressed = (html.match(/aria-pressed\s*=\s*["'](true|false|mixed)["']/gi) || []).length
+  const ariaSelected = (html.match(/aria-selected\s*=\s*["'](true|false)["']/gi) || []).length
+  const ariaChecked = (html.match(/aria-checked\s*=\s*["'](true|false|mixed)["']/gi) || []).length
+  const detailsElements = (html.match(/<details[^>]*>/gi) || []).length
+  const dialogElements = (html.match(/<dialog[^>]*>/gi) || []).length
+  
+  // 상태 기반 인터랙션 점수 계산
+  const stateInteractionScore = Math.min(
+    ariaExpanded * 0.5 +    // 아코디언, 메뉴 (중요도 높음)
+    ariaPressed * 0.4 +      // 토글 버튼
+    ariaSelected * 0.4 +     // 탭, 선택
+    ariaChecked * 0.3 +      // 체크박스
+    detailsElements * 0.6 +  // 네이티브 접기/펼치기
+    dialogElements * 0.8,    // 모달 (중요도 매우 높음)
+    4.0  // 최대 4점
+  )
+  
+  if (ariaExpanded > 0) details.push(`✓ 접기/펼치기 (aria-expanded): ${ariaExpanded}개`)
+  if (ariaPressed > 0) details.push(`✓ 토글 버튼 (aria-pressed): ${ariaPressed}개`)
+  if (ariaSelected > 0) details.push(`✓ 선택 가능 요소 (aria-selected): ${ariaSelected}개`)
+  if (ariaChecked > 0) details.push(`✓ 체크 상태 (aria-checked): ${ariaChecked}개`)
+  if (detailsElements > 0) details.push(`✓ <details> 요소: ${detailsElements}개`)
+  if (dialogElements > 0) details.push(`✓ <dialog> 모달: ${dialogElements}개`)
+  
+  // ========================================
+  // 3차원: 사용자 도움 수준 (User Assistance)
+  // ========================================
+  
+  const autocomplete = (html.match(/autocomplete\s*=\s*["'][^"']+["']/gi) || []).length
+  const inputmode = (html.match(/inputmode\s*=\s*["'][^"']+["']/gi) || []).length
+  const datalist = (html.match(/<input[^>]*list\s*=\s*["'][^"']+["']/gi) || []).length
+  const combobox = (html.match(/role\s*=\s*["']combobox["']/gi) || []).length
+  const ariaLive = (html.match(/aria-live\s*=\s*["'](polite|assertive|off)["']/gi) || []).length
+  const roleAlert = (html.match(/role\s*=\s*["'](alert|status)["']/gi) || []).length
+  const ariaBusy = (html.match(/aria-busy\s*=\s*["']true["']/gi) || []).length
+  const progressbar = (html.match(/role\s*=\s*["']progressbar["']/gi) || []).length
+  
+  // 사용자 도움 점수 계산
+  const assistanceScore = Math.min(
+    autocomplete * 0.3 +     // 자동완성
+    inputmode * 0.2 +        // 모바일 키패드
+    datalist * 0.5 +         // 데이터리스트 (중요)
+    combobox * 0.6 +         // 콤보박스 (매우 중요)
+    ariaLive * 0.4 +         // 실시간 알림
+    roleAlert * 0.3 +        // 경고
+    ariaBusy * 0.5 +         // 로딩 상태
+    progressbar * 0.6,       // 진행 상태
+    3.0  // 최대 3점
+  )
+  
+  if (autocomplete > 0) details.push(`✓ 자동완성 (autocomplete): ${autocomplete}개`)
+  if (inputmode > 0) details.push(`✓ 모바일 키패드 최적화 (inputmode): ${inputmode}개`)
+  if (datalist > 0) details.push(`✓ 데이터리스트 (datalist): ${datalist}개`)
+  if (combobox > 0) details.push(`✓ 콤보박스 (role=combobox): ${combobox}개`)
+  if (ariaLive > 0) details.push(`✓ 실시간 알림 (aria-live): ${ariaLive}개`)
+  if (roleAlert > 0) details.push(`✓ 경고/상태 (role=alert/status): ${roleAlert}개`)
+  if (ariaBusy > 0) details.push(`✓ 로딩 상태 (aria-busy): ${ariaBusy}개`)
+  if (progressbar > 0) details.push(`✓ 진행 상태 (role=progressbar): ${progressbar}개`)
+  
+  // ========================================
+  // 인터랙션 밀도 계산
+  // ========================================
+  
+  // 전체 클릭 가능 요소
+  const clickableElements = [
+    ...html.matchAll(/<(button|a)[^>]*>/gi),
+    ...html.matchAll(/<input[^>]*type\s*=\s*["'](button|submit|reset)["']/gi),
+    ...html.matchAll(/role\s*=\s*["']button["']/gi)
+  ].length
+  
+  // 반응형 요소 (피드백이 있는 요소)
+  const responsiveElements = hoverEffects + focusEffects + activeEffects + 
+                             ariaExpanded + ariaPressed + ariaSelected
+  
+  const interactionDensity = clickableElements > 0 
+    ? Math.round((responsiveElements / clickableElements) * 100) / 100
+    : 0
+  
+  // ========================================
+  // 종합 점수 계산 (0-10점)
+  // ========================================
+  
+  const score = Math.min(
+    microInteractions + stateInteractionScore + assistanceScore,
+    10.0
+  )
+  
+  const hasActionFeedback = score >= 2.0  // 2점 이상이면 피드백 있음
+  
+  return {
+    score,
+    hasActionFeedback,
+    immediateFeedback: {
+      hoverEffects,
+      focusEffects,
+      activeEffects,
+      transitions,
+      microInteractions: Math.round(microInteractions * 10) / 10
+    },
+    stateManagement: {
+      ariaExpanded,
+      ariaPressed,
+      ariaSelected,
+      ariaChecked,
+      detailsElements,
+      dialogElements,
+      stateInteractionScore: Math.round(stateInteractionScore * 10) / 10
+    },
+    userAssistance: {
+      autocomplete,
+      inputmode,
+      datalist,
+      combobox,
+      ariaLive,
+      roleAlert,
+      ariaBusy,
+      progressbar,
+      assistanceScore: Math.round(assistanceScore * 10) / 10
+    },
+    interactionDensity,
+    details
   }
+}
 
-  return hasHoverEffect || hasFocusEffect || hasActiveEffect || 
-         hasJSInteraction || hasValidationFeedback || hasTransition
+function detectInteractiveFeedback(html: string): boolean {
+  // 하위 호환성을 위해 유지
+  const actionFeedback = detectActionFeedback(html)
+  return actionFeedback.hasActionFeedback
 }
 
 function analyzeContent(html: string): ContentStructure {
