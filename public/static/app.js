@@ -303,35 +303,7 @@ function displayResults(data, resultElement) {
         const convenienceItems = convenience_items || [];
         const designItems = design_items || [];
         
-        // 🔥 localStorage에 저장된 수정된 점수를 우선 적용 (총점 계산용)
-        try {
-            const savedResult = localStorage.getItem('lastAnalysisResult');
-            if (savedResult) {
-                const savedData = JSON.parse(savedResult);
-                // 편의성 항목 점수 우선 적용
-                if (savedData.convenience_items) {
-                    savedData.convenience_items.forEach(savedItem => {
-                        const matchedItem = convenienceItems.find(item => item.item_id === savedItem.item_id);
-                        if (matchedItem && savedItem.score !== matchedItem.score) {
-                            console.log(`🔄 총점 계산용 점수 적용 (편의성): ${matchedItem.item_id} ${matchedItem.score} → ${savedItem.score}`);
-                            matchedItem.score = savedItem.score;
-                        }
-                    });
-                }
-                // 디자인 항목 점수 우선 적용
-                if (savedData.design_items) {
-                    savedData.design_items.forEach(savedItem => {
-                        const matchedItem = designItems.find(item => item.item_id === savedItem.item_id);
-                        if (matchedItem && savedItem.score !== matchedItem.score) {
-                            console.log(`🔄 총점 계산용 점수 적용 (디자인): ${matchedItem.item_id} ${matchedItem.score} → ${savedItem.score}`);
-                            matchedItem.score = savedItem.score;
-                        }
-                    });
-                }
-            }
-        } catch (e) {
-            console.error('❌ localStorage 점수 로드 실패 (총점 계산):', e);
-        }
+        // ✅ 백엔드에서 이미 피드백이 적용된 점수를 받으므로 localStorage 점수를 사용하지 않음
         
         // 편의성 평균 계산
         if (convenienceItems.length > 0) {
