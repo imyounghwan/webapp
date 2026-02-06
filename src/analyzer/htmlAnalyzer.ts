@@ -721,13 +721,13 @@ function analyzeRealWorldMatch(html: string): RealWorldMatch {
   // 1차원: 언어 친화도 분석
   const languageFriendliness = analyzeLanguageFriendliness(textContent, details)
   
-  // 2차원: 데이터 자연스러움 분석
-  const dataNaturalness = analyzeDataNaturalness(textContent, details)
+  // 2차원: 예측 가능성 분석 (HTML 구조 기반)
+  const dataNaturalness = analyzeDataNaturalness(html, details)
   
   // 3차원: 인터페이스 친화도 분석
   const interfaceFriendliness = analyzeInterfaceFriendliness(textContent, details)
   
-  // 최종 점수 계산 (가중 평균: 언어 40%, 데이터 30%, 인터페이스 30%)
+  // 최종 점수 계산 (가중 평균: 언어 40%, 예측가능성 30%, 인터페이스 30%)
   const finalScore = (
     languageFriendliness.score * 0.4 +
     dataNaturalness.score * 0.3 +
@@ -823,57 +823,83 @@ function analyzeLanguageFriendliness(text: string, details: string[]): RealWorld
 /**
  * 데이터 자연스러움 분석
  */
-function analyzeDataNaturalness(text: string, details: string[]): RealWorldMatch['dataNaturalness'] {
-  let rawDataScore = 0
-  let naturalDataScore = 0
+function analyzeDataNaturalness(html: string, details: string[]): RealWorldMatch['dataNaturalness'] {
+  let score = 0
   
-  // 부자연스러운 시스템 데이터 패턴
-  const rawPatterns = [
-    { pattern: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/g, weight: 5, name: 'ISO 날짜' },
-    { pattern: /\d{8,}/g, weight: 3, name: '긴 숫자 코드' },
-    { pattern: /\d{4,}(?![년월일])/g, weight: 2, name: '콤마 없는 큰 숫자' },
-    { pattern: /[A-Z0-9]{6,}/g, weight: 3, name: '시스템 코드' }
-  ]
+  // 1. 헤딩 구조 (25점) - H1이 페이지당 정확히 1개
+  const h1Count = (html.match(/<h1[^>]*>/gi) || []).length
+  let headingScore = 0
+  if (h1Count === 1) {
+    headingScore = 25
+    details.push('✅ H1 태그가 1개로 적절함')
+  } else if (h1Count === 0) {
+    headingScore = 0
+    details.push('⚠️ H1 태그가 없음 - 페이지 구조가 불명확')
+  } else {
+    headingScore = 15
+    details.push(`⚠️ H1 태그가 ${h1Count}개 - 페이지당 1개 권장`)
+  }
+  score += headingScore
   
-  rawPatterns.forEach(({ pattern, weight, name }) => {
-    const matches = text.match(pattern)
-    if (matches) {
-      rawDataScore += matches.length * weight
-      if (matches.length > 3) {
-        details.push(`⚠️ ${name} ${matches.length}개 발견`)
-      }
-    }
+  // 2. 시각적 일치도 (30점) - tabindex 남용 체크
+  const tabindexMatches = html.match(/tabindex\s*=\s*["']?(\d+)["']?/gi) || []
+  const abnormalTabindex = tabindexMatches.filter(match => {
+    const tabIndex = parseInt(match.match(/\d+/)?.[0] || '0')
+    return tabIndex > 10
   })
   
-  // 자연스러운 표현 패턴
-  const naturalPatterns = [
-    { pattern: /\d{1,3}(,\d{3})+/g, weight: 3, name: '콤마 있는 숫자' },
-    { pattern: /\d{4}년\s*\d{1,2}월\s*\d{1,2}일/g, weight: 5, name: '한국식 날짜' },
-    { pattern: /오전|오후\s*\d{1,2}:\d{2}/g, weight: 4, name: '12시간 표기' },
-    { pattern: /약\s*\d+|대략\s*\d+|정도/g, weight: 3, name: '근사치 표현' }
-  ]
+  let visualScore = 30
+  if (abnormalTabindex.length > 0) {
+    visualScore = Math.max(0, 30 - abnormalTabindex.length * 5)
+    details.push(`⚠️ 비정상적인 tabindex ${abnormalTabindex.length}개 발견 - DOM 순서 개선 필요`)
+  } else if (tabindexMatches.length > 0) {
+    details.push('✅ tabindex 사용이 적절함')
+  }
+  score += visualScore
   
-  naturalPatterns.forEach(({ pattern, weight, name }) => {
-    const matches = text.match(pattern)
-    if (matches) {
-      naturalDataScore += matches.length * weight
-      if (matches.length > 2) {
-        details.push(`✅ ${name} ${matches.length}개 사용`)
-      }
+  // 3. 작업 흐름 (30점) - 프로세스 단계 표시
+  const formCount = (html.match(/<form[^>]*>/gi) || []).length
+  const hasStepIndicator = /class\s*=\s*["'][^"']*step[^"']*["']|role\s*=\s*["']progressbar["']/i.test(html)
+  
+  let workflowScore = 0
+  if (formCount > 0) {
+    // 폼이 있으면 단계 표시가 중요
+    workflowScore = 15
+    if (hasStepIndicator) {
+      workflowScore = 30
+      details.push('✅ 프로세스 단계 표시가 있음')
+    } else {
+      details.push('⚠️ 폼이 있지만 단계 표시가 없음')
     }
-  })
+  } else {
+    // 폼이 없으면 단계 표시 불필요
+    workflowScore = 30
+    details.push('✅ 폼이 없어 단계 표시 불필요')
+  }
+  score += workflowScore
   
-  const totalDataElements = rawDataScore + naturalDataScore
-  const naturalRatio = totalDataElements > 0 ? (naturalDataScore / totalDataElements) * 100 : 100
+  // 4. 관습 준수 (15점) - 로고 홈 링크
+  const hasLogoLink = /<header[^>]*>[\s\S]*?<a[^>]*href\s*=\s*["'][/]?["'][^>]*>[\s\S]*?<img[^>]*[\s\S]*?<\/a>[\s\S]*?<\/header>/i.test(html) ||
+                     /class\s*=\s*["'][^"']*logo[^"']*["'][^>]*>[\s\S]*?<a[^>]*href\s*=\s*["'][/]?["']/i.test(html)
   
-  // 점수 계산: 자연스러운 비율이 높을수록 좋음
-  const dataScore = naturalRatio
+  let conventionScore = 0
+  if (hasLogoLink) {
+    conventionScore = 15
+    details.push('✅ 로고가 홈페이지 링크로 연결됨')
+  } else {
+    details.push('⚠️ 로고를 홈페이지 링크로 연결 권장')
+  }
+  score += conventionScore
+  
+  // 총점 계산 (0-100점 → 0-10점으로 변환)
+  const finalScore = Math.max(0, Math.min(100, score))
+  const grade = finalScore >= 70 ? 'B 이상' : finalScore >= 50 ? 'C' : 'D'
   
   return {
-    rawDataCount: Math.round(rawDataScore),
-    naturalDataCount: Math.round(naturalDataScore),
-    naturalRatio: Math.round(naturalRatio * 10) / 10,
-    score: Math.round(dataScore / 10 * 10) / 10  // 0-10점으로 변환
+    rawDataCount: 100 - finalScore,  // 문제점 개수 (역산)
+    naturalDataCount: finalScore,    // 좋은 점수
+    naturalRatio: finalScore,        // 백분율
+    score: Math.round(finalScore / 10 * 10) / 10  // 0-10점
   }
 }
 

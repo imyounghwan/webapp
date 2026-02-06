@@ -666,31 +666,42 @@ button:active {
       description: (() => {
         const rwm = structure.realWorldMatch
         const dn = rwm.dataNaturalness
+        const score = dn.naturalRatio  // 0-100점
         
-        if (dn.score >= 8) {
-          return `✅ 자연스러운 데이터 표현: 자연스러운 표현 비율 ${dn.naturalRatio}%로 현실 세계 표현을 잘 활용합니다.`
-        } else if (dn.score >= 6) {
-          return `😊 대체로 자연스러움: 자연스러운 표현 비율 ${dn.naturalRatio}%입니다.`
-        } else if (dn.score >= 4) {
-          return `⚠️ 시스템 데이터 노출: 자연스러운 표현 비율 ${dn.naturalRatio}%로 개선 필요합니다.`
+        if (score >= 70) {
+          return `✅ 예측 가능한 구조: 점수 ${score}/100 (B 이상). ${rwm.details.filter(d => d.startsWith('✅')).join(', ')}`
+        } else if (score >= 50) {
+          return `😊 준수한 구조: 점수 ${score}/100 (C등급). 일부 개선 필요.`
         } else {
-          return `❌ 부자연스러운 시스템 코드: 원시 데이터 ${dn.rawDataCount}개가 그대로 노출되어 있습니다.`
+          return `⚠️ 예측성 부족: 점수 ${score}/100 (D등급). ${rwm.details.filter(d => d.startsWith('⚠️')).slice(0, 2).join(', ')}`
         }
       })(),
       recommendation: (() => {
         const rwm = structure.realWorldMatch
         const dn = rwm.dataNaturalness
+        const score = dn.naturalRatio
         
-        if (dn.score >= 6) {
-          return '현재 상태를 유지하세요. 데이터를 자연스럽게 표현하고 있습니다.'
+        if (score >= 70) {
+          return '현재 상태를 유지하세요. 페이지 구조가 예측 가능하고 표준을 잘 따릅니다.'
         } else {
-          const suggestions = []
-          if (dn.rawDataCount > 10) {
-            suggestions.push('시스템 코드를 숨기고 사용자 친화적으로 표현하세요 (예: "20240206" → "2024년 2월 6일")')
-          }
-          suggestions.push('큰 숫자에 콤마를 추가하세요 (예: "1000000" → "1,000,000")')
-          suggestions.push('ISO 날짜를 한국식으로 표현하세요')
-          return suggestions.join('. ') + '.'
+          const quickFixes = []
+          const warnings = rwm.details.filter(d => d.startsWith('⚠️'))
+          
+          warnings.forEach(warning => {
+            if (warning.includes('H1 태그가 없음')) {
+              quickFixes.push('H1 태그를 페이지당 1개 추가하세요')
+            } else if (warning.includes('H1 태그가')) {
+              quickFixes.push('H1 태그를 페이지당 1개로 수정하세요')
+            } else if (warning.includes('tabindex')) {
+              quickFixes.push('tabindex 사용을 줄이고 DOM 순서를 개선하세요')
+            } else if (warning.includes('단계 표시')) {
+              quickFixes.push('프로세스 단계 표시(step indicator)를 추가하세요')
+            } else if (warning.includes('로고')) {
+              quickFixes.push('로고를 홈페이지 링크로 연결하세요')
+            }
+          })
+          
+          return quickFixes.length > 0 ? quickFixes.join('. ') + '.' : '페이지 구조를 표준에 맞게 개선하세요.'
         }
       })()
     },
