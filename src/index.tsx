@@ -144,12 +144,9 @@ function applyFeedbackAdjustment(itemId: string, baseScore: number, url: string)
     return exactMatch.new_score
   }
   
-  // 다른 URL들의 평균 조정값 적용
-  const avgDelta = feedbacks.reduce((sum, f) => sum + f.score_delta, 0) / feedbacks.length
-  const adjustedScore = Math.max(0, Math.min(5, baseScore + avgDelta))
-  
-  console.log(`[Feedback] Applying avg adjustment for ${itemId}: ${baseScore} + ${avgDelta.toFixed(2)} = ${adjustedScore.toFixed(2)}`)
-  return adjustedScore
+  // 다른 URL들의 평균 조정값은 적용하지 않음 (각 URL마다 독립적으로 평가)
+  console.log(`[Feedback] No exact match for ${itemId} on ${url}, using base score: ${baseScore}`)
+  return baseScore
 }
 
 // API routes
