@@ -1000,7 +1000,6 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         improvedScores.N1_3_action_feedback,
         improvedScores.N2_1_familiar_terms,
         improvedScores.N2_2_natural_flow,
-        improvedScores.N2_3_real_world_metaphor,  // ✅ N2.3을 편의성 항목으로 이동
         improvedScores.N3_1_undo_redo,
         improvedScores.N3_3_flexible_navigation,
         improvedScores.N4_2_terminology_consistency,
@@ -1020,6 +1019,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       ]
       
       const designItems = [
+        improvedScores.N2_3_real_world_metaphor,
         improvedScores.N4_1_visual_consistency,
         improvedScores.N8_1_essential_info,
         improvedScores.N8_2_clean_interface,
@@ -1040,7 +1040,6 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         { key: 'N1.3_행동_피드백', id: 'N1_3' },
         { key: 'N2.1_친숙한_용어', id: 'N2_1' },
         { key: 'N2.2_자연스러운_흐름', id: 'N2_2' },
-        { key: 'N2.3_현실_은유', id: 'N2_3' },  // ✅ N2.3 추가
         { key: 'N3.1_실행_취소', id: 'N3_1' },
         { key: 'N3.3_유연한_네비게이션', id: 'N3_3' },
         { key: 'N4.2_용어_일관성', id: 'N4_2' },
@@ -1061,7 +1060,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       
       const convenienceDiagnosisKeys = [
         'N1_1_current_location', 'N1_2_loading_status', 'N1_3_action_feedback',
-        'N2_1_familiar_terms', 'N2_2_natural_flow', 'N2_3_real_world_metaphor',  // ✅ N2.3 추가
+        'N2_1_familiar_terms', 'N2_2_natural_flow',
         'N3_1_undo_redo', 'N3_3_flexible_navigation',
         'N4_2_terminology_consistency', 'N4_3_standard_compliance',
         'N5_1_input_validation', 'N5_2_confirmation_dialog', 'N5_3_constraints',
@@ -1110,6 +1109,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       })
       
       const designMapping = [
+        { key: 'N2.3_현실_은유', id: 'N2_3' },
         { key: 'N4.1_시각_일관성', id: 'N4_1' },
         { key: 'N8.1_핵심_정보', id: 'N8_1' },
         { key: 'N8.2_깔끔한_인터페이스', id: 'N8_2' },
@@ -1117,6 +1117,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       ]
       
       const designDiagnosisKeys = [
+        'N2_3_real_world_metaphor',
         'N4_1_visual_consistency',
         'N8_1_essential_info',
         'N8_2_clean_interface',
@@ -1347,11 +1348,10 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       improvedScores.N1_3_action_feedback,
       improvedScores.N2_1_familiar_terms,
       improvedScores.N2_2_natural_flow,
-      improvedScores.N2_3_real_world_metaphor,  // ✅ N2.3을 편의성 항목으로 이동
       improvedScores.N3_1_undo_redo,
       improvedScores.N3_3_flexible_navigation,
-      improvedScores.N4_2_terminology_consistency,  // N4.2 편의성으로 이동
-      improvedScores.N4_3_standard_compliance,      // N4.3 편의성으로 이동
+      improvedScores.N4_2_terminology_consistency,
+      improvedScores.N4_3_standard_compliance,
       improvedScores.N5_1_input_validation,
       improvedScores.N5_2_confirmation_dialog,
       improvedScores.N5_3_constraints,
@@ -1367,6 +1367,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     ]
     
     const designItems = [
+      improvedScores.N2_3_real_world_metaphor,
       improvedScores.N4_1_visual_consistency,
       improvedScores.N8_1_essential_info,
       improvedScores.N8_2_clean_interface,
@@ -1389,7 +1390,6 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       { key: 'N1.3_행동_피드백', id: 'N1_3' },
       { key: 'N2.1_친숙한_용어', id: 'N2_1' },
       { key: 'N2.2_자연스러운_흐름', id: 'N2_2' },
-      { key: 'N2.3_현실_은유', id: 'N2_3' },  // ✅ N2.3 추가
       { key: 'N3.1_실행_취소', id: 'N3_1' },
       { key: 'N3.3_유연한_네비게이션', id: 'N3_3' },
       { key: 'N4.2_용어_일관성', id: 'N4_2' },
@@ -1410,7 +1410,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     
     const convenienceDiagnosisKeys = [
       'N1_1_current_location', 'N1_2_loading_status', 'N1_3_action_feedback',
-      'N2_1_familiar_terms', 'N2_2_natural_flow', 'N2_3_real_world_metaphor',  // ✅ N2.3 추가
+      'N2_1_familiar_terms', 'N2_2_natural_flow',
       'N3_1_undo_redo', 'N3_3_flexible_navigation',
       'N4_2_terminology_consistency', 'N4_3_standard_compliance',
       'N5_1_input_validation', 'N5_2_confirmation_dialog', 'N5_3_constraints',
@@ -1460,6 +1460,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     
     // 디자인 항목 상세 (ID 매핑 추가)
     const designMapping = [
+      { key: 'N2.3_현실_세계_은유', id: 'N2_3' },
       { key: 'N4.1_시각적_일관성', id: 'N4_1' },
       { key: 'N8.1_핵심_정보', id: 'N8_1' },
       { key: 'N8.2_깔끔한_인터페이스', id: 'N8_2' },
@@ -1467,6 +1468,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     ]
     
     const designDiagnosisKeys = [
+      'N2_3_real_world_metaphor',
       'N4_1_visual_consistency',
       'N8_1_essential_info', 'N8_2_clean_interface', 'N8_3_visual_hierarchy',
     ]
