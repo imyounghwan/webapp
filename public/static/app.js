@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         console.log('🔍 Analyzing (Auto Mode):', url);
-        performAnalysis({ url }, analyzeResult);
+        performAnalysis({ url, mode: 'mgine' }, analyzeResult);
     });
     
     // 직접 선별 모드 분석
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             console.log(`🔍 Analyzing (Manual Mode): ${urls.length} pages`, urls);
-            performAnalysis({ urls }, analyzeResult);
+            performAnalysis({ urls, mode: 'mgine' }, analyzeResult);
         });
     }
     
@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     score: item.score
                 }))
             });
+            console.log('📊 전체 편의성 항목 점수:', data.convenience_items?.map(item => `${item.item_id}: ${item.score}`));
             displayResults(data, resultContainer);
         } catch (error) {
             clearInterval(progressInterval);
@@ -257,6 +258,7 @@ function displayResults(data, resultElement) {
         url: data?.url,
         mode: data?.mode
     });
+    console.log('⚠️ data.mode =', data.mode, '(타입:', typeof data.mode, ')');
     console.log('📊 displayResults 받은 데이터:', {
         overall_score: data.overall_score,
         convenience_score: data.convenience_score,
@@ -632,6 +634,12 @@ function displayResults(data, resultElement) {
             </div>
         `;
     });
+    
+    console.log('🎨 렌더링 직전 편의성 항목 점수:', convenienceItemsList.slice(0, 5).map(item => ({
+        item_id: item.item_id,
+        name: item.item,
+        score: item.score
+    })));
     
     resultElement.innerHTML = `
         <div style="max-width:1200px;margin:0 auto;padding:20px;">
