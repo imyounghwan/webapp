@@ -72,6 +72,43 @@ export interface ActionFeedback {
   details: string[]                // 발견된 패턴 상세 목록
 }
 
+/**
+ * 현실 세계 일치 분석 결과
+ * Nielsen 2번 원칙: Match between system and the real world
+ */
+export interface RealWorldMatch {
+  score: number                    // 0-10점: 종합 현실 세계 일치 점수
+  
+  // 1차원: 언어 친화도 (Language Friendliness) - 40% 가중치
+  languageFriendliness: {
+    jargonDensity: number          // 전문용어 밀도 (%)
+    jargonCount: number            // 전문용어 개수
+    totalWords: number             // 전체 단어 수
+    avgSentenceLength: number      // 평균 문장 길이
+    longSentencesRatio: number     // 긴 문장 비율 (%)
+    score: number                  // 언어 친화도 점수 (0-10)
+  }
+  
+  // 2차원: 데이터 자연스러움 (Data Naturalness) - 30% 가중치
+  dataNaturalness: {
+    rawDataCount: number           // 부자연스러운 시스템 데이터 개수
+    naturalDataCount: number       // 자연스러운 표현 개수
+    naturalRatio: number           // 자연스러운 표현 비율 (%)
+    score: number                  // 데이터 자연스러움 점수 (0-10)
+  }
+  
+  // 3차원: 인터페이스 친화도 (Interface Friendliness) - 30% 가중치
+  interfaceFriendliness: {
+    actionWords: number            // 행동 중심 동사 개수
+    userCentricWords: number       // 사용자 중심 언어 개수
+    systemWords: number            // 시스템 중심 언어 개수
+    metaphors: number              // 현실 세계 은유 개수
+    score: number                  // 인터페이스 친화도 점수 (0-10)
+  }
+  
+  details: string[]                // 발견된 패턴 상세 목록
+}
+
 export interface HTMLStructure {
   url: string
   html?: string  // 원본 HTML (KRDS 평가용)
@@ -80,6 +117,7 @@ export interface HTMLStructure {
   content: ContentStructure
   forms: FormStructure
   visuals: VisualStructure
+  realWorldMatch: RealWorldMatch   // 현실 세계 일치 분석
 }
 
 export interface NavigationStructure {
@@ -141,6 +179,7 @@ export function analyzeHTML(
   const content = analyzeContent(html)
   const forms = analyzeForms(html)
   const visuals = analyzeVisuals(html)
+  const realWorldMatch = analyzeRealWorldMatch(html)
 
   return {
     url,
@@ -149,7 +188,8 @@ export function analyzeHTML(
     accessibility,
     content,
     forms,
-    visuals
+    visuals,
+    realWorldMatch
   }
 }
 
@@ -660,5 +700,232 @@ function analyzeVisuals(html: string): VisualStructure {
     imageCount,
     videoCount,
     iconCount: iconMatches.length
+  }
+}
+
+/**
+ * 현실 세계 일치 분석
+ * Nielsen 2번 원칙: 시스템과 현실 세계의 일치
+ */
+function analyzeRealWorldMatch(html: string): RealWorldMatch {
+  // HTML에서 텍스트만 추출
+  const textContent = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')  // 스크립트 제거
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')    // 스타일 제거
+    .replace(/<[^>]+>/g, ' ')                           // 태그 제거
+    .replace(/\s+/g, ' ')                               // 공백 정리
+    .trim()
+  
+  const details: string[] = []
+  
+  // 1차원: 언어 친화도 분석
+  const languageFriendliness = analyzeLanguageFriendliness(textContent, details)
+  
+  // 2차원: 데이터 자연스러움 분석
+  const dataNaturalness = analyzeDataNaturalness(textContent, details)
+  
+  // 3차원: 인터페이스 친화도 분석
+  const interfaceFriendliness = analyzeInterfaceFriendliness(textContent, details)
+  
+  // 최종 점수 계산 (가중 평균: 언어 40%, 데이터 30%, 인터페이스 30%)
+  const finalScore = (
+    languageFriendliness.score * 0.4 +
+    dataNaturalness.score * 0.3 +
+    interfaceFriendliness.score * 0.3
+  )
+  
+  return {
+    score: Math.round(finalScore * 10) / 10,  // 소수점 1자리
+    languageFriendliness,
+    dataNaturalness,
+    interfaceFriendliness,
+    details
+  }
+}
+
+/**
+ * 언어 친화도 분석
+ */
+function analyzeLanguageFriendliness(text: string, details: string[]): RealWorldMatch['languageFriendliness'] {
+  const words = text.match(/[\w가-힣]+/g) || []
+  const totalWords = words.length
+  
+  // 전문용어 패턴
+  const systemJargon = [
+    // IT 용어
+    /솔루션|프로세스|워크플로우|인스턴스|리소스|세션|API|SDK/gi,
+    /퍼포먼스|컨버전|임팩트|디플로이|빌드|런타임|마이그레이션/gi,
+    // 불필요한 한자어/행정용어
+    /귀하|당사|폐사|본인|차수|건명|시행|이행|준수|기재|수취인/gi,
+    // 영어 약자 (연속된 대문자 3자 이상)
+    /\b[A-Z]{3,}\b/g
+  ]
+  
+  let jargonCount = 0
+  systemJargon.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) jargonCount += matches.length
+  })
+  
+  const jargonDensity = totalWords > 0 ? (jargonCount / totalWords) * 100 : 0
+  
+  // 문장 복잡도 분석
+  const sentences = text.split(/[.!?。]+/).filter(s => s.trim().length > 10)
+  let totalWordsInSentences = 0
+  let longSentences = 0
+  
+  sentences.forEach(sentence => {
+    const sentenceWords = sentence.trim().split(/\s+/)
+    totalWordsInSentences += sentenceWords.length
+    if (sentenceWords.length > 25) longSentences++
+  })
+  
+  const avgSentenceLength = sentences.length > 0 ? totalWordsInSentences / sentences.length : 0
+  const longSentencesRatio = sentences.length > 0 ? (longSentences / sentences.length) * 100 : 0
+  
+  // 점수 계산
+  // 1. 전문용어 밀도 점수: 낮을수록 좋음 (0~2% 만점, 10% 이상 0점)
+  const jargonScore = Math.max(0, 100 - jargonDensity * 10)
+  
+  // 2. 문장 복잡도 점수: 10~20단어 적정 (벗어날수록 감점)
+  let complexityScore = 100
+  if (avgSentenceLength > 20) {
+    complexityScore = Math.max(0, 100 - (avgSentenceLength - 20) * 4)
+  } else if (avgSentenceLength < 10 && avgSentenceLength > 0) {
+    complexityScore = Math.max(50, 100 - (10 - avgSentenceLength) * 3)
+  }
+  
+  const languageScore = (jargonScore + complexityScore) / 2
+  
+  // 디테일 추가
+  if (jargonDensity > 5) {
+    details.push(`⚠️ 전문용어 밀도가 높음 (${jargonDensity.toFixed(1)}%)`)
+  } else if (jargonDensity < 2) {
+    details.push(`✅ 친숙한 용어 사용 (전문용어 ${jargonDensity.toFixed(1)}%)`)
+  }
+  
+  if (avgSentenceLength > 25) {
+    details.push(`⚠️ 문장이 길고 복잡함 (평균 ${avgSentenceLength.toFixed(1)}단어)`)
+  } else if (avgSentenceLength >= 10 && avgSentenceLength <= 20) {
+    details.push(`✅ 적절한 문장 길이 (평균 ${avgSentenceLength.toFixed(1)}단어)`)
+  }
+  
+  return {
+    jargonDensity: Math.round(jargonDensity * 10) / 10,
+    jargonCount,
+    totalWords,
+    avgSentenceLength: Math.round(avgSentenceLength * 10) / 10,
+    longSentencesRatio: Math.round(longSentencesRatio * 10) / 10,
+    score: Math.round(languageScore / 10 * 10) / 10  // 0-10점으로 변환
+  }
+}
+
+/**
+ * 데이터 자연스러움 분석
+ */
+function analyzeDataNaturalness(text: string, details: string[]): RealWorldMatch['dataNaturalness'] {
+  let rawDataScore = 0
+  let naturalDataScore = 0
+  
+  // 부자연스러운 시스템 데이터 패턴
+  const rawPatterns = [
+    { pattern: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/g, weight: 5, name: 'ISO 날짜' },
+    { pattern: /\d{8,}/g, weight: 3, name: '긴 숫자 코드' },
+    { pattern: /\d{4,}(?![년월일])/g, weight: 2, name: '콤마 없는 큰 숫자' },
+    { pattern: /[A-Z0-9]{6,}/g, weight: 3, name: '시스템 코드' }
+  ]
+  
+  rawPatterns.forEach(({ pattern, weight, name }) => {
+    const matches = text.match(pattern)
+    if (matches) {
+      rawDataScore += matches.length * weight
+      if (matches.length > 3) {
+        details.push(`⚠️ ${name} ${matches.length}개 발견`)
+      }
+    }
+  })
+  
+  // 자연스러운 표현 패턴
+  const naturalPatterns = [
+    { pattern: /\d{1,3}(,\d{3})+/g, weight: 3, name: '콤마 있는 숫자' },
+    { pattern: /\d{4}년\s*\d{1,2}월\s*\d{1,2}일/g, weight: 5, name: '한국식 날짜' },
+    { pattern: /오전|오후\s*\d{1,2}:\d{2}/g, weight: 4, name: '12시간 표기' },
+    { pattern: /약\s*\d+|대략\s*\d+|정도/g, weight: 3, name: '근사치 표현' }
+  ]
+  
+  naturalPatterns.forEach(({ pattern, weight, name }) => {
+    const matches = text.match(pattern)
+    if (matches) {
+      naturalDataScore += matches.length * weight
+      if (matches.length > 2) {
+        details.push(`✅ ${name} ${matches.length}개 사용`)
+      }
+    }
+  })
+  
+  const totalDataElements = rawDataScore + naturalDataScore
+  const naturalRatio = totalDataElements > 0 ? (naturalDataScore / totalDataElements) * 100 : 100
+  
+  // 점수 계산: 자연스러운 비율이 높을수록 좋음
+  const dataScore = naturalRatio
+  
+  return {
+    rawDataCount: Math.round(rawDataScore),
+    naturalDataCount: Math.round(naturalDataScore),
+    naturalRatio: Math.round(naturalRatio * 10) / 10,
+    score: Math.round(dataScore / 10 * 10) / 10  // 0-10점으로 변환
+  }
+}
+
+/**
+ * 인터페이스 친화도 분석
+ */
+function analyzeInterfaceFriendliness(text: string, details: string[]): RealWorldMatch['interfaceFriendliness'] {
+  const lowerText = text.toLowerCase()
+  let friendlyScore = 0
+  
+  // 긍정 신호: 행동 중심의 명확한 동사
+  const actionWords = text.match(/시작하|만들|보내|저장하|찾아보|확인하|선택하|클릭|눌러|등록|신청|조회|검색/g) || []
+  friendlyScore += actionWords.length * 3
+  
+  // 긍정 신호: 사용자 중심 언어
+  const userCentricWords = text.match(/당신|여러분|회원님|고객님|함께|도와드|안내|이용|편리|간편|쉽게/g) || []
+  friendlyScore += userCentricWords.length * 2
+  
+  // 긍정 신호: 친근한 설명
+  const explanatoryWords = text.match(/예를 들어|쉽게 말하면|간단히|쉽게|편리하게|빠르게/g) || []
+  friendlyScore += explanatoryWords.length * 4
+  
+  // 부정 신호: 시스템 중심 언어
+  const systemWords = text.match(/시스템|데이터베이스|서버|관리자|운영자|처리|수행|실행|구동|배포/g) || []
+  friendlyScore -= systemWords.length * 3
+  
+  // 긍정 신호: 현실 세계 은유 (아이콘, 버튼 텍스트)
+  const metaphors = text.match(/장바구니|폴더|휴지통|집|홈|담기|꺼내기|넣기|빼기|보관함|서랍/g) || []
+  friendlyScore += metaphors.length * 5
+  
+  // 점수 정규화 (0-100점)
+  const normalizedScore = Math.max(0, Math.min(100, 50 + friendlyScore))
+  
+  // 디테일 추가
+  if (actionWords.length > 5) {
+    details.push(`✅ 행동 중심 동사 ${actionWords.length}개 사용`)
+  }
+  if (userCentricWords.length > 3) {
+    details.push(`✅ 사용자 중심 언어 ${userCentricWords.length}개 사용`)
+  }
+  if (systemWords.length > 5) {
+    details.push(`⚠️ 시스템 중심 언어 ${systemWords.length}개 발견`)
+  }
+  if (metaphors.length > 2) {
+    details.push(`✅ 현실 은유 ${metaphors.length}개 사용`)
+  }
+  
+  return {
+    actionWords: actionWords.length,
+    userCentricWords: userCentricWords.length,
+    systemWords: systemWords.length,
+    metaphors: metaphors.length,
+    score: Math.round(normalizedScore / 10 * 10) / 10  // 0-10점으로 변환
   }
 }

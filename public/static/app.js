@@ -200,6 +200,17 @@ document.addEventListener('DOMContentLoaded', () => {
             await new Promise(resolve => setTimeout(resolve, 500));
             
             const data = await response.json();
+            console.log('✅ 백엔드 응답 받음:', {
+                url: data.url,
+                overall_score: data.overall_score,
+                convenience_score: data.convenience_score,
+                convenience_items_count: data.convenience_items?.length,
+                first_three_items: data.convenience_items?.slice(0, 3).map(item => ({
+                    item_id: item.item_id,
+                    name: item.item,
+                    score: item.score
+                }))
+            });
             displayResults(data, resultContainer);
         } catch (error) {
             clearInterval(progressInterval);
@@ -246,6 +257,18 @@ function displayResults(data, resultElement) {
         url: data?.url,
         mode: data?.mode
     });
+    console.log('📊 displayResults 받은 데이터:', {
+        overall_score: data.overall_score,
+        convenience_score: data.convenience_score,
+        convenience_items_count: data.convenience_items?.length,
+        전체_편의성_항목: data.convenience_items?.map((item, idx) => ({
+            index: idx,
+            item_id: item.item_id,
+            name: item.item,
+            score: item.score,
+            description: item.description?.substring(0, 50)
+        }))
+    });
     
     if (!resultElement) {
         console.error('❌ resultElement is null!');
@@ -277,6 +300,36 @@ function displayResults(data, resultElement) {
     if (predicted_score) {
         const convenienceItems = convenience_items || [];
         const designItems = design_items || [];
+        
+        // 🔥 localStorage에 저장된 수정된 점수를 우선 적용 (총점 계산용)
+        try {
+            const savedResult = localStorage.getItem('lastAnalysisResult');
+            if (savedResult) {
+                const savedData = JSON.parse(savedResult);
+                // 편의성 항목 점수 우선 적용
+                if (savedData.convenience_items) {
+                    savedData.convenience_items.forEach(savedItem => {
+                        const matchedItem = convenienceItems.find(item => item.item_id === savedItem.item_id);
+                        if (matchedItem && savedItem.score !== matchedItem.score) {
+                            console.log(`🔄 총점 계산용 점수 적용 (편의성): ${matchedItem.item_id} ${matchedItem.score} → ${savedItem.score}`);
+                            matchedItem.score = savedItem.score;
+                        }
+                    });
+                }
+                // 디자인 항목 점수 우선 적용
+                if (savedData.design_items) {
+                    savedData.design_items.forEach(savedItem => {
+                        const matchedItem = designItems.find(item => item.item_id === savedItem.item_id);
+                        if (matchedItem && savedItem.score !== matchedItem.score) {
+                            console.log(`🔄 총점 계산용 점수 적용 (디자인): ${matchedItem.item_id} ${matchedItem.score} → ${savedItem.score}`);
+                            matchedItem.score = savedItem.score;
+                        }
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('❌ localStorage 점수 로드 실패 (총점 계산):', e);
+        }
         
         // 편의성 평균 계산
         if (convenienceItems.length > 0) {
@@ -385,6 +438,33 @@ function displayResults(data, resultElement) {
     // 편의성 항목
     const convenienceItemsList = convenience_items || [];
     console.log('📊 편의성 항목 수:', convenienceItemsList.length);
+    console.log('📊 편의성 항목 전체 점수:', convenienceItemsList.map(item => ({
+        item_id: item.item_id,
+        name: item.item,
+        score: item.score
+    })));
+    
+    // 🔥 localStorage에 저장된 수정된 점수를 우선 적용
+    try {
+        const savedResult = localStorage.getItem('lastAnalysisResult');
+        if (savedResult) {
+            const savedData = JSON.parse(savedResult);
+            if (savedData.convenience_items) {
+                savedData.convenience_items.forEach(savedItem => {
+                    const matchedItem = convenienceItemsList.find(item => item.item_id === savedItem.item_id);
+                    if (matchedItem && savedItem.score !== matchedItem.score) {
+                        console.log(`🔄 localStorage 점수 우선 적용: ${matchedItem.item_id} ${matchedItem.score} → ${savedItem.score}`);
+                        matchedItem.score = savedItem.score;
+                        if (savedItem.description) matchedItem.description = savedItem.description;
+                        if (savedItem.recommendation) matchedItem.recommendation = savedItem.recommendation;
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.error('❌ localStorage 점수 로드 실패:', e);
+    }
+    
     let convenienceHTML = '<h3 style="color:#00C9A7;font-size:24px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
     convenienceItemsList.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
@@ -469,6 +549,28 @@ function displayResults(data, resultElement) {
     
     // 디자인 항목
     const designItemsList = design_items || [];
+    
+    // 🔥 localStorage에 저장된 수정된 점수를 우선 적용 (디자인)
+    try {
+        const savedResult = localStorage.getItem('lastAnalysisResult');
+        if (savedResult) {
+            const savedData = JSON.parse(savedResult);
+            if (savedData.design_items) {
+                savedData.design_items.forEach(savedItem => {
+                    const matchedItem = designItemsList.find(item => item.item_id === savedItem.item_id);
+                    if (matchedItem && savedItem.score !== matchedItem.score) {
+                        console.log(`🔄 localStorage 점수 우선 적용 (디자인): ${matchedItem.item_id} ${matchedItem.score} → ${savedItem.score}`);
+                        matchedItem.score = savedItem.score;
+                        if (savedItem.description) matchedItem.description = savedItem.description;
+                        if (savedItem.recommendation) matchedItem.recommendation = savedItem.recommendation;
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.error('❌ localStorage 점수 로드 실패 (디자인):', e);
+    }
+    
     let designHTML = '<h3 style="color:#9333EA;font-size:24px;font-weight:800;margin-bottom:25px;margin-top:50px;padding-bottom:15px;border-bottom:3px solid #9333EA;">🎨 디자인 항목 (5개)</h3>';
     designItemsList.forEach((item, itemIndex) => {
         const scoreColor = item.score >= 4.5 ? '#00C9A7' : item.score >= 3.5 ? '#0066FF' : item.score >= 2.5 ? '#f59e0b' : '#ef4444';
@@ -994,25 +1096,22 @@ window.saveScore = async function(itemId, itemIdValue, itemName, originalScore, 
             try {
                 const data = JSON.parse(savedResult);
                 // 수정된 점수를 반영하여 다시 저장
-                if (data.predicted_score) {
-                    // 편의성/디자인 항목 찾아서 업데이트
-                    const items = data.predicted_score.convenience_items || [];
-                    const designItems = data.predicted_score.design_items || [];
-                    const allItems = [...items, ...designItems];
-                    
-                    for (let item of allItems) {
-                        if (item.item_id === itemIdValue) {
-                            item.score = correctedScore;
-                            if (correctedDiagnosis) {
-                                item.diagnosis = correctedDiagnosis;
-                            }
-                            break;
+                const items = data.convenience_items || [];
+                const designItems = data.design_items || [];
+                const allItems = [...items, ...designItems];
+                
+                for (let item of allItems) {
+                    if (item.item_id === itemIdValue) {
+                        item.score = correctedScore;
+                        if (correctedDiagnosis) {
+                            item.diagnosis = correctedDiagnosis;
                         }
+                        break;
                     }
-                    
-                    // 업데이트된 데이터 저장
-                    localStorage.setItem('lastAnalysisResult', JSON.stringify(data));
                 }
+                
+                // 업데이트된 데이터 저장
+                localStorage.setItem('lastAnalysisResult', JSON.stringify(data));
             } catch (e) {
                 console.error('Failed to update localStorage:', e);
             }

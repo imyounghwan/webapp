@@ -97,19 +97,54 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
       return Math.max(1, Math.min(5, baseScore + adjustment))
     })(),
     
-    // N2: 현실 세계 일치
-    N2_1_familiar_terms: calculateScore(
-      weights.N2_1_familiar_terms.base_score,
-      calculateAdjustment(structure, weights.N2_1_familiar_terms)
-    ),
-    N2_2_natural_flow: calculateScore(
-      weights.N2_2_natural_flow.base_score,
-      calculateAdjustment(structure, weights.N2_2_natural_flow)
-    ),
-    N2_3_real_world_metaphor: calculateScore(
-      weights.N2_3_real_world_metaphor.base_score,
-      calculateAdjustment(structure, weights.N2_3_real_world_metaphor)
-    ),
+    // N2: 현실 세계 일치 (개선된 3차원 측정)
+    N2_1_familiar_terms: (() => {
+      const rwm = structure.realWorldMatch
+      const baseScore = weights.N2_1_familiar_terms.base_score
+      
+      // 언어 친화도 점수 (0-10) 기반 조정
+      // 8점 이상: +1.5 (만점)
+      // 6-8점: +1.0 (우수)
+      // 4-6점: +0.5 (보통)
+      // 2-4점: 0 (기본)
+      // 2점 미만: -1.0 (부족)
+      let adjustment = 0
+      if (rwm.languageFriendliness.score >= 8) adjustment = 1.5
+      else if (rwm.languageFriendliness.score >= 6) adjustment = 1.0
+      else if (rwm.languageFriendliness.score >= 4) adjustment = 0.5
+      else if (rwm.languageFriendliness.score >= 2) adjustment = 0
+      else adjustment = -1.0
+      
+      return calculateScore(baseScore, adjustment)
+    })(),
+    N2_2_natural_flow: (() => {
+      const rwm = structure.realWorldMatch
+      const baseScore = weights.N2_2_natural_flow.base_score
+      
+      // 데이터 자연스러움 점수 (0-10) 기반 조정
+      let adjustment = 0
+      if (rwm.dataNaturalness.score >= 8) adjustment = 1.5
+      else if (rwm.dataNaturalness.score >= 6) adjustment = 1.0
+      else if (rwm.dataNaturalness.score >= 4) adjustment = 0.5
+      else if (rwm.dataNaturalness.score >= 2) adjustment = 0
+      else adjustment = -1.0
+      
+      return calculateScore(baseScore, adjustment)
+    })(),
+    N2_3_real_world_metaphor: (() => {
+      const rwm = structure.realWorldMatch
+      const baseScore = weights.N2_3_real_world_metaphor.base_score
+      
+      // 인터페이스 친화도 점수 (0-10) 기반 조정
+      let adjustment = 0
+      if (rwm.interfaceFriendliness.score >= 8) adjustment = 1.5
+      else if (rwm.interfaceFriendliness.score >= 6) adjustment = 1.0
+      else if (rwm.interfaceFriendliness.score >= 4) adjustment = 0.5
+      else if (rwm.interfaceFriendliness.score >= 2) adjustment = 0
+      else adjustment = -1.0
+      
+      return calculateScore(baseScore, adjustment)
+    })(),
     
     // N3: 사용자 제어와 자유
     N3_1_undo_redo: calculateScore(
