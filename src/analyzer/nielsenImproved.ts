@@ -83,7 +83,7 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
     ),
     N1_3_action_feedback: (() => {
       // 새로운 3차원 측정 시스템 사용
-      const actionFeedback = accessibility.actionFeedback
+      const actionFeedback = structure.accessibility.actionFeedback
       const baseScore = weights.N1_3_action_feedback.base_score
       
       // actionFeedback.score (0-10점)를 기반으로 가중치 적용
@@ -340,7 +340,7 @@ HTML에서 로딩 상태를 알려주는 시각적 표시나 텍스트가 거의
     },
     
     N1_3_action_feedback: (() => {
-      const actionFeedback = accessibility.actionFeedback
+      const actionFeedback = structure.accessibility.actionFeedback
       const score = actionFeedback.score
       
       // 5단계 점수 구간별 진단
