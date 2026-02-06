@@ -218,8 +218,11 @@ export function generateImprovedDiagnoses(structure: HTMLStructure, scores: Impr
       description: (() => {
         const loadingUI = accessibility.loadingUI
         if (!loadingUI) {
+          console.warn('[N1_2] loadingUI is undefined in accessibility:', accessibility)
           return '로딩 UI 분석 데이터를 찾을 수 없습니다.'
         }
+        
+        console.log('[N1_2] loadingUI:', loadingUI)
         
         if (loadingUI.score >= 8) {
           return `✅ 매우 우수한 로딩 UI (점수: ${loadingUI.score.toFixed(1)}/10)

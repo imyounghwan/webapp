@@ -624,7 +624,9 @@ function aggregateResults(pageResults: any[]): any {
     ariaLabelCount: Math.round(allPages.reduce((sum, s) => sum + s.accessibility.ariaLabelCount, 0) / allPages.length),
     headingStructure: allPages.filter(s => s.accessibility.headingStructure).length > allPages.length / 2,
     langAttribute: allPages.some(s => s.accessibility.langAttribute),
-    skipLinkExists: allPages.some(s => s.accessibility.skipLinkExists)
+    skipLinkExists: allPages.some(s => s.accessibility.skipLinkExists),
+    loadingIndicatorExists: allPages.some(s => s.accessibility.loadingIndicatorExists),  // 하위 호환성
+    loadingUI: mainPage.structure.accessibility.loadingUI  // 메인 페이지의 로딩 UI 분석 결과 사용
   }
   
   // Content 종합 (평균)
