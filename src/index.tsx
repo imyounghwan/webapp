@@ -957,7 +957,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         // 피드백 데이터 적용 (AI 학습 반영)
         const adjustedScore = applyFeedbackAdjustment(id, baseScore, validUrls[0])
         
-        convenience_items_detail.push({
+        const itemData: any = {
           item: desc?.name || mapping.key,
           item_id: id,
           category: '편의성',
@@ -968,7 +968,14 @@ app.post('/api/analyze', authMiddleware, async (c) => {
           why_important: desc?.why_important || '',
           evaluation_criteria: desc?.evaluation_criteria || '',
           affected_pages: relevantPages
-        })
+        }
+        
+        // N1_2 로딩 상태: loadingUI 상세 정보 추가
+        if (id === 'N1_2' && structure?.accessibility?.loadingUI) {
+          itemData.loadingUI = structure.accessibility.loadingUI
+        }
+        
+        convenience_items_detail.push(itemData)
       })
       
       const designMapping = [
@@ -1289,7 +1296,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       // 피드백 데이터 적용 (AI 학습 반영)
       const adjustedScore = applyFeedbackAdjustment(id, baseScore, url)
       
-      convenience_items_detail.push({
+      const itemData: any = {
         item: desc?.name || key,
         item_id: id,
         category: '편의성',
@@ -1300,7 +1307,14 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         why_important: desc?.why_important || '',
         evaluation_criteria: desc?.evaluation_criteria || '',
         affected_pages: relevantPages
-      })
+      }
+      
+      // N1_2 로딩 상태: loadingUI 상세 정보 추가
+      if (id === 'N1_2' && structure?.accessibility?.loadingUI) {
+        itemData.loadingUI = structure.accessibility.loadingUI
+      }
+      
+      convenience_items_detail.push(itemData)
     })
     
     // 디자인 항목 상세 (ID 매핑 추가)
