@@ -103,17 +103,18 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
       const baseScore = weights.N2_1_familiar_terms.base_score
       
       // 언어 친화도 점수 (0-10) 기반 조정
-      // 8점 이상: +1.5 (만점)
-      // 6-8점: +1.0 (우수)
-      // 4-6점: +0.5 (보통)
-      // 2-4점: 0 (기본)
-      // 2점 미만: -1.0 (부족)
+      // 전문용어가 많을수록 더 큰 감점
+      // 8점 이상: +1.5 (전문용어 거의 없음, 문장 적절)
+      // 6-8점: +0.5 (약간 개선 필요)
+      // 4-6점: -0.5 (전문용어 많음, 감점)
+      // 2-4점: -1.0 (전문용어 매우 많음, 큰 감점)
+      // 2점 미만: -1.5 (전문용어 과다, 최대 감점)
       let adjustment = 0
       if (rwm.languageFriendliness.score >= 8) adjustment = 1.5
-      else if (rwm.languageFriendliness.score >= 6) adjustment = 1.0
-      else if (rwm.languageFriendliness.score >= 4) adjustment = 0.5
-      else if (rwm.languageFriendliness.score >= 2) adjustment = 0
-      else adjustment = -1.0
+      else if (rwm.languageFriendliness.score >= 6) adjustment = 0.5
+      else if (rwm.languageFriendliness.score >= 4) adjustment = -0.5
+      else if (rwm.languageFriendliness.score >= 2) adjustment = -1.0
+      else adjustment = -1.5
       
       const finalScore = calculateScore(baseScore, adjustment)
       console.log(`[N2.1 Nielsen] languageFriendliness: ${rwm.languageFriendliness.score}, baseScore: ${baseScore}, adjustment: ${adjustment}, final: ${finalScore}`)
