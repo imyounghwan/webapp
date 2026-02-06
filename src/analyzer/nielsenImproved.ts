@@ -215,12 +215,114 @@ export function generateImprovedDiagnoses(structure: HTMLStructure, scores: Impr
     },
     
     N1_2_loading_status: {
-      description: accessibility.loadingIndicatorExists
-        ? `로딩 인디케이터가 발견되어 사용자에게 처리 상태를 알려줍니다. (스피너, 프로그레스 바, "로딩중" 텍스트 등)`
-        : `로딩 인디케이터를 찾을 수 없습니다. HTML에서 로딩 상태를 알려주는 시각적 표시나 텍스트가 없어 사용자가 페이지 로딩 중인지 파악하기 어렵습니다.`,
-      recommendation: accessibility.loadingIndicatorExists
-        ? '로딩 표시가 잘 구현되어 있습니다. 현재 상태를 유지하세요.'
-        : '페이지 로딩 중이거나 데이터 처리 중일 때 스피너(빙글빙글 도는 아이콘), 프로그레스 바, 또는 "처리중..." 메시지를 추가하여 사용자가 시스템이 작동 중임을 알 수 있도록 개선하세요. ARIA role="status"나 aria-live 속성을 함께 사용하면 스크린 리더 사용자에게도 도움이 됩니다.'
+      description: (() => {
+        const loadingUI = accessibility.loadingUI
+        if (!loadingUI) {
+          return '로딩 UI 분석 데이터를 찾을 수 없습니다.'
+        }
+        
+        if (loadingUI.score >= 8) {
+          return `✅ 매우 우수한 로딩 UI (점수: ${loadingUI.score.toFixed(1)}/10)
+발견된 패턴: ${loadingUI.details.join(', ')}
+사용자가 페이지 로딩 상태를 명확하게 인지할 수 있습니다.`
+        } else if (loadingUI.score >= 6) {
+          return `✓ 좋은 로딩 UI (점수: ${loadingUI.score.toFixed(1)}/10)
+발견된 패턴: ${loadingUI.details.join(', ')}
+로딩 상태 표시가 적절하게 구현되어 있습니다.`
+        } else if (loadingUI.score >= 4) {
+          return `△ 기본적인 로딩 UI (점수: ${loadingUI.score.toFixed(1)}/10)
+발견된 패턴: ${loadingUI.details.join(', ')}
+로딩 상태를 알리지만 개선의 여지가 있습니다.`
+        } else if (loadingUI.score >= 2) {
+          return `⚠️ 최소한의 로딩 UI (점수: ${loadingUI.score.toFixed(1)}/10)
+발견된 패턴: ${loadingUI.details.join(', ')}
+로딩 상태 표시가 부족합니다.`
+        } else {
+          return `❌ 로딩 UI 없음 (점수: ${loadingUI.score.toFixed(1)}/10)
+HTML에서 로딩 상태를 알려주는 시각적 표시나 텍스트가 거의 없어 사용자가 페이지 로딩 중인지 파악하기 어렵습니다.`
+        }
+      })(),
+      recommendation: (() => {
+        const loadingUI = accessibility.loadingUI
+        if (!loadingUI) {
+          return '로딩 UI 분석 데이터를 확인할 수 없습니다.'
+        }
+        
+        if (loadingUI.score >= 8) {
+          return '✅ 로딩 UI가 매우 우수합니다! 다음을 유지하세요:\n• 다양한 로딩 패턴 (ARIA, HTML5, 애니메이션)\n• 접근성 속성 (aria-busy, role="status")\n• 시각적 피드백 (스피너, 프로그레스 바)'
+        } else if (loadingUI.score >= 6) {
+          return '✓ 로딩 UI가 잘 구현되어 있습니다. 추가 개선 사항:\n• 로딩 지속 시간이 긴 경우 진행률 표시 추가\n• 모든 비동기 작업에 일관된 로딩 표시 적용'
+        } else if (loadingUI.score >= 4) {
+          return `△ 로딩 UI 개선 권장 (현재 점수: ${loadingUI.score.toFixed(1)}/10)
+
+**추가하면 좋은 요소:**
+1. **ARIA 속성**: aria-busy="true", role="progressbar", aria-live="polite"
+2. **HTML5 태그**: <progress value="70" max="100"></progress>
+3. **CSS 애니메이션**: 스피너 회전 효과 (@keyframes spin)
+4. **로딩 텍스트**: "로딩 중...", "처리 중...", "잠시만 기다려주세요"
+
+**예시 코드:**
+\`\`\`html
+<!-- 접근성이 우수한 로딩 UI -->
+<div class="loading-spinner" role="status" aria-live="polite">
+  <div class="spinner"></div>
+  <span class="sr-only">로딩 중입니다...</span>
+</div>
+\`\`\``
+        } else if (loadingUI.score >= 2) {
+          return `⚠️ 로딩 UI가 부족합니다 (현재 점수: ${loadingUI.score.toFixed(1)}/10)
+
+**시급히 추가해야 할 요소:**
+1. **CSS 스피너**: 간단한 회전 애니메이션
+\`\`\`css
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spinner { animation: spin 1s linear infinite; }
+\`\`\`
+
+2. **로딩 텍스트**: 최소한 "로딩 중..." 메시지
+3. **프로그레스 바**: <progress> 태그로 진행 상태 표시
+4. **ARIA 레이블**: aria-busy="true"로 스크린 리더 지원`
+        } else {
+          return `❌ 로딩 UI가 거의 없습니다 (현재 점수: ${loadingUI.score.toFixed(1)}/10)
+
+**즉시 구현 필요:**
+
+**1단계: 기본 스피너 추가**
+\`\`\`html
+<div class="loading" role="status">
+  <div class="spinner"></div>
+  <span>로딩 중...</span>
+</div>
+\`\`\`
+
+**2단계: CSS 애니메이션**
+\`\`\`css
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+\`\`\`
+
+**3단계: 접근성 강화**
+- aria-busy="true" 추가
+- role="status" 또는 role="progressbar" 사용
+- aria-live="polite"로 스크린 리더 알림
+
+**4단계: 동적 로딩 UI**
+- JavaScript로 비동기 작업 시작 시 로딩 표시
+- 작업 완료 시 자동으로 로딩 숨김`
+        }
+      })()
     },
     
     N1_3_action_feedback: {
