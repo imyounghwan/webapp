@@ -1029,7 +1029,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       // 피드백 조정 적용 전 임시 점수 (나중에 다시 계산)
       let convenience = convenienceItems.reduce((sum, s) => sum + s, 0) / convenienceItems.length
       let design = designItems.reduce((sum, s) => sum + s, 0) / designItems.length
-      let overall = [...convenienceItems, ...designItems].reduce((sum, s) => sum + s, 0) / (convenienceItems.length + designItems.length)
+      let overall = convenience * 0.6 + design * 0.4  // 편의성 60%, 디자인 40%
       
       const convenience_items_detail: any[] = []
       const design_items_detail: any[] = []
@@ -1156,7 +1156,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       
       convenience = adjustedConvenienceScores.reduce((sum, s) => sum + s, 0) / adjustedConvenienceScores.length
       design = adjustedDesignScores.reduce((sum, s) => sum + s, 0) / adjustedDesignScores.length
-      overall = [...adjustedConvenienceScores, ...adjustedDesignScores].reduce((sum, s) => sum + s, 0) / (adjustedConvenienceScores.length + adjustedDesignScores.length)
+      overall = convenience * 0.6 + design * 0.4  // 편의성 60%, 디자인 40%
       
       const summary = generateEvaluationSummary(convenience_items_detail, design_items_detail, overall, convenience, design)
       
@@ -1377,7 +1377,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     // 피드백 조정 적용 전 임시 점수 (나중에 다시 계산)
     let convenience = convenienceItems.reduce((sum, s) => sum + s, 0) / convenienceItems.length
     let design = designItems.reduce((sum, s) => sum + s, 0) / designItems.length
-    let overall = [...convenienceItems, ...designItems].reduce((sum, s) => sum + s, 0) / (convenienceItems.length + designItems.length)
+    let overall = convenience * 0.6 + design * 0.4  // 편의성 60%, 디자인 40%
     
     // 5. 응답 포맷 (convenience_items, design_items 포함)
     const convenience_items_detail: any[] = []
@@ -1505,7 +1505,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
     
     convenience = adjustedConvenienceScores.reduce((sum, s) => sum + s, 0) / adjustedConvenienceScores.length
     design = adjustedDesignScores.reduce((sum, s) => sum + s, 0) / adjustedDesignScores.length
-    overall = [...adjustedConvenienceScores, ...adjustedDesignScores].reduce((sum, s) => sum + s, 0) / (adjustedConvenienceScores.length + adjustedDesignScores.length)
+    overall = convenience * 0.6 + design * 0.4  // 편의성 60%, 디자인 40%
     
     // 7. 개선 제안 생성
     const recommendations = generateImprovedRecommendations(structure, improvedScores)

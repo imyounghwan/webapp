@@ -319,9 +319,9 @@ function displayResults(data, resultElement) {
             console.log('🔄 Recalculated design score:', predicted_score.design.toFixed(2));
         }
         
-        // 전체 평균 계산
-        predicted_score.overall = (predicted_score.convenience + predicted_score.design) / 2;
-        console.log('🔄 Recalculated overall score:', predicted_score.overall.toFixed(2));
+        // 전체 평균 계산 (편의성 60%, 디자인 40%)
+        predicted_score.overall = predicted_score.convenience * 0.6 + predicted_score.design * 0.4;
+        console.log('🔄 Recalculated overall score:', predicted_score.overall.toFixed(2), '(편의성 60% + 디자인 40%)');
     }
     
     // localStorage에 분석 결과 저장 (새로고침 시 복원용)
