@@ -769,6 +769,9 @@ function analyzeLanguageFriendliness(text: string, details: string[]): RealWorld
   
   const jargonDensity = totalWords > 0 ? (jargonCount / totalWords) * 100 : 0
   
+  // 🔍 디버깅: 전문용어 분석 결과
+  console.log(`[N2.1 Language] 전체 단어: ${totalWords}, 전문용어: ${jargonCount}, 밀도: ${jargonDensity.toFixed(2)}%`)
+  
   // 문장 복잡도 분석
   const sentences = text.split(/[.!?。]+/).filter(s => s.trim().length > 10)
   let totalWordsInSentences = 0
@@ -784,18 +787,32 @@ function analyzeLanguageFriendliness(text: string, details: string[]): RealWorld
   const longSentencesRatio = sentences.length > 0 ? (longSentences / sentences.length) * 100 : 0
   
   // 점수 계산
-  // 1. 전문용어 밀도 점수: 낮을수록 좋음 (0~2% 만점, 10% 이상 0점)
-  const jargonScore = Math.max(0, 100 - jargonDensity * 10)
+  // 1. 전문용어 밀도 점수: 낮을수록 좋음 (0~2% 만점 100점, 5% 50점, 10% 이상 0점)
+  let jargonScore = 100
+  if (jargonDensity >= 10) {
+    jargonScore = 0
+  } else if (jargonDensity >= 5) {
+    jargonScore = 50 - (jargonDensity - 5) * 10  // 5%~10%: 50점 → 0점
+  } else if (jargonDensity >= 2) {
+    jargonScore = 100 - (jargonDensity - 2) * 16.67  // 2%~5%: 100점 → 50점
+  }
+  // 0~2%는 100점
   
   // 2. 문장 복잡도 점수: 10~20단어 적정 (벗어날수록 감점)
   let complexityScore = 100
-  if (avgSentenceLength > 20) {
-    complexityScore = Math.max(0, 100 - (avgSentenceLength - 20) * 4)
+  if (avgSentenceLength > 25) {
+    complexityScore = Math.max(0, 100 - (avgSentenceLength - 25) * 5)  // 25단어 초과 시 급격히 감점
+  } else if (avgSentenceLength > 20) {
+    complexityScore = 100 - (avgSentenceLength - 20) * 4  // 20~25단어: 100점 → 80점
   } else if (avgSentenceLength < 10 && avgSentenceLength > 0) {
-    complexityScore = Math.max(50, 100 - (10 - avgSentenceLength) * 3)
+    complexityScore = Math.max(70, 100 - (10 - avgSentenceLength) * 3)  // 10단어 미만도 감점
   }
+  // 10~20단어는 100점
   
   const languageScore = (jargonScore + complexityScore) / 2
+  
+  // 🔍 디버깅: 점수 계산
+  console.log(`[N2.1 Language] jargonScore: ${jargonScore}, complexityScore: ${complexityScore}, final: ${languageScore / 10}`)
   
   // 디테일 추가
   if (jargonDensity > 5) {
