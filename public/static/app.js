@@ -444,26 +444,8 @@ function displayResults(data, resultElement) {
         score: item.score
     })));
     
-    // 🔥 localStorage에 저장된 수정된 점수를 우선 적용
-    try {
-        const savedResult = localStorage.getItem('lastAnalysisResult');
-        if (savedResult) {
-            const savedData = JSON.parse(savedResult);
-            if (savedData.convenience_items) {
-                savedData.convenience_items.forEach(savedItem => {
-                    const matchedItem = convenienceItemsList.find(item => item.item_id === savedItem.item_id);
-                    if (matchedItem && savedItem.score !== matchedItem.score) {
-                        console.log(`🔄 localStorage 점수 우선 적용: ${matchedItem.item_id} ${matchedItem.score} → ${savedItem.score}`);
-                        matchedItem.score = savedItem.score;
-                        if (savedItem.description) matchedItem.description = savedItem.description;
-                        if (savedItem.recommendation) matchedItem.recommendation = savedItem.recommendation;
-                    }
-                });
-            }
-        }
-    } catch (e) {
-        console.error('❌ localStorage 점수 로드 실패:', e);
-    }
+    // ✅ 재분석 시에는 백엔드에서 이미 피드백이 적용된 점수를 받으므로 localStorage 점수를 사용하지 않음
+    // localStorage는 수정 후 재분석 전까지만 임시로 사용됨
     
     let convenienceHTML = '<h3 style="color:#00C9A7;font-size:24px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid #00C9A7;">📊 편의성 항목 (21개)</h3>';
     convenienceItemsList.forEach((item, itemIndex) => {
