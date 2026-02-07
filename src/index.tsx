@@ -1541,7 +1541,8 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         visuals: structure.visuals,
         realWorldMatch: structure.realWorldMatch,
         userControlFreedom: structure.userControlFreedom,
-        navigationFreedom: structure.navigationFreedom
+        navigationFreedom: structure.navigationFreedom,
+        languageConsistency: structure.languageConsistency
       },
       predicted_score: {
         overall: Math.round(overall * 100) / 100,
