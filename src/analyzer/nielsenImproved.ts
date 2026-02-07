@@ -769,12 +769,24 @@ button:active {
     },
     
     N3_3_flexible_navigation: {
-      description: navigation.linkCount >= 15
-        ? `${navigation.linkCount}개의 링크로 다양한 탐색 경로를 제공합니다.`
-        : `링크가 ${navigation.linkCount}개로 제한적이어서 탐색 유연성이 부족합니다.`,
-      recommendation: navigation.linkCount >= 15
-        ? '${navigation. 현재 상태를 유지하세요.'
-        : '링크가 ${navigation 개선이 필요합니다.'
+      description: (() => {
+        // navigationFreedom 데이터 사용
+        const nf = structure.navigationFreedom
+        if (!nf) return '네비게이션 자유도 분석 실패'
+        
+        const score = nf.totalScore
+        const grade = nf.grade
+        const gap = nf.govComparison?.gap || '0'
+        const ranking = nf.govComparison?.percentile || '미측정'
+        
+        return `네비게이션 자유도 ${score}/100점 (${grade}등급) | 정부 49개 기관 평균 대비 ${gap}점 (${ranking})`
+      })(),
+      recommendation: (() => {
+        const nf = structure.navigationFreedom
+        if (!nf) return '네비게이션 자유도를 확인할 수 없습니다.'
+        
+        return nf.recommendation || '✅ 정부 49개 기관 수준의 네비게이션 제공'
+      })()
     },
     
     N4_1_visual_consistency: {

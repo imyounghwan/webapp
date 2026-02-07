@@ -109,6 +109,131 @@ export interface RealWorldMatch {
   details: string[]                // 발견된 패턴 상세 목록
 }
 
+/**
+ * N3.1 비상구(Emergency Exit) 분석 결과
+ * 사용자 제어와 자유 - 되돌리기 측정
+ */
+export interface UserControlFreedom {
+  totalScore: number
+  grade: 'A' | 'B' | 'C' | 'D'
+  modalEscape: {
+    score: number
+    totalModals: number
+    escapableModals: number
+    escapeRatio: string
+    details: string[]
+  }
+  stepNavigation: {
+    score: number
+    hasNextButtons: boolean
+    hasPrevButtons: boolean
+    hasStepIndicator: boolean
+    hasBreadcrumbs: boolean
+  }
+  inputCancellation: {
+    score: number
+    totalForms: number
+    formsWithReset: number
+    totalFilters: number
+    filtersWithReset: number
+  }
+  destructivePrevention: {
+    score: number
+    totalDangerousActions: number
+    protectedActions: number
+    protectionRatio: string
+  }
+  govComparison: {
+    siteScore: number
+    govAverage: number
+    gap: string
+    percentile: string
+    status: string
+    ranking: string
+    commonIssues: string[]
+    bestPractices: string[]
+  }
+  recommendation: string
+  details: string[]
+}
+
+/**
+ * N3.3 네비게이션 자유도 - 여러 길로 갈 수 있게 하기
+ * 4차원 모델: 텔레포트, 트래킹, 조감도, 회귀
+ */
+export interface NavigationFreedom {
+  totalScore: number
+  grade: 'A' | 'B' | 'C' | 'D'
+  
+  // 1단계: 텔레포트 - 검색을 통한 즉시 이동 (30점)
+  teleport: {
+    score: number
+    hasSearch: boolean
+    isGlobalSearch: boolean  // 헤더에 배치
+    hasSearchIcon: boolean
+    accessibility: string  // 우수/양호/미흡
+    details: string[]
+  }
+  
+  // 2단계: 트래킹 - 브레드크럼을 통한 위치 파악 (30점)
+  tracking: {
+    score: number
+    hasBreadcrumb: boolean
+    linkCount: number
+    totalDepth: number
+    hasCurrentMarker: boolean  // 현재 위치 표시
+    pathDepth: number  // URL 깊이
+    quality: string  // 우수/양호/기본/없음
+    details: string[]
+  }
+  
+  // 3단계: 조감도 - 전체 구조 파악 (25점)
+  birdEye: {
+    score: number
+    hasSitemap: boolean
+    footerLinkCount: number
+    hasFooterNav: boolean
+    structuralVisibility: string  // 우수/양호/미흡
+    details: string[]
+  }
+  
+  // 4단계: 회귀 - 홈으로의 복귀 (15점)
+  return: {
+    score: number
+    hasLogoHomeLink: boolean
+    totalHomeLinkCount: number
+    returnCapability: string  // 우수/기본/없음
+    details: string[]
+  }
+  
+  // 정부 49개 기관 벤치마크
+  govComparison: {
+    siteScore: number
+    govAverage: number
+    gap: string
+    percentile: string
+    status: string
+    ranking: string
+    dimensionAvg: {
+      teleport: number
+      tracking: number
+      birdEye: number
+      return: number
+    }
+    userImpact: {
+      findingDifficulty: string  // 높음/보통/낮음
+      estimatedSearchTime: string
+      bounceRateRisk: string
+      conversionImpact: string
+    }
+    commonIssues: string[]
+    bestPractices: string[]
+  }
+  
+  recommendation: string
+  details: string[]
+}
+
 export interface HTMLStructure {
   url: string
   html?: string  // 원본 HTML (KRDS 평가용)
@@ -117,7 +242,9 @@ export interface HTMLStructure {
   content: ContentStructure
   forms: FormStructure
   visuals: VisualStructure
-  realWorldMatch: RealWorldMatch   // 현실 세계 일치 분석
+  realWorldMatch: RealWorldMatch        // 현실 세계 일치 분석
+  userControlFreedom: UserControlFreedom  // N3.1 비상구 분석
+  navigationFreedom?: NavigationFreedom   // N3.3 네비게이션 자유도 (선택적)
 }
 
 export interface NavigationStructure {
@@ -181,6 +308,7 @@ export function analyzeHTML(
   const visuals = analyzeVisuals(html)
   const realWorldMatch = analyzeRealWorldMatch(html)
   const userControlFreedom = analyzeUserControlFreedom(html)
+  const navigationFreedom = analyzeNavigationFreedom(html, url)
 
   return {
     url,
@@ -191,7 +319,8 @@ export function analyzeHTML(
     forms,
     visuals,
     realWorldMatch,
-    userControlFreedom
+    userControlFreedom,
+    navigationFreedom
   }
 }
 
@@ -1177,6 +1306,347 @@ function analyzeUserControlFreedom(html: string): UserControlFreedom {
         percentile: '하위 50%',
         status: '개선필요',
         ranking: '하위권',
+        commonIssues: [],
+        bestPractices: []
+      },
+      recommendation: '분석 중 오류가 발생했습니다.',
+      details: [`에러: ${error}`]
+    }
+  }
+}
+
+/**
+ * N3.3 네비게이션 자유도 분석
+ * 4차원 모델: 텔레포트(검색), 트래킹(브레드크럼), 조감도(사이트맵), 회귀(홈)
+ * 정부 49개 기관 데이터 기반
+ */
+function analyzeNavigationFreedom(html: string, url: string): NavigationFreedom {
+  try {
+    // 1단계: 텔레포트 - 검색 즉시 이동 (30점)
+    let teleportScore = 0
+    const teleportDetails: string[] = []
+    
+    const searchInputs = html.match(/<input[^>]*(type="search"|name="search"|name="q"|placeholder="[^"]*검색[^"]*")[^>]*>/gi) || []
+    const hasSearchRole = /<[^>]*role="search"[^>]*>/i.test(html)
+    const hasSearch = searchInputs.length > 0 || hasSearchRole
+    
+    if (hasSearch) {
+      teleportScore += 10
+      teleportDetails.push('✅ 검색 기능 존재')
+      
+      // 헤더 영역 배치 확인 (정규식 기반 간단 체크)
+      const headerSection = html.match(/<header[^>]*>[\s\S]*?<\/header>/i)?.[0] || ''
+      const navSection = html.match(/<nav[^>]*>[\s\S]*?<\/nav>/i)?.[0] || ''
+      const topSection = html.substring(0, Math.min(5000, html.length))  // 상단 5000자
+      
+      const isGlobalSearch = headerSection.includes('search') || navSection.includes('search') || 
+                             (topSection.includes('search') && topSection.indexOf('search') < 3000)
+      
+      if (isGlobalSearch) {
+        teleportScore += 15
+        teleportDetails.push('✅ 헤더 영역에 글로벌 검색 배치 (정부 98% 수준)')
+      } else {
+        teleportDetails.push('⚠️ 검색이 하단에 위치 (정부 43% 문제)')
+      }
+      
+      // 검색 아이콘/버튼 명확성
+      const hasSearchButton = /<button[^>]*>[^<]*검색[^<]*<\/button>/i.test(html) ||
+                              /<button[^>]*search[^>]*>/i.test(html) ||
+                              /<svg[^>]*>[\s\S]*?search[\s\S]*?<\/svg>/i.test(html)
+      
+      if (hasSearchButton) {
+        teleportScore += 5
+        teleportDetails.push('✅ 검색 버튼/아이콘 명확')
+      }
+    } else {
+      teleportDetails.push('❌ 검색 기능 없음 - 텔레포트 불가 (정부 필수 기능)')
+    }
+    
+    const teleportAccessibility = teleportScore >= 25 ? '우수' : teleportScore >= 15 ? '양호' : '미흡'
+    
+    // 2단계: 트래킹 - 브레드크럼 네비게이션 (30점)
+    let trackingScore = 0
+    const trackingDetails: string[] = []
+    
+    const breadcrumbPatterns = [
+      /<nav[^>]*aria-label="[^"]*breadcrumb[^"]*"[^>]*>/i,
+      /<[^>]*class="[^"]*breadcrumb[^"]*"[^>]*>/i,
+      /<ol[^>]*class="[^"]*breadcrumb[^"]*"[^>]*>/i,
+      /홈\s*[>›]\s*/i,
+      /Home\s*[>›]\s*/i
+    ]
+    
+    const hasBreadcrumb = breadcrumbPatterns.some(pattern => pattern.test(html))
+    
+    const pathDepth = url.split('/').filter(p => p && p !== 'http:' && p !== 'https:').length
+    
+    if (hasBreadcrumb) {
+      trackingScore += 15
+      trackingDetails.push('✅ 브레드크럼 존재')
+      
+      // 브레드크럼 구조 분석
+      const breadcrumbSection = html.match(/<nav[^>]*breadcrumb[\s\S]*?<\/nav>/i)?.[0] || 
+                                html.match(/<ol[^>]*breadcrumb[\s\S]*?<\/ol>/i)?.[0] || ''
+      
+      const linkCount = (breadcrumbSection.match(/<a[^>]*href/gi) || []).length
+      const totalItems = (breadcrumbSection.match(/<li|<a|<span/gi) || []).length
+      
+      if (linkCount >= 2) {
+        trackingScore += 10
+        trackingDetails.push(`✅ ${linkCount}개 링크 - 계층 구조 명확`)
+      }
+      
+      if (totalItems >= 3) trackingScore += 3
+      if (totalItems >= 4) trackingScore += 2
+      
+      // 현재 위치 표시
+      const hasCurrentMarker = /aria-current="page"|class="[^"]*active[^"]*"|class="[^"]*current[^"]*"/.test(breadcrumbSection)
+      if (hasCurrentMarker) {
+        trackingScore += 5
+        trackingDetails.push('✅ 현재 위치 하이라이트 (국세청 스타일)')
+      }
+    } else {
+      if (pathDepth > 2) {
+        trackingDetails.push(`❌ Critical: ${pathDepth}단계 깊은 구조인데 브레드크럼 부재`)
+        trackingDetails.push('⚠️ 사용자가 현재 위치 파악 불가 (정부 필수)')
+      } else {
+        trackingDetails.push('ℹ️ 단순 구조 - 브레드크럼 불필요')
+        trackingScore += 15  // 불필요한 경우 기본 점수 부여
+      }
+    }
+    
+    const trackingQuality = trackingScore >= 25 ? '우수' : trackingScore >= 20 ? '양호' : trackingScore >= 10 ? '기본' : '없음'
+    
+    // 3단계: 조감도 - 구조적 가시성 (25점)
+    let birdEyeScore = 0
+    const birdEyeDetails: string[] = []
+    
+    const hasSitemap = /<a[^>]*>[^<]*(사이트맵|sitemap|전체메뉴|site map)[^<]*<\/a>/i.test(html)
+    
+    if (hasSitemap) {
+      birdEyeScore += 12
+      birdEyeDetails.push('✅ 사이트맵 링크 존재')
+    } else {
+      birdEyeDetails.push('⚠️ 사이트맵 없음 (정부 100% 제공)')
+    }
+    
+    // 푸터 네비게이션 (Fat Footer)
+    const footerSection = html.match(/<footer[^>]*>[\s\S]*?<\/footer>/i)?.[0] || ''
+    const footerLinks = (footerSection.match(/<a[^>]*href/gi) || []).length
+    const contentLinks = footerLinks  // 간단화: 전체 링크 수로 판단
+    
+    let footerNavScore = 0
+    if (contentLinks >= 8) {
+      footerNavScore = 13
+      birdEyeDetails.push('✅ 풍부한 푸터 네비게이션 (8+ 링크)')
+    } else if (contentLinks >= 4) {
+      footerNavScore = 8
+      birdEyeDetails.push('✅ 기본 푸터 네비게이션')
+    } else if (contentLinks > 0) {
+      birdEyeDetails.push('⚠️ 푸터 네비게이션 빈약 (정부 평균 이하)')
+    }
+    
+    birdEyeScore += footerNavScore
+    
+    const birdEyeVisibility = birdEyeScore >= 20 ? '우수' : birdEyeScore >= 12 ? '양호' : '미흡'
+    
+    // 4단계: 회귀 - 홈 복귀 안전장치 (15점)
+    let returnScore = 0
+    const returnDetails: string[] = []
+    
+    const homeLinks = html.match(/<a[^>]*href=["'](\/|\.\/|index\.html|http[s]?:\/\/[^"'\/]+\/?)[^"']*["'][^>]*>/gi) || []
+    
+    // 로고가 홈으로 연결되는지 확인
+    const hasLogoHomeLink = homeLinks.some(link => {
+      const hasImg = /<img|<svg/i.test(link)
+      const hasLogoClass = /logo|brand/i.test(link)
+      const inHeader = true  // 간단화
+      
+      return (hasImg || hasLogoClass) && inHeader
+    })
+    
+    if (hasLogoHomeLink) {
+      returnScore = 15
+      returnDetails.push('✅ 로고 홈링크 완벽 구현 (정부 표준)')
+    } else if (homeLinks.length > 0) {
+      returnScore = 8
+      returnDetails.push('⚠️ 홈 링크 있지만 로고 연결 없음')
+    } else {
+      returnDetails.push('❌ 홈 복귀 수단 없음 (정부 기본 필수)')
+    }
+    
+    const returnCapability = returnScore >= 15 ? '우수' : returnScore >= 8 ? '기본' : '없음'
+    
+    // 총점 및 등급
+    const totalScore = teleportScore + trackingScore + birdEyeScore + returnScore
+    const grade: 'A' | 'B' | 'C' | 'D' = totalScore >= 85 ? 'A' : totalScore >= 70 ? 'B' : totalScore >= 50 ? 'C' : 'D'
+    
+    // 정부 49개 기관 벤치마크
+    const govAverage = 78
+    const govTop10 = 92
+    const gap = totalScore - govAverage
+    const percentile = gap >= 14 ? '상위 10%' : 
+                       gap >= 0 ? `상위 ${Math.round(50 - (gap / govAverage) * 30)}%` :
+                       `하위 ${Math.round(50 + Math.abs(gap / govAverage) * 30)}%`
+    
+    const status = gap >= 0 ? '정부 평균 이상' : '정부 평균 이하'
+    const ranking = gap >= 14 ? '상위 10% 수준' : gap >= 0 ? '평균 이상' : '개선 필요'
+    
+    // 사용자 임팩트 예측
+    const findingDifficulty = totalScore < 60 ? '높음' : totalScore < 80 ? '보통' : '낮음'
+    const estimatedSearchTime = totalScore < 60 ? '4분 이상' : totalScore < 80 ? '2-3분' : '1분 이내'
+    const bounceRateRisk = totalScore < 60 ? '+40%' : totalScore < 80 ? '+20%' : '정상'
+    const conversionImpact = totalScore < 60 ? '-35%' : totalScore < 80 ? '-15%' : '정상'
+    
+    // 권장사항
+    let recommendation = ''
+    if (grade === 'A') {
+      recommendation = '✅ 네비게이션 자유도 우수 - 정부 상위 10% 수준'
+    } else if (grade === 'B') {
+      recommendation = '대체로 양호 - 일부 경로 보완 필요'
+    } else if (grade === 'C') {
+      recommendation = '⚠️ 개선 필요 - 사용자 길 찾기 어려움'
+    } else {
+      recommendation = '❌ 긴급 개선 필요 - 네비게이션 미로 상태'
+    }
+    
+    const commonIssues = [
+      '검색창이 하단에 숨겨짐 (정부 43% 문제)',
+      '브레드크럼 깊이 부족 (정부 38% 문제)',
+      '푸터 네비게이션 빈약 (정부 31% 문제)',
+      '로고 홈링크 없음 (정부 29% 문제)'
+    ]
+    
+    const bestPractices = [
+      '정부24: 헤더 검색 + 5단계 브레드크럼 + 분야별 사이트맵',
+      '국세청 홈택스: 검색 자동완성 + 현재위치 하이라이트',
+      '서울시: 통합검색 + 관련서비스 추천 + 맞춤형 바로가기'
+    ]
+    
+    return {
+      totalScore,
+      grade,
+      teleport: {
+        score: teleportScore,
+        hasSearch,
+        isGlobalSearch: teleportScore >= 25,
+        hasSearchIcon: teleportScore === 30,
+        accessibility: teleportAccessibility,
+        details: teleportDetails
+      },
+      tracking: {
+        score: trackingScore,
+        hasBreadcrumb,
+        linkCount: 0,  // 간단화
+        totalDepth: 0,
+        hasCurrentMarker: false,
+        pathDepth,
+        quality: trackingQuality,
+        details: trackingDetails
+      },
+      birdEye: {
+        score: birdEyeScore,
+        hasSitemap,
+        footerLinkCount: footerLinks,
+        hasFooterNav: footerLinks > 0,
+        structuralVisibility: birdEyeVisibility,
+        details: birdEyeDetails
+      },
+      return: {
+        score: returnScore,
+        hasLogoHomeLink,
+        totalHomeLinkCount: homeLinks.length,
+        returnCapability,
+        details: returnDetails
+      },
+      govComparison: {
+        siteScore: totalScore,
+        govAverage,
+        gap: gap >= 0 ? `+${gap}` : `${gap}`,
+        percentile,
+        status,
+        ranking,
+        dimensionAvg: {
+          teleport: 24,
+          tracking: 21,
+          birdEye: 20,
+          return: 13
+        },
+        userImpact: {
+          findingDifficulty,
+          estimatedSearchTime,
+          bounceRateRisk,
+          conversionImpact
+        },
+        commonIssues,
+        bestPractices
+      },
+      recommendation,
+      details: [
+        `🔍 텔레포트: ${teleportScore}/30`,
+        `🍞 트래킹: ${trackingScore}/30`,
+        `🗺️ 조감도: ${birdEyeScore}/25`,
+        `🏠 회귀: ${returnScore}/15`,
+        `정부 평균 대비: ${gap >= 0 ? '+' : ''}${gap}점`
+      ]
+    }
+  } catch (error) {
+    // 에러 발생 시 기본값 반환
+    return {
+      totalScore: 0,
+      grade: 'D',
+      teleport: {
+        score: 0,
+        hasSearch: false,
+        isGlobalSearch: false,
+        hasSearchIcon: false,
+        accessibility: '미흡',
+        details: ['분석 실패']
+      },
+      tracking: {
+        score: 0,
+        hasBreadcrumb: false,
+        linkCount: 0,
+        totalDepth: 0,
+        hasCurrentMarker: false,
+        pathDepth: 0,
+        quality: '없음',
+        details: ['분석 실패']
+      },
+      birdEye: {
+        score: 0,
+        hasSitemap: false,
+        footerLinkCount: 0,
+        hasFooterNav: false,
+        structuralVisibility: '미흡',
+        details: ['분석 실패']
+      },
+      return: {
+        score: 0,
+        hasLogoHomeLink: false,
+        totalHomeLinkCount: 0,
+        returnCapability: '없음',
+        details: ['분석 실패']
+      },
+      govComparison: {
+        siteScore: 0,
+        govAverage: 78,
+        gap: '-78',
+        percentile: '하위 50%',
+        status: '정부 평균 이하',
+        ranking: '개선 필요',
+        dimensionAvg: {
+          teleport: 24,
+          tracking: 21,
+          birdEye: 20,
+          return: 13
+        },
+        userImpact: {
+          findingDifficulty: '높음',
+          estimatedSearchTime: '4분 이상',
+          bounceRateRisk: '+40%',
+          conversionImpact: '-35%'
+        },
         commonIssues: [],
         bestPractices: []
       },

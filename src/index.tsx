@@ -748,6 +748,9 @@ function aggregateResults(pageResults: any[]): any {
   // UserControlFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
   const avgUserControlFreedom = mainPage.structure.userControlFreedom || allPages[0].userControlFreedom
   
+  // NavigationFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgNavigationFreedom = mainPage.structure.navigationFreedom || allPages[0].navigationFreedom
+  
   return {
     html: mainPage.structure.html || '',  // 메인 페이지 HTML 사용 (KRDS 평가용)
     navigation: avgNavigation,
@@ -756,7 +759,8 @@ function aggregateResults(pageResults: any[]): any {
     forms: avgForms,
     visuals: avgVisuals,
     realWorldMatch: avgRealWorldMatch,
-    userControlFreedom: avgUserControlFreedom
+    userControlFreedom: avgUserControlFreedom,
+    navigationFreedom: avgNavigationFreedom
   }
 }
 
@@ -1532,7 +1536,8 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         forms: structure.forms,
         visuals: structure.visuals,
         realWorldMatch: structure.realWorldMatch,
-        userControlFreedom: structure.userControlFreedom
+        userControlFreedom: structure.userControlFreedom,
+        navigationFreedom: structure.navigationFreedom
       },
       predicted_score: {
         overall: Math.round(overall * 100) / 100,
