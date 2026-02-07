@@ -193,10 +193,21 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
     })(),
     
     // N5: 오류 예방
-    N5_1_input_validation: calculateScore(
-      weights.N5_1_input_validation.base_score,
-      calculateAdjustment(structure, weights.N5_1_input_validation)
-    ),
+    N5_1_input_validation: (() => {
+      const baseScore = calculateScore(
+        weights.N5_1_input_validation.base_score,
+        calculateAdjustment(structure, weights.N5_1_input_validation)
+      )
+      
+      // realtimeValidation 보너스 점수 추가
+      if (structure.forms.realtimeValidation) {
+        const rtv = structure.forms.realtimeValidation
+        if (rtv.quality === 'excellent') return Math.min(5.0, baseScore + 0.5)
+        if (rtv.quality === 'good') return Math.min(5.0, baseScore + 0.3)
+      }
+      
+      return baseScore
+    })(),
     N5_2_confirmation_dialog: calculateScore(
       weights.N5_2_confirmation_dialog.base_score,
       calculateAdjustment(structure, weights.N5_2_confirmation_dialog)
@@ -885,25 +896,61 @@ button:active {
       };
     })(),
     
-    N5_1_input_validation: {
-      description: forms.validationExists
-      ? `✅ ${url}에서 입력 검증(required, pattern 등)이 구현되어 오류를 사전 예방합니다.`
-      : forms.formCount === 0
-        ? `ℹ️ 입력 폼이 없어 검증이 필요하지 않습니다.`
-        : `⚠️ 입력 검증이 없어 잘못된 데이터 입력 가능성이 있습니다.`,
+    N5_1_input_validation: (() => {
+      const rtv = forms.realtimeValidation
+      let description = ''
+      let recommendation = ''
+      
+      if (forms.formCount === 0) {
+        description = 'ℹ️ 입력 폼이 없어 검증이 필요하지 않습니다.'
+        recommendation = 'ℹ️ 입력 폼이 없어 검증이 필요하지 않습니다.'
+      } else {
+        // 기본 검증 (required, pattern 등)
+        const hasBasicValidation = forms.validationExists
+        
+        // 실시간 검증
+        const hasRealtimeValidation = rtv && rtv.quality !== 'none'
+        
+        if (hasBasicValidation && hasRealtimeValidation) {
+          description = `✅ 입력 검증 우수: 기본 검증(required, pattern) + 실시간 검증 ${rtv.score}/30점 (${rtv.quality})`
+          recommendation = `✅ 입력 검증이 우수합니다. 기본 검증과 실시간 검증을 모두 구현했습니다. 현재 상태를 유지하세요.`
+        } else if (hasBasicValidation) {
+          description = `✅ 입력 검증(required, pattern 등)이 구현되어 오류를 사전 예방합니다.`
+          recommendation = `✅ 기본 검증은 잘 되어 있습니다. 실시간 검증(aria-invalid, 에러 메시지, aria-live)을 추가하면 사용자 경험이 더 향상됩니다.`
+        } else if (hasRealtimeValidation) {
+          description = `✅ 실시간 검증 ${rtv.score}/30점 (${rtv.quality})이 구현되어 있습니다.`
+          recommendation = `✅ 실시간 검증은 잘 되어 있습니다. required, pattern 속성을 추가하면 더 강력한 검증이 가능합니다.`
+        } else {
+          description = `⚠️ 입력 검증이 없어 잘못된 데이터 입력 가능성이 있습니다.`
+          recommendation = `⚠️ 입력 검증 추가 필요: 1) required/pattern 속성, 2) aria-invalid, 3) 에러 메시지 영역, 4) aria-live 실시간 알림`
+        }
+        
+        // 실시간 검증 세부 정보 추가
+        if (rtv && rtv.totalForms > 0) {
+          description += `\n  총 폼 ${rtv.totalForms}개 중 검증 있는 폼 ${rtv.formsWithValidation}개 (${rtv.validationRatio}%)`
+          
+          const features = []
+          if (rtv.features.hasAriaInvalid > 0) features.push(`aria-invalid ${rtv.features.hasAriaInvalid}개`)
+          if (rtv.features.hasErrorMessages > 0) features.push(`에러 메시지 ${rtv.features.hasErrorMessages}개`)
+          if (rtv.features.hasLiveRegion > 0) features.push(`aria-live ${rtv.features.hasLiveRegion}개`)
+          if (rtv.features.hasBrowserValidation > 0) features.push(`브라우저 검증 ${rtv.features.hasBrowserValidation}개`)
+          
+          if (features.length > 0) {
+            description += `\n  Features: ${features.join(', ')}`
+          }
+        }
+      }
+      
+      return { description, recommendation }
+    })(),
     
-    N5_2_confirmation_dialog: forms.formCount > 0
+    N5_2_confirmation_dialog: {
+      description: forms.formCount > 0
         ? `폼이 있어 중요한 작업 전 확인 절차가 가능합니다.`
         : `ℹ️ 폼이 없어 확인 대화상자가 필요하지 않습니다.`,
-      recommendation: forms.validationExists
-      ? `✅ ${url}에서 입력 검증(required, pattern 등)이 구현되어 오류를 사전 예방합니다.`
-      : forms.formCount === 0
-        ? `ℹ️ 입력 폼이 없어 검증이 필요하지 않습니다.`
-        : `⚠️ 입력 검증이 없어 잘못된 데이터 입력 가능성이 있습니다.`,
-    
-    N5_2_confirmation_dialog: forms.formCount > 0
+      recommendation: forms.formCount > 0
         ? '폼이 있어 중요한 작업 전 확인 절차가 가능합니다. 현재 상태를 유지하세요.'
-        : 'ℹ️ 폼이 없어 확인 대화상자가 필요하지 않습니다 개선이 필요합니다.'
+        : 'ℹ️ 폼이 없어 확인 대화상자가 필요하지 않습니다.'
     },
     
     N5_3_constraints: {

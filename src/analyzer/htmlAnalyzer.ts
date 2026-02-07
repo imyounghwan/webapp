@@ -415,12 +415,30 @@ export interface ContentStructure {
   tableCount: number
 }
 
+/**
+ * 실시간 검증 분석 결과 (N5 오류 예방 - 2단계)
+ */
+export interface RealtimeValidation {
+  totalForms: number
+  formsWithValidation: number
+  validationRatio: number  // 0-100%
+  features: {
+    hasAriaInvalid: number       // aria-invalid 속성 사용
+    hasErrorMessages: number     // 에러 메시지 영역 존재
+    hasLiveRegion: number        // aria-live 실시간 알림 영역
+    hasBrowserValidation: number // 브라우저 기본 검증 (novalidate 없음)
+  }
+  score: number  // 0-30점
+  quality: 'excellent' | 'good' | 'basic' | 'minimal' | 'none'
+}
+
 export interface FormStructure {
   formCount: number
   inputCount: number
   labelRatio: number
   validationExists: boolean
   interactiveFeedbackExists: boolean  // 호버/포커스/클릭 피드백 존재 여부
+  realtimeValidation?: RealtimeValidation  // 실시간 검증 분석 (신규)
 }
 
 export interface VisualStructure {
@@ -948,12 +966,103 @@ function analyzeContent(html: string): ContentStructure {
   }
 }
 
+/**
+ * 실시간 검증 분석 (N5 오류 예방 - 2단계)
+ * HTML 정적 분석으로 실시간 검증 메커니즘 탐지
+ */
+function analyzeRealtimeValidation(html: string): RealtimeValidation {
+  // <form> 태그 추출 (간단한 매칭)
+  const formPattern = /<form[^>]*>[\s\S]*?<\/form>/gi
+  const forms = html.match(formPattern) || []
+  
+  if (forms.length === 0) {
+    // 폼이 없으면 만점 (검증 불필요)
+    return {
+      totalForms: 0,
+      formsWithValidation: 0,
+      validationRatio: 100,
+      features: {
+        hasAriaInvalid: 0,
+        hasErrorMessages: 0,
+        hasLiveRegion: 0,
+        hasBrowserValidation: 0
+      },
+      score: 30,
+      quality: 'none'
+    }
+  }
+  
+  let validationCount = 0
+  const features = {
+    hasAriaInvalid: 0,
+    hasErrorMessages: 0,
+    hasLiveRegion: 0,
+    hasBrowserValidation: 0
+  }
+  
+  forms.forEach(form => {
+    let hasValidation = false
+    
+    // 1. 브라우저 기본 검증 사용 (novalidate 속성 없음)
+    if (!/novalidate/i.test(form)) {
+      hasValidation = true
+      features.hasBrowserValidation++
+    }
+    
+    // 2. aria-invalid 속성 (실시간 검증의 표준)
+    if (/aria-invalid\s*=/i.test(form)) {
+      hasValidation = true
+      features.hasAriaInvalid++
+    }
+    
+    // 3. 에러 메시지 영역
+    // - role="alert": 경고 역할
+    // - class*="error": 에러 클래스
+    // - id*="error": 에러 ID
+    // - aria-describedby*="error": 에러 설명 연결
+    if (/role\s*=\s*["']alert["']|class\s*=\s*["'][^"']*error[^"']*["']|id\s*=\s*["'][^"']*error[^"']*["']|aria-describedby\s*=\s*["'][^"']*error[^"']*["']/i.test(form)) {
+      hasValidation = true
+      features.hasErrorMessages++
+    }
+    
+    // 4. aria-live 영역 (동적 메시지 알림)
+    if (/aria-live\s*=\s*["'](polite|assertive)["']/i.test(form)) {
+      hasValidation = true
+      features.hasLiveRegion++
+    }
+    
+    if (hasValidation) validationCount++
+  })
+  
+  const ratio = (validationCount / forms.length) * 100
+  let score = Math.round((ratio / 100) * 30)
+  let quality: RealtimeValidation['quality']
+  
+  if (ratio === 0) quality = 'none'
+  else if (ratio < 40) quality = 'minimal'
+  else if (ratio < 60) quality = 'basic'
+  else if (ratio < 85) quality = 'good'
+  else quality = 'excellent'
+  
+  return {
+    totalForms: forms.length,
+    formsWithValidation: validationCount,
+    validationRatio: Math.round(ratio),
+    features,
+    score,
+    quality
+  }
+}
+
 function analyzeForms(html: string): FormStructure {
   const formMatches = html.match(/<form[^>]*>/gi) || []
   const inputMatches = html.match(/<input[^>]*>/gi) || []
   const labelMatches = html.match(/<label[^>]*>/gi) || []
   const validationExists = /required|pattern|minlength|maxlength/i.test(html)
   const interactiveFeedbackExists = detectInteractiveFeedback(html)
+  
+  // 실시간 검증 분석 추가
+  const realtimeValidation = analyzeRealtimeValidation(html)
 
   const labelRatio = inputMatches.length > 0 
     ? labelMatches.length / inputMatches.length 
@@ -964,7 +1073,8 @@ function analyzeForms(html: string): FormStructure {
     inputCount: inputMatches.length,
     labelRatio,
     validationExists,
-    interactiveFeedbackExists
+    interactiveFeedbackExists,
+    realtimeValidation
   }
 }
 
