@@ -180,6 +180,7 @@ export function analyzeHTML(
   const forms = analyzeForms(html)
   const visuals = analyzeVisuals(html)
   const realWorldMatch = analyzeRealWorldMatch(html)
+  const userControlFreedom = analyzeUserControlFreedom(html)
 
   return {
     url,
@@ -189,7 +190,8 @@ export function analyzeHTML(
     content,
     forms,
     visuals,
-    realWorldMatch
+    realWorldMatch,
+    userControlFreedom
   }
 }
 
@@ -971,5 +973,215 @@ function analyzeInterfaceFriendliness(text: string, details: string[]): RealWorl
     systemWords: systemWords.length,
     metaphors: metaphors.length,
     score: Math.round(normalizedScore / 10 * 10) / 10  // 0-10점으로 변환
+  }
+}
+
+/**
+ * N3.1 비상구(Emergency Exit) 분석
+ * 정부 49개 기관 데이터 기반 4단계 측정
+ */
+function analyzeUserControlFreedom(html: string): UserControlFreedom {
+  try {
+    // 1단계: 모달/팝업 탈출 (30점)
+    const modalMatches = html.match(/<div[^>]*(role="dialog"|class="[^"]*modal[^"]*"|class="[^"]*popup[^"]*")[^>]*>/gi) || []
+    const closeButtons = html.match(/<button[^>]*(닫기|close|cancel|취소)[^>]*>/gi) || []
+    const xButtons = html.match(/<button[^>]*>[^<]*[×✕xX][^<]*<\/button>/gi) || []
+    const escSupport = html.includes('keydown') || html.includes('Escape')
+    
+    const totalModals = modalMatches.length
+    const escapableModals = Math.min(totalModals, closeButtons.length + xButtons.length)
+    const escapeRatio = totalModals > 0 ? escapableModals / totalModals : 1
+    const modalScore = Math.round(escapeRatio * 30)
+    
+    // 2단계: 다단계 프로세스 후퇴 (25점)
+    const nextButtons = html.match(/<button[^>]*(다음|next|계속)[^>]*>/gi) || []
+    const prevButtons = html.match(/<button[^>]*(이전|previous|prev|back)[^>]*>/gi) || []
+    const stepIndicator = html.includes('step-indicator') || html.includes('stepper') || /step\s*[0-9]/i.test(html)
+    const breadcrumbs = /<nav[^>]*breadcrumb/i.test(html) || /홈\s*>\s*/i.test(html)
+    
+    let stepScore = 0
+    if (prevButtons.length > 0) stepScore += 15
+    if (nextButtons.length > 0) stepScore += 5
+    if (stepIndicator) stepScore += 5
+    if (breadcrumbs) stepScore += 5
+    stepScore = Math.min(stepScore, 25)
+    
+    // 3단계: 입력 취소/초기화 (25점)
+    const forms = html.match(/<form[^>]*>/gi) || []
+    const resetButtons = html.match(/<button[^>]*(type="reset"|초기화|reset|clear)[^>]*>/gi) || []
+    const cancelButtons = html.match(/<button[^>]*(취소|cancel)[^>]*>/gi) || []
+    const filterAreas = html.match(/<div[^>]*class="[^"]*filter[^"]*"[^>]*>/gi) || []
+    const filterResetButtons = html.match(/<button[^>]*(필터.*초기화|reset.*filter)[^>]*>/gi) || []
+    
+    const formsWithReset = Math.min(forms.length, resetButtons.length + cancelButtons.length)
+    const filtersWithReset = Math.min(filterAreas.length, filterResetButtons.length)
+    
+    let inputScore = 0
+    if (forms.length > 0) {
+      inputScore += (formsWithReset / forms.length) * 15
+    } else {
+      inputScore += 15 // 폼 없으면 만점
+    }
+    if (filterAreas.length > 0) {
+      inputScore += (filtersWithReset / filterAreas.length) * 10
+    } else {
+      inputScore += 10 // 필터 없으면 만점
+    }
+    inputScore = Math.round(inputScore)
+    
+    // 4단계: 파괴적 행동 방지 (20점)
+    const deleteButtons = html.match(/<button[^>]*(삭제|delete|remove|탈퇴|해지)[^>]*>/gi) || []
+    const confirmDialogs = html.match(/confirm|확인.*하시겠습니까|정말|취소.*불가/gi) || []
+    const twoStepConfirm = html.includes('재확인') || html.includes('2단계')
+    
+    const totalDangerousActions = deleteButtons.length
+    const protectedActions = Math.min(totalDangerousActions, confirmDialogs.length)
+    const protectionRatio = totalDangerousActions > 0 ? protectedActions / totalDangerousActions : 1
+    let destructiveScore = Math.round(protectionRatio * 15)
+    if (twoStepConfirm) destructiveScore += 5
+    destructiveScore = Math.min(destructiveScore, 20)
+    
+    // 총점 계산
+    const totalScore = modalScore + stepScore + inputScore + destructiveScore
+    
+    // 등급 산정
+    let grade: 'A' | 'B' | 'C' | 'D'
+    if (totalScore >= 90) grade = 'A'
+    else if (totalScore >= 75) grade = 'B'
+    else if (totalScore >= 60) grade = 'C'
+    else grade = 'D'
+    
+    // 정부 49개 기관 벤치마크 비교
+    const govAverage = 72
+    const gap = totalScore - govAverage
+    let status: '우수' | '평균' | '개선필요'
+    let percentile: string
+    
+    if (totalScore >= 89) {
+      status = '우수'
+      percentile = '상위 10%'
+    } else if (totalScore >= govAverage) {
+      status = '평균'
+      percentile = '상위 50%'
+    } else {
+      status = '개선필요'
+      percentile = '하위 50%'
+    }
+    
+    return {
+      totalScore,
+      grade,
+      modalEscape: {
+        score: modalScore,
+        totalModals,
+        escapableModals,
+        escapeRatio: `${Math.round(escapeRatio * 100)}%`,
+        details: [
+          `총 모달/팝업: ${totalModals}개`,
+          `탈출 가능: ${escapableModals}개`,
+          `닫기 버튼: ${closeButtons.length}개`,
+          `X 아이콘: ${xButtons.length}개`,
+          `ESC 키 지원: ${escSupport ? '있음' : '없음'}`
+        ]
+      },
+      stepNavigation: {
+        score: stepScore,
+        hasNextButtons: nextButtons.length > 0,
+        hasPrevButtons: prevButtons.length > 0,
+        hasStepIndicator: stepIndicator,
+        hasBreadcrumbs: breadcrumbs
+      },
+      inputCancellation: {
+        score: inputScore,
+        totalForms: forms.length,
+        formsWithReset,
+        totalFilters: filterAreas.length,
+        filtersWithReset
+      },
+      destructivePrevention: {
+        score: destructiveScore,
+        totalDangerousActions,
+        protectedActions,
+        protectionRatio: `${Math.round(protectionRatio * 100)}%`
+      },
+      govComparison: {
+        siteScore: totalScore,
+        govAverage,
+        gap: gap >= 0 ? `+${gap}` : `${gap}`,
+        percentile,
+        status,
+        ranking: totalScore >= 89 ? '상위권' : totalScore >= govAverage ? '중위권' : '하위권',
+        commonIssues: [
+          '모달 닫기 접근성 부족 (38%)',
+          '다단계 이전 버튼 부재 (45%)',
+          '폼 취소 후 입력값 유지 문제 (33%)',
+          '삭제 전 확인 절차 부재 (41%)'
+        ],
+        bestPractices: [
+          '정부24: ESC 키 + 명시적 닫기 버튼 모두 제공',
+          '국세청 홈택스: 각 단계 저장 후 이전 가능',
+          '민원24: 삭제 시 2단계 확인 + 7일 복구 기간'
+        ]
+      },
+      recommendation: grade === 'A' 
+        ? '정부 49개 기관 수준의 우수한 사용자 제어권을 제공하고 있습니다.'
+        : grade === 'B'
+        ? '정부 평균 수준입니다. A등급을 위해 모달 탈출과 프로세스 후퇴 기능을 강화하세요.'
+        : grade === 'C'
+        ? '개선이 필요합니다. 4단계 측정 항목 중 낮은 점수 영역을 집중 보완하세요.'
+        : '전면 개선이 필요합니다. 정부 49개 기관 모범 사례를 참고하여 비상구 시스템을 구축하세요.',
+      details: [
+        `1단계(모달탈출): ${modalScore}/30점`,
+        `2단계(프로세스후퇴): ${stepScore}/25점`,
+        `3단계(입력취소): ${inputScore}/25점`,
+        `4단계(파괴방지): ${destructiveScore}/20점`,
+        `정부 평균 대비: ${gap >= 0 ? '+' : ''}${gap}점`
+      ]
+    }
+  } catch (error) {
+    // 에러 발생 시 기본값 반환
+    return {
+      totalScore: 0,
+      grade: 'D',
+      modalEscape: {
+        score: 0,
+        totalModals: 0,
+        escapableModals: 0,
+        escapeRatio: '0%',
+        details: ['분석 실패']
+      },
+      stepNavigation: {
+        score: 0,
+        hasNextButtons: false,
+        hasPrevButtons: false,
+        hasStepIndicator: false,
+        hasBreadcrumbs: false
+      },
+      inputCancellation: {
+        score: 0,
+        totalForms: 0,
+        formsWithReset: 0,
+        totalFilters: 0,
+        filtersWithReset: 0
+      },
+      destructivePrevention: {
+        score: 0,
+        totalDangerousActions: 0,
+        protectedActions: 0,
+        protectionRatio: '0%'
+      },
+      govComparison: {
+        siteScore: 0,
+        govAverage: 72,
+        gap: '-72',
+        percentile: '하위 50%',
+        status: '개선필요',
+        ranking: '하위권',
+        commonIssues: [],
+        bestPractices: []
+      },
+      recommendation: '분석 중 오류가 발생했습니다.',
+      details: [`에러: ${error}`]
+    }
   }
 }

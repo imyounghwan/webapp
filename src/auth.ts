@@ -34,7 +34,19 @@ export function generateSessionId(): string {
  * 세션 검증 미들웨어
  */
 export async function authMiddleware(c: Context<{ Bindings: Env }>, next: () => Promise<void>) {
-  const sessionId = c.req.header('X-Session-ID') || c.req.query('session_id')
+  // 세션 ID를 여러 방법으로 확인: 헤더, 쿼리, 쿠키
+  let sessionId = c.req.header('X-Session-ID') || c.req.query('session_id')
+  
+  // 쿠키에서 세션 ID 확인
+  if (!sessionId) {
+    const cookie = c.req.header('Cookie')
+    if (cookie) {
+      const match = cookie.match(/session_id=([^;]+)/)
+      if (match) {
+        sessionId = match[1]
+      }
+    }
+  }
   
   if (!sessionId) {
     return c.json({ success: false, error: '인증이 필요합니다.' }, 401)
@@ -65,7 +77,18 @@ export async function authMiddleware(c: Context<{ Bindings: Env }>, next: () => 
  */
 export async function adminMiddleware(c: Context<{ Bindings: Env }>, next: () => Promise<void>) {
   // 먼저 인증 체크
-  const sessionId = c.req.header('X-Session-ID') || c.req.query('session_id')
+  let sessionId = c.req.header('X-Session-ID') || c.req.query('session_id')
+  
+  // 쿠키에서 세션 ID 확인
+  if (!sessionId) {
+    const cookie = c.req.header('Cookie')
+    if (cookie) {
+      const match = cookie.match(/session_id=([^;]+)/)
+      if (match) {
+        sessionId = match[1]
+      }
+    }
+  }
   
   if (!sessionId) {
     return c.json({ success: false, error: '인증이 필요합니다.' }, 401)

@@ -745,6 +745,9 @@ function aggregateResults(pageResults: any[]): any {
   // RealWorldMatch 종합 (메인 페이지 우선, 없으면 첫 페이지)
   const avgRealWorldMatch = mainPage.structure.realWorldMatch || allPages[0].realWorldMatch
   
+  // UserControlFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgUserControlFreedom = mainPage.structure.userControlFreedom || allPages[0].userControlFreedom
+  
   return {
     html: mainPage.structure.html || '',  // 메인 페이지 HTML 사용 (KRDS 평가용)
     navigation: avgNavigation,
@@ -752,7 +755,8 @@ function aggregateResults(pageResults: any[]): any {
     content: avgContent,
     forms: avgForms,
     visuals: avgVisuals,
-    realWorldMatch: avgRealWorldMatch
+    realWorldMatch: avgRealWorldMatch,
+    userControlFreedom: avgUserControlFreedom
   }
 }
 
