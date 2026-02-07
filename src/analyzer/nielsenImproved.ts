@@ -179,10 +179,18 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
         calculateAdjustment(structure, weights.N4_2_terminology_consistency)
       );
     })(),
-    N4_3_standard_compliance: calculateScore(
-      weights.N4_3_standard_compliance.base_score,
-      calculateAdjustment(structure, weights.N4_3_standard_compliance)
-    ),
+    N4_3_standard_compliance: (() => {
+      // webStandardsCompliance 사용 (100점 → 5점 스케일 변환)
+      if (structure.webStandardsCompliance) {
+        const score = (structure.webStandardsCompliance.totalScore / 100) * 5;
+        return Math.round(score * 10) / 10;
+      }
+      // fallback: 기존 방식
+      return calculateScore(
+        weights.N4_3_standard_compliance.base_score,
+        calculateAdjustment(structure, weights.N4_3_standard_compliance)
+      );
+    })(),
     
     // N5: 오류 예방
     N5_1_input_validation: calculateScore(
@@ -837,14 +845,45 @@ button:active {
       };
     })(),
     
-    N4_3_standard_compliance: {
-      description: accessibility.langAttribute
-        ? `HTML 표준(lang, alt 등)을 준수합니다. (alt 비율: ${(accessibility.altTextRatio * 100).toFixed(0)}%)`
-        : `접근성 표준 준수가 미흡합니다. (alt 비율: ${(accessibility.altTextRatio * 100).toFixed(0)}%)`,
-      recommendation: accessibility.langAttribute
-        ? '현재 상태를 유지하세요.'
-        : '개선이 필요합니다.'
-    },
+    N4_3_standard_compliance: (() => {
+      // webStandardsCompliance 우선 사용
+      if (structure.webStandardsCompliance) {
+        const wsc = structure.webStandardsCompliance;
+        const criticalFindings = wsc.findings.filter(f => f.severity === 'CRITICAL');
+        
+        let description = `웹 표준 준수: ${wsc.totalScore}/100 (${wsc.grade}등급)`;
+        if (criticalFindings.length > 0) {
+          description += ` | 긴급 ${criticalFindings.length}개: ${criticalFindings[0].issue}`;
+        }
+        
+        let recommendation = '';
+        if (wsc.grade === 'A') {
+          recommendation = '✅ 웹 표준 우수 - 정부 상위 10% 수준';
+        } else if (wsc.grade === 'B') {
+          recommendation = '대체로 준수 - 일부 보완 권장';
+        } else if (wsc.grade === 'C') {
+          recommendation = `⚠️ 개선 필요 - 법적 리스크: ${wsc.govComparison.legalRisk}`;
+        } else {
+          recommendation = '❌ 긴급 개선 필요 - 법적 제재 위험';
+        }
+        
+        if (criticalFindings.length > 0) {
+          recommendation += ` | 우선: ${criticalFindings[0].fix || criticalFindings[0].issue}`;
+        }
+        
+        return { description, recommendation };
+      }
+      
+      // fallback: 기존 방식
+      return {
+        description: accessibility.langAttribute
+          ? `HTML 표준(lang, alt 등)을 준수합니다. (alt 비율: ${(accessibility.altTextRatio * 100).toFixed(0)}%)`
+          : `접근성 표준 준수가 미흡합니다. (alt 비율: ${(accessibility.altTextRatio * 100).toFixed(0)}%)`,
+        recommendation: accessibility.langAttribute
+          ? '현재 상태를 유지하세요.'
+          : '개선이 필요합니다.'
+      };
+    })(),
     
     N5_1_input_validation: {
       description: forms.validationExists

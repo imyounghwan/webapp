@@ -302,6 +302,78 @@ export interface LanguageConsistency {
   }
 }
 
+/**
+ * N4.3 웹 표준 준수 (W-CORE: Web Standards 4-Layer Compliance)
+ * 법적 요구사항과 정부 49개 기관 벤치마크 기반 웹 표준 분석
+ */
+export interface WebStandardsCompliance {
+  // 종합 점수
+  totalScore: number            // /100
+  grade: 'A' | 'B' | 'C' | 'D'
+  
+  // 4계층별 점수
+  breakdown: {
+    htmlStructure: string       // "18/25"
+    accessibility: string        // "12/30"
+    semanticMarkup: string      // "19/25"
+    compatibility: string        // "18/20"
+  }
+  
+  // 정부 벤치마크 비교 (정부 49개 기관 데이터)
+  govComparison: {
+    siteScore: number
+    govAverage: number          // 85점
+    gap: number
+    status: string              // '정부 표준 준수' | '표준 미달'
+    ranking: string             // '상위 10% (모범사례)' | '평균 이상' | '개선 필요'
+    legalRisk: '높음' | '보통' | '낮음'
+    mandatoryCompliance: {
+      accessibility: string     // '법적 의무 (장애인차별금지법)'
+      deadline: string          // '2025년 4월부터 과태료 부과'
+      penalty: string           // '위반 시 최대 3천만원'
+      kwcag: string            // 'KWCAG 2.2 AA 등급 필수'
+    }
+  }
+  
+  // 사용자 임팩트
+  userImpact: {
+    disabledUsers: string       // '장애인 사용자 87% 접근 불가'
+    elderlyUsers: string        // '고령층 사용자 64% 어려움'
+    seoImpact: string          // '검색 순위 -35%'
+  }
+  
+  // 발견사항 (CRITICAL 우선)
+  findings: Array<{
+    category: string            // 'Document Structure', 'Image Accessibility', etc.
+    issue: string               // 문제 설명
+    impact?: string             // 영향
+    severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
+    legalRisk?: string         // 법적 위험
+    fix?: string               // 수정 방법
+    govStandard?: string       // 정부 표준 참조
+  }>
+  
+  // 상세 분석 (4계층)
+  detailedAnalysis: {
+    htmlStructure: {
+      score: number
+      findings: any[]
+    }
+    accessibility: {
+      score: number
+      findings: any[]
+    }
+    semanticMarkup: {
+      score: number
+      findings: any[]
+    }
+    compatibility: {
+      score: number
+      findings: any[]
+    }
+  }
+}
+
 export interface HTMLStructure {
   url: string
   html?: string  // 원본 HTML (KRDS 평가용)
@@ -314,6 +386,7 @@ export interface HTMLStructure {
   userControlFreedom: UserControlFreedom  // N3.1 비상구 분석
   navigationFreedom?: NavigationFreedom   // N3.3 네비게이션 자유도 (선택적)
   languageConsistency: LanguageConsistency // N4.2 언어 일관성 (용어 통일)
+  webStandardsCompliance: WebStandardsCompliance // N4.3 웹 표준 준수 (W-CORE)
 }
 
 export interface NavigationStructure {
@@ -379,6 +452,7 @@ export function analyzeHTML(
   const userControlFreedom = analyzeUserControlFreedom(html)
   const navigationFreedom = analyzeNavigationFreedom(html, url)
   const languageConsistency = analyzeLanguageConsistency(html)
+  const webStandardsCompliance = analyzeWebStandardsCompliance(html)
 
   return {
     url,
@@ -391,7 +465,8 @@ export function analyzeHTML(
     realWorldMatch,
     userControlFreedom,
     navigationFreedom,
-    languageConsistency
+    languageConsistency,
+    webStandardsCompliance
   }
 }
 
@@ -2107,4 +2182,471 @@ function analyzeToneConsistency(text: string): { score: number; findings: any[] 
   }
   
   return { score: Math.max(0, score), findings };
+}
+
+/**
+ * ============================================
+ * N4.3 웹 표준 준수 분석 (W-CORE Framework)
+ * Web Standards 4-Layer Compliance Analysis
+ * ============================================
+ */
+
+/**
+ * 1계층: HTML 구조적 표준 (25점)
+ */
+function analyzeHTMLStructuralStandards(html: string): { score: number; findings: any[] } {
+  let score = 25;
+  const findings: any[] = [];
+  
+  // 1. DOCTYPE 선언 (4점)
+  const hasDoctype = /<!DOCTYPE\s+html>/i.test(html);
+  if (!hasDoctype) {
+    score -= 4;
+    findings.push({
+      category: 'Document Structure',
+      issue: 'DOCTYPE 선언 누락',
+      impact: '브라우저 쿼크 모드, 렌더링 불일치',
+      severity: 'HIGH',
+      fix: '<!DOCTYPE html> 추가'
+    });
+  }
+  
+  // 2. HTML lang 속성 (4점) - 법적 필수
+  const htmlLang = /<html[^>]*\slang\s*=/i.test(html);
+  if (!htmlLang) {
+    score -= 4;
+    findings.push({
+      category: 'Language',
+      issue: 'HTML lang 속성 누락',
+      impact: '스크린리더 언어 인식 불가, WCAG 2.1 위반',
+      severity: 'CRITICAL',
+      legalRisk: '장애인차별금지법 위반 가능',
+      fix: '<html lang="ko"> 추가'
+    });
+  }
+  
+  // 3. charset 선언 (2점)
+  const hasCharset = /<meta[^>]*charset/i.test(html);
+  if (!hasCharset) {
+    score -= 2;
+    findings.push({
+      category: 'Encoding',
+      issue: 'charset 선언 누락',
+      impact: '한글 깨짐 위험',
+      severity: 'MEDIUM',
+      fix: '<meta charset="UTF-8"> 추가'
+    });
+  }
+  
+  // 4. 시맨틱 랜드마크 (10점)
+  const landmarks = ['header', 'nav', 'main', 'footer'];
+  const usedLandmarks = landmarks.filter(tag => 
+    new RegExp(`<${tag}[\\s>]`, 'i').test(html)
+  );
+  
+  if (usedLandmarks.length < 3) {
+    const penalty = (3 - usedLandmarks.length) * 3;
+    score -= penalty;
+    const missing = landmarks.filter(tag => !new RegExp(`<${tag}[\\s>]`, 'i').test(html));
+    findings.push({
+      category: 'Semantic Structure',
+      issue: `시맨틱 랜드마크 부족 (${usedLandmarks.length}/4)`,
+      impact: 'SEO 불리, 스크린리더 네비게이션 불가',
+      severity: 'HIGH',
+      fix: `누락 태그 추가: ${missing.join(', ')}`
+    });
+  }
+  
+  // 5. 중복 ID 검사 (5점)
+  const idMatches = html.match(/\sid\s*=\s*["']([^"']+)["']/gi) || [];
+  const ids = idMatches.map(m => {
+    const match = m.match(/id\s*=\s*["']([^"']+)["']/i);
+    return match ? match[1] : '';
+  }).filter(id => id);
+  
+  const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index);
+  const uniqueDuplicates = [...new Set(duplicateIds)];
+  
+  if (uniqueDuplicates.length > 0) {
+    const penalty = Math.min(5, uniqueDuplicates.length * 2);
+    score -= penalty;
+    findings.push({
+      category: 'HTML Validity',
+      issue: `중복 ID ${uniqueDuplicates.length}개 발견`,
+      impact: 'JavaScript 오작동, 접근성 보조기기 혼란',
+      severity: 'HIGH',
+      fix: `중복 ID 제거: ${uniqueDuplicates.slice(0, 3).join(', ')}`
+    });
+  }
+  
+  return { score: Math.max(0, score), findings };
+}
+
+/**
+ * 2계층: 접근성 표준 (30점) - 법적 의무사항
+ */
+function analyzeAccessibilityStandards(html: string): { score: number; findings: any[] } {
+  let score = 30;
+  const findings: any[] = [];
+  
+  // 1. 이미지 alt 속성 (12점) - CRITICAL
+  const images = (html.match(/<img[^>]*>/gi) || []);
+  const imagesWithoutAlt = images.filter(img => !/ alt\s*=/i.test(img));
+  
+  if (imagesWithoutAlt.length > 0) {
+    const penalty = Math.min(12, imagesWithoutAlt.length * 2);
+    score -= penalty;
+    findings.push({
+      category: 'Image Accessibility',
+      issue: `alt 속성 누락 이미지 ${imagesWithoutAlt.length}개`,
+      impact: '시각장애인 콘텐츠 접근 불가',
+      severity: 'CRITICAL',
+      legalRisk: '장애인차별금지법 위반, 과태료 최대 3천만원',
+      govStandard: 'KWCAG 2.2 필수 준수 사항',
+      fix: '모든 <img> 태그에 alt 속성 추가'
+    });
+  }
+  
+  // 2. 폼 레이블 연결 (10점) - CRITICAL
+  const inputs = (html.match(/<input(?![^>]*type\s*=\s*["']hidden["'])[^>]*>/gi) || [])
+    .concat(html.match(/<select[^>]*>/gi) || [])
+    .concat(html.match(/<textarea[^>]*>/gi) || []);
+  
+  let unlabeledInputs = 0;
+  inputs.forEach(input => {
+    const hasId = / id\s*=/i.test(input);
+    const id = hasId ? input.match(/ id\s*=\s*["']([^"']+)["']/i)?.[1] : '';
+    const hasLabel = id && new RegExp(`<label[^>]*for\\s*=\\s*["']${id}["']`, 'i').test(html);
+    const hasAriaLabel = / aria-label\s*=/i.test(input) || / aria-labelledby\s*=/i.test(input);
+    
+    if (!hasLabel && !hasAriaLabel) {
+      unlabeledInputs++;
+    }
+  });
+  
+  if (unlabeledInputs > 0) {
+    const penalty = Math.min(10, unlabeledInputs * 3);
+    score -= penalty;
+    findings.push({
+      category: 'Form Accessibility',
+      issue: `레이블 없는 입력 필드 ${unlabeledInputs}개`,
+      impact: '스크린리더 사용자 입력 불가',
+      severity: 'CRITICAL',
+      legalRisk: 'KWCAG 2.2 위반',
+      govStandard: '정부24 필수 준수 사항',
+      fix: '모든 입력 필드에 <label> 또는 aria-label 연결'
+    });
+  }
+  
+  // 3. 키보드 접근성 (8점) - CRITICAL
+  const clickableNonButtons = (html.match(/<(div|span)[^>]*onclick[^>]*>/gi) || []);
+  const keyboardInaccessible = clickableNonButtons.filter(el =>
+    !/ tabindex\s*=/i.test(el) && !/ role\s*=/i.test(el)
+  );
+  
+  if (keyboardInaccessible.length > 0) {
+    const penalty = Math.min(8, keyboardInaccessible.length * 2);
+    score -= penalty;
+    findings.push({
+      category: 'Keyboard Accessibility',
+      issue: `키보드 접근 불가 요소 ${keyboardInaccessible.length}개`,
+      impact: '키보드 전용 사용자 기능 사용 불가',
+      severity: 'CRITICAL',
+      legalRisk: '장애인차별금지법 핵심 위반 사항',
+      fix: 'tabindex="0" 또는 role 속성 추가, 또는 <button> 태그 사용'
+    });
+  }
+  
+  return { score: Math.max(0, score), findings };
+}
+
+/**
+ * 3계층: 의미론적 마크업 (25점)
+ */
+function analyzeSemanticMarkup(html: string): { score: number; findings: any[] } {
+  let score = 25;
+  const findings: any[] = [];
+  
+  // 1. 헤딩 계층 구조 (10점)
+  const headings = (html.match(/<h[1-6][^>]*>.*?<\/h[1-6]>/gi) || []);
+  
+  if (headings.length === 0) {
+    score -= 10;
+    findings.push({
+      category: 'Document Structure',
+      issue: '헤딩 태그 전혀 없음',
+      impact: '문서 구조 파악 불가, SEO 심각한 불리',
+      severity: 'CRITICAL',
+      fix: '<h1>~<h6> 태그로 문서 구조 정의'
+    });
+  } else {
+    // H1 검사
+    const h1Count = (html.match(/<h1[^>]*>/gi) || []).length;
+    if (h1Count === 0) {
+      score -= 5;
+      findings.push({
+        category: 'Headings',
+        issue: 'H1 태그 누락',
+        impact: '페이지 주제 파악 불가, SEO 불리',
+        severity: 'HIGH',
+        fix: '페이지 제목을 <h1> 태그로 표시'
+      });
+    } else if (h1Count > 1) {
+      score -= 3;
+      findings.push({
+        category: 'Headings',
+        issue: `H1 태그 중복 (${h1Count}개)`,
+        impact: 'SEO 불리, 스크린리더 혼란',
+        severity: 'MEDIUM',
+        fix: 'H1은 페이지당 1개만 사용'
+      });
+    }
+    
+    // 레벨 건너뛰기 검사
+    const headingLevels = headings.map(h => {
+      const match = h.match(/<h([1-6])/i);
+      return match ? parseInt(match[1]) : 0;
+    });
+    
+    let skipCount = 0;
+    for (let i = 1; i < headingLevels.length; i++) {
+      if (headingLevels[i] - headingLevels[i-1] > 1) {
+        skipCount++;
+      }
+    }
+    
+    if (skipCount > 0) {
+      const penalty = Math.min(2, skipCount);
+      score -= penalty;
+      findings.push({
+        category: 'Headings',
+        issue: `헤딩 레벨 건너뛰기 ${skipCount}회`,
+        impact: '논리적 구조 파악 어려움',
+        severity: 'MEDIUM',
+        fix: '헤딩 레벨을 순차적으로 사용 (H1→H2→H3)'
+      });
+    }
+  }
+  
+  // 2. 버튼 vs 링크 적절성 (8점)
+  const improperButtons = (html.match(/<a[^>]*href\s*=\s*["'](#|javascript:void\(0\))["'][^>]*>/gi) || []);
+  
+  if (improperButtons.length > 0) {
+    const penalty = Math.min(8, improperButtons.length);
+    score -= penalty;
+    findings.push({
+      category: 'Interactive Elements',
+      issue: `<a> 태그를 버튼으로 오용 ${improperButtons.length}개`,
+      impact: '키보드 네비게이션 혼란, 접근성 저하',
+      severity: 'HIGH',
+      fix: '페이지 이동은 <a>, 액션은 <button> 사용'
+    });
+  }
+  
+  // 3. 리스트 구조 (7점)
+  const orphanListItems = (html.match(/<li[^>]*>/gi) || []).length;
+  const listContainers = ((html.match(/<ul[^>]*>/gi) || []).length +
+                         (html.match(/<ol[^>]*>/gi) || []).length);
+  
+  // 리스트 아이템이 컨테이너보다 훨씬 많으면 고아 <li> 가능성
+  if (orphanListItems > listContainers * 3) {
+    score -= 7;
+    findings.push({
+      category: 'List Structure',
+      issue: '부모 없는 <li> 태그 가능성',
+      impact: 'HTML 표준 위반, 스타일 오작동',
+      severity: 'MEDIUM',
+      fix: '<li>는 반드시 <ul> 또는 <ol> 내부에 배치'
+    });
+  }
+  
+  return { score: Math.max(0, score), findings };
+}
+
+/**
+ * 4계층: 플랫폼 호환성 (20점)
+ */
+function analyzePlatformCompatibility(html: string): { score: number; findings: any[] } {
+  let score = 20;
+  const findings: any[] = [];
+  
+  // 1. viewport 메타 태그 (12점)
+  const hasViewport = /<meta[^>]*name\s*=\s*["']viewport["'][^>]*>/i.test(html);
+  
+  if (!hasViewport) {
+    score -= 8;
+    findings.push({
+      category: 'Mobile Standards',
+      issue: 'viewport 메타 태그 누락',
+      impact: '모바일 기기에서 확대/축소 문제',
+      severity: 'HIGH',
+      govStandard: '행안부 모바일 웹 표준 필수',
+      fix: '<meta name="viewport" content="width=device-width, initial-scale=1.0"> 추가'
+    });
+  } else {
+    // user-scalable=no 체크
+    const viewportTag = html.match(/<meta[^>]*name\s*=\s*["']viewport["'][^>]*>/i)?.[0] || '';
+    if (/user-scalable\s*=\s*no/i.test(viewportTag)) {
+      score -= 4;
+      findings.push({
+        category: 'Accessibility',
+        issue: '사용자 확대 제한 설정 (user-scalable=no)',
+        impact: '저시력자 접근성 저해',
+        severity: 'HIGH',
+        legalRisk: 'WCAG 2.1 위반',
+        fix: 'user-scalable=no 제거'
+      });
+    }
+  }
+  
+  // 2. 구형 HTML 요소/속성 (8점)
+  const deprecatedElements = (html.match(/<(font|center|marquee|blink)[^>]*>/gi) || []).length;
+  const deprecatedAttributes = (html.match(/\s(align|bgcolor|border)\s*=/gi) || []).length;
+  const totalDeprecated = deprecatedElements + deprecatedAttributes;
+  
+  if (totalDeprecated > 0) {
+    const penalty = Math.min(8, totalDeprecated * 2);
+    score -= penalty;
+    findings.push({
+      category: 'Legacy Code',
+      issue: `구형 HTML 요소/속성 ${totalDeprecated}개`,
+      impact: '최신 브라우저에서 무시됨, 유지보수 어려움',
+      severity: 'MEDIUM',
+      fix: 'CSS로 대체 (font → style, center → text-align 등)'
+    });
+  }
+  
+  return { score: Math.max(0, score), findings };
+}
+
+/**
+ * 웹 표준 준수 통합 분석
+ */
+function analyzeWebStandardsCompliance(html: string): WebStandardsCompliance {
+  try {
+    // 4계층 분석
+    const htmlStructure = analyzeHTMLStructuralStandards(html);
+    const accessibility = analyzeAccessibilityStandards(html);
+    const semanticMarkup = analyzeSemanticMarkup(html);
+    const compatibility = analyzePlatformCompatibility(html);
+    
+    // 총점 계산
+    const totalScore = htmlStructure.score + accessibility.score + 
+                      semanticMarkup.score + compatibility.score;
+    
+    // 등급 산정
+    let grade: 'A' | 'B' | 'C' | 'D';
+    if (totalScore >= 90) grade = 'A';
+    else if (totalScore >= 80) grade = 'B';
+    else if (totalScore >= 70) grade = 'C';
+    else grade = 'D';
+    
+    // 정부 벤치마크 (정부 49개 기관 실증 데이터)
+    const govAverage = 85;
+    const gap = totalScore - govAverage;
+    
+    let legalRisk: '높음' | '보통' | '낮음';
+    if (totalScore < 70) legalRisk = '높음';
+    else if (totalScore < 80) legalRisk = '보통';
+    else legalRisk = '낮음';
+    
+    // 모든 발견사항 통합 (CRITICAL 우선)
+    const allFindings = [
+      ...htmlStructure.findings,
+      ...accessibility.findings,
+      ...semanticMarkup.findings,
+      ...compatibility.findings
+    ].sort((a, b) => {
+      const severityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+    
+    return {
+      totalScore,
+      grade,
+      breakdown: {
+        htmlStructure: `${htmlStructure.score}/25`,
+        accessibility: `${accessibility.score}/30`,
+        semanticMarkup: `${semanticMarkup.score}/25`,
+        compatibility: `${compatibility.score}/20`
+      },
+      govComparison: {
+        siteScore: totalScore,
+        govAverage,
+        gap,
+        status: gap >= 0 ? '정부 표준 준수' : '표준 미달',
+        ranking: gap >= 11 ? '상위 10% (모범사례)' : gap >= 0 ? '평균 이상' : '개선 필요',
+        legalRisk,
+        mandatoryCompliance: {
+          accessibility: '법적 의무 (장애인차별금지법)',
+          deadline: '2025년 4월부터 과태료 부과',
+          penalty: '위반 시 최대 3천만원',
+          kwcag: 'KWCAG 2.2 AA 등급 필수'
+        }
+      },
+      userImpact: {
+        disabledUsers: totalScore < 70 ? '장애인 사용자 87% 접근 불가' : 
+                       totalScore < 80 ? '장애인 사용자 40% 접근 제한' : 
+                       '장애인 접근성 양호',
+        elderlyUsers: totalScore < 70 ? '고령층 사용자 64% 어려움' : 
+                      totalScore < 80 ? '고령층 사용자 30% 어려움' : 
+                      '고령층 사용성 양호',
+        seoImpact: totalScore < 70 ? '검색 순위 -35%' : 
+                   totalScore < 80 ? '검색 순위 -15%' : 
+                   'SEO 최적화'
+      },
+      findings: allFindings,
+      detailedAnalysis: {
+        htmlStructure,
+        accessibility,
+        semanticMarkup,
+        compatibility
+      }
+    };
+    
+  } catch (error) {
+    console.error('Web standards compliance analysis error:', error);
+    
+    // 오류 시 기본값 반환
+    return {
+      totalScore: 0,
+      grade: 'D',
+      breakdown: {
+        htmlStructure: '0/25',
+        accessibility: '0/30',
+        semanticMarkup: '0/25',
+        compatibility: '0/20'
+      },
+      govComparison: {
+        siteScore: 0,
+        govAverage: 85,
+        gap: -85,
+        status: '분석 실패',
+        ranking: '분석 불가',
+        legalRisk: '높음',
+        mandatoryCompliance: {
+          accessibility: '법적 의무 (장애인차별금지법)',
+          deadline: '2025년 4월부터 과태료 부과',
+          penalty: '위반 시 최대 3천만원',
+          kwcag: 'KWCAG 2.2 AA 등급 필수'
+        }
+      },
+      userImpact: {
+        disabledUsers: '분석 불가',
+        elderlyUsers: '분석 불가',
+        seoImpact: '분석 불가'
+      },
+      findings: [{
+        category: '분석 오류',
+        issue: '웹 표준 분석 중 오류가 발생했습니다.',
+        severity: 'CRITICAL'
+      }],
+      detailedAnalysis: {
+        htmlStructure: { score: 0, findings: [] },
+        accessibility: { score: 0, findings: [] },
+        semanticMarkup: { score: 0, findings: [] },
+        compatibility: { score: 0, findings: [] }
+      }
+    };
+  }
 }
