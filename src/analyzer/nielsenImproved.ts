@@ -165,10 +165,20 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
       weights.N4_1_visual_consistency.base_score,
       calculateAdjustment(structure, weights.N4_1_visual_consistency)
     ),
-    N4_2_terminology_consistency: calculateScore(
-      weights.N4_2_terminology_consistency.base_score,
-      calculateAdjustment(structure, weights.N4_2_terminology_consistency)
-    ),
+    N4_2_terminology_consistency: (() => {
+      // LanguageConsistency 데이터 활용 (100점 → 5점 스케일 변환)
+      if (structure.languageConsistency) {
+        const totalScore = structure.languageConsistency.totalScore;
+        // 100점 만점을 5점 만점으로 변환 (84점 평균 = 4.2점)
+        const convertedScore = (totalScore / 100) * 5;
+        return Math.round(convertedScore * 10) / 10; // 소수점 1자리
+      }
+      // Fallback: 기존 방식
+      return calculateScore(
+        weights.N4_2_terminology_consistency.base_score,
+        calculateAdjustment(structure, weights.N4_2_terminology_consistency)
+      );
+    })(),
     N4_3_standard_compliance: calculateScore(
       weights.N4_3_standard_compliance.base_score,
       calculateAdjustment(structure, weights.N4_3_standard_compliance)
@@ -798,14 +808,34 @@ button:active {
         : '개선이 필요합니다.'
     },
     
-    N4_2_terminology_consistency: {
-      description: content.headingCount >= 3
-        ? `헤딩 구조가 용어 일관성을 지원합니다.`
-        : `헤딩이 부족하여 용어 일관성 확인이 어렵습니다.`,
-      recommendation: content.headingCount >= 3
-        ? '현재 상태를 유지하세요.'
-        : '헤딩이 부족하여 용어 일관성 확인이 어렵습니다 개선이 필요합니다.'
-    },
+    N4_2_terminology_consistency: (() => {
+      if (structure.languageConsistency) {
+        const lc = structure.languageConsistency;
+        const { totalScore, grade, govComparison, findings } = lc;
+        
+        // 주요 이슈 요약
+        const issuesSummary = findings.length > 0
+          ? findings.slice(0, 3).map(f => f.category).join(', ')
+          : '발견된 문제 없음';
+        
+        return {
+          description: `언어 일관성: ${totalScore}/100점 (${grade}등급). ${issuesSummary}`,
+          recommendation: govComparison.gap >= 0
+            ? `정부 표준 준수 (+${govComparison.gap}점). 현재 상태를 유지하세요.`
+            : `정부 평균 대비 ${Math.abs(govComparison.gap)}점 낮음. ${findings.length}개 항목 개선 필요.`
+        };
+      }
+      
+      // Fallback
+      return {
+        description: content.headingCount >= 3
+          ? `헤딩 구조가 용어 일관성을 지원합니다.`
+          : `헤딩이 부족하여 용어 일관성 확인이 어렵습니다.`,
+        recommendation: content.headingCount >= 3
+          ? '현재 상태를 유지하세요.'
+          : '헤딩이 부족하여 용어 일관성 확인이 어렵습니다 개선이 필요합니다.'
+      };
+    })(),
     
     N4_3_standard_compliance: {
       description: accessibility.langAttribute

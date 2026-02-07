@@ -751,6 +751,9 @@ function aggregateResults(pageResults: any[]): any {
   // NavigationFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
   const avgNavigationFreedom = mainPage.structure.navigationFreedom || allPages[0].navigationFreedom
   
+  // LanguageConsistency 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgLanguageConsistency = mainPage.structure.languageConsistency || allPages[0].languageConsistency
+  
   return {
     html: mainPage.structure.html || '',  // 메인 페이지 HTML 사용 (KRDS 평가용)
     navigation: avgNavigation,
@@ -760,7 +763,8 @@ function aggregateResults(pageResults: any[]): any {
     visuals: avgVisuals,
     realWorldMatch: avgRealWorldMatch,
     userControlFreedom: avgUserControlFreedom,
-    navigationFreedom: avgNavigationFreedom
+    navigationFreedom: avgNavigationFreedom,
+    languageConsistency: avgLanguageConsistency
   }
 }
 
