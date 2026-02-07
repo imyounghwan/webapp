@@ -749,51 +749,22 @@ button:active {
     
     N3_1_undo_redo: {
       description: (() => {
-        // 정부 49개 기관 비상구(Emergency Exit) 평가
-        const govAvg = 72
-        const govTop10 = 89
+        // userControlFreedom 데이터 사용
+        const ucf = structure.userControlFreedom
+        if (!ucf) return '비상구 분석 실패'
         
-        // 4단계 간단 측정
-        let score = 0
+        const score = ucf.totalScore
+        const grade = ucf.grade
+        const gap = ucf.govComparison?.gap || '0'
+        const ranking = ucf.govComparison?.percentile || '미측정'
         
-        // 1. 모달 탈출 (30점)
-        const hasModal = /modal|dialog|popup/i.test(structure.html || '')
-        const hasClose = /close|cancel|취소|닫기|×/i.test(structure.html || '')
-        score += hasModal ? (hasClose ? 30 : 15) : 30
-        
-        // 2. 프로세스 후퇴 (25점)
-        const hasPrev = /이전|prev|back/i.test(structure.html || '')
-        score += hasPrev ? 25 : (forms.formCount > 0 ? 12 : 25)
-        
-        // 3. 입력 취소 (25점)
-        const hasReset = /type="reset"|초기화|reset/i.test(structure.html || '')
-        score += forms.formCount > 0 ? (hasReset ? 25 : 12) : 25
-        
-        // 4. 파괴 방지 (20점)
-        const hasDanger = /삭제|delete|탈퇴/i.test(structure.html || '')
-        const hasConfirm = /confirm|확인/i.test(structure.html || '')
-        score += hasDanger ? (hasConfirm ? 20 : 10) : 20
-        
-        const grade = score >= 90 ? 'A' : score >= 75 ? 'B' : score >= 60 ? 'C' : 'D'
-        const gap = score - govAvg
-        const ranking = score >= govTop10 ? '상위 10%' : score >= govAvg ? '평균 이상' : '평균 미만'
-        
-        return `비상구(Emergency Exit) ${score}/100점 (${grade}등급) | 정부 49개 기관 평균 대비 ${gap >= 0 ? '+' : ''}${gap}점 (${ranking})`
+        return `비상구(Emergency Exit) ${score}/100점 (${grade}등급) | 정부 49개 기관 평균 대비 ${gap}점 (${ranking})`
       })(),
       recommendation: (() => {
-        const hasModal = /modal|dialog|popup/i.test(structure.html || '')
-        const hasClose = /close|cancel|취소|닫기/i.test(structure.html || '')
-        const hasPrev = /이전|prev|back/i.test(structure.html || '')
-        const hasReset = /type="reset"|초기화/i.test(structure.html || '')
+        const ucf = structure.userControlFreedom
+        if (!ucf) return '비상구 분석을 확인할 수 없습니다.'
         
-        const issues = []
-        if (hasModal && !hasClose) issues.push('⚠️ 모달에 닫기 버튼 추가')
-        if (forms.formCount > 0 && !hasPrev) issues.push('⚠️ 다단계 프로세스에 이전 버튼 추가')
-        if (forms.formCount > 0 && !hasReset) issues.push('⚠️ 폼에 초기화 버튼 추가')
-        
-        return issues.length > 0 
-          ? `정부 표준 개선 필요: ${issues.join(', ')}`
-          : '✅ 정부 49개 기관 수준의 사용자 제어권 제공'
+        return ucf.recommendation || '✅ 정부 49개 기관 수준의 사용자 제어권 제공'
       })()
     },
     
