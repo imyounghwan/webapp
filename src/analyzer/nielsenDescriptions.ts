@@ -160,30 +160,30 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
   },
   'N7_1': {
     id: 'N7.1',
-    name: '메인 기능 빠르게 접근',
+    name: '가속 장치',
     category: '편의성',
     principle: 'N7: 유연성과 효율성',
-    description: '상단 메뉴에서 1~2번 클릭으로 회사소개, 제품, 고객센터 같은 주요 페이지 도달',
-    why_important: '5~6번 클릭해야 원하는 페이지 나오면 지쳐서 포기하게 됩니다.',
-    evaluation_criteria: '주요 메뉴가 첫 화면에 바로 보이는지 확인'
+    description: '키보드 단축키, 빠른 메뉴, 최근 이용 기록 등 숙련자를 위한 효율적인 작업 수단 제공',
+    why_important: '반복 작업이 많은 숙련자는 빠른 접근 수단이 없으면 불편합니다.',
+    evaluation_criteria: '키보드 단축키, 빠른 메뉴, 최근 이용 기록이 있는지 확인'
   },
   'N7_2': {
     id: 'N7.2',
-    name: '화면 크기에 맞게 조정',
+    name: '개인화',
     category: '편의성',
     principle: 'N7: 유연성과 효율성',
-    description: '스마트폰, 태블릿, PC 등 어떤 기기로 봐도 화면에 맞게 자동으로 크기 조정(반응형)',
-    why_important: '스마트폰에서 PC용 화면이 그대로 나오면 글자가 너무 작아서 못 읽습니다.',
-    evaluation_criteria: '브라우저 창 크기를 바꿔도 레이아웃이 깨지지 않는지 확인'
+    description: '설정 개인화, 글자 크기 조절, 다크모드/테마, 언어 선택 등 사용자 맞춤 기능 제공',
+    why_important: '사용자마다 선호하는 환경이 다르므로 개인화 기능이 필요합니다.',
+    evaluation_criteria: '설정 개인화, 글자 크기 조절, 테마 변경 기능이 있는지 확인'
   },
   'N7_3': {
     id: 'N7.3',
-    name: '검색 기능 제공',
+    name: '일괄 처리',
     category: '편의성',
     principle: 'N7: 유연성과 효율성',
-    description: '페이지 상단에 검색창이 있어서 원하는 정보를 키워드로 바로 찾을 수 있음',
-    why_important: '메뉴를 계속 뒤져보는 것보다 검색이 훨씬 빠릅니다.',
-    evaluation_criteria: '사이트 내 검색 기능이 눈에 잘 보이는지 확인'
+    description: '전체 선택, 일괄 삭제/다운로드/수정 등 여러 항목을 한 번에 처리하는 기능 제공',
+    why_important: '항목을 하나씩 처리하는 것은 비효율적이고 시간이 오래 걸립니다.',
+    evaluation_criteria: '전체 선택 기능과 일괄 작업 버튼이 있는지 확인'
   },
   'N8_1': {
     id: 'N8.1',
