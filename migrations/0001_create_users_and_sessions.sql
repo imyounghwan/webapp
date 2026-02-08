@@ -5,9 +5,10 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'user', -- 'user', 'admin'
+  is_active INTEGER DEFAULT 1, -- 1: 활성, 0: 비활성
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  last_login_at DATETIME,
-  is_active INTEGER DEFAULT 1 -- 1: 활성, 0: 비활성
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_login_at DATETIME
 );
 
 -- 세션 테이블

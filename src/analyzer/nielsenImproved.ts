@@ -281,7 +281,7 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
  * 개선된 진단 근거 생성
  */
 export function generateImprovedDiagnoses(structure: HTMLStructure, scores: ImprovedNielsenScores, url: string): Record<string, { description: string; recommendation: string }> {
-  const { navigation, accessibility, content, forms, visuals } = structure
+  const { navigation, accessibility, content, forms, visuals, helpDocumentation } = structure
   
   return {
     N1_1_current_location: {
@@ -1452,25 +1452,37 @@ button:active {
     },
     
     N10_1_help_visibility: {
-      description: navigation.searchExists
-        ? `✅ 검색 기능으로 도움말을 쉽게 찾을 수 있습니다.`
-        : content.listCount > 3
-          ? `✅ 리스트 형태로 도움말 정보가 구조화되어 있습니다.`
-          : `⚠️ 도움말 찾기가 어려울 수 있습니다.`,
-      recommendation: navigation.searchExists
-        ? `✅ 검색 기능으로 도움말을 쉽게 찾을 수 있습니다.`
-        : content.listCount > 3
-          ? `✅ 리스트 형태로 도움말 정보가 구조화되어 있습니다.`
-          : `⚠️ 도움말 찾기가 어려울 수 있습니다.`
+      description: !helpDocumentation
+        ? `⚠️ 도움말 접근성 평가 불가 (분석 데이터 없음)`
+        : helpDocumentation.accessibility.score === 0
+          ? `❌ 도움말 접근성 개선 필요 (0/25)\n\n정부 95% 헤더 배치 기준:\n- 헤더/푸터 도움말 링크: ${helpDocumentation.accessibility.headerFooterLinks}/10\n- 검색 기능: ${helpDocumentation.accessibility.searchFunction}/8\n- FAQ 존재 여부: ${helpDocumentation.accessibility.faqExists}/7`
+          : helpDocumentation.accessibility.score >= 20
+            ? `✅ 도움말 접근성 우수 (${helpDocumentation.accessibility.score}/25)`
+            : helpDocumentation.accessibility.score >= 15
+              ? `😊 도움말 접근성 양호 (${helpDocumentation.accessibility.score}/25)`
+              : `⚠️ 도움말 접근성 개선 필요 (${helpDocumentation.accessibility.score}/25)\n\n정부 95% 헤더 배치 기준:\n- 헤더/푸터 도움말 링크: ${helpDocumentation.accessibility.headerFooterLinks}/10\n- 검색 기능: ${helpDocumentation.accessibility.searchFunction}/8\n- FAQ 존재 여부: ${helpDocumentation.accessibility.faqExists}/7`,
+      recommendation: !helpDocumentation
+        ? `⚠️ 도움말 접근성 평가 불가`
+        : helpDocumentation.accessibility.score >= 15
+          ? `현재 상태를 유지하세요.`
+          : `⚠️ 긴급 개선 필요 (${helpDocumentation.accessibility.score}/25 → 15점+ 목표):\n\n🔹 **헤더/푸터 도움말 링크** (${helpDocumentation.accessibility.headerFooterLinks}/10)\n   - 정부 95% 헤더 도움말 링크 배치\n   - 예: "도움말", "FAQ", "고객센터"\n\n🔹 **검색 기능** (${helpDocumentation.accessibility.searchFunction}/8)\n   - 전체 검색 제공\n   - 도움말 전용 검색 제공\n\n🔹 **FAQ 페이지** (${helpDocumentation.accessibility.faqExists}/7)\n   - 자주 묻는 질문 페이지 제공\n   - 카테고리별 분류`
     },
     
     N10_2_documentation: {
-      description: content.listCount > 5
-        ? `${content.listCount}개의 리스트로 문서화가 잘 되어 있습니다.`
-        : `리스트가 ${content.listCount}개로 문서화가 부족합니다.`,
-      recommendation: content.listCount > 5
-        ? '현재 상태를 유지하세요.'
-        : '문서화 개선이 필요합니다.'
+      description: !helpDocumentation
+        ? `⚠️ 문서 품질 평가 불가 (분석 데이터 없음)`
+        : helpDocumentation.quality.score === 0
+          ? `❌ 문서 품질 개선 필요 (0/25)\n\n불만: 정부 63% "따라할 수 없다"\n- 리스트 구조: ${helpDocumentation.quality.listStructure}/10\n- 이미지/스크린샷: ${helpDocumentation.quality.visualAids}/8\n- 예시/샘플: ${helpDocumentation.quality.examples}/7`
+          : helpDocumentation.quality.score >= 20
+            ? `✅ 문서 품질 우수 (${helpDocumentation.quality.score}/25)`
+            : helpDocumentation.quality.score >= 15
+              ? `😊 문서 품질 양호 (${helpDocumentation.quality.score}/25)`
+              : `⚠️ 문서 품질 개선 필요 (${helpDocumentation.quality.score}/25)\n\n불만: 정부 63% "따라할 수 없다"\n- 리스트 구조: ${helpDocumentation.quality.listStructure}/10\n- 이미지/스크린샷: ${helpDocumentation.quality.visualAids}/8\n- 예시/샘플: ${helpDocumentation.quality.examples}/7`,
+      recommendation: !helpDocumentation
+        ? `⚠️ 문서 품질 평가 불가`
+        : helpDocumentation.quality.score >= 15
+          ? `현재 상태를 유지하세요.`
+          : `⚠️ 긴급 개선 필요 (${helpDocumentation.quality.score}/25 → 15점+ 목표):\n\n🔹 **리스트 구조 (단계별 설명)** (${helpDocumentation.quality.listStructure}/10)\n   - 1단계, 2단계, 3단계... 형태로 작성\n   - 번호 있는 목록 사용\n   - 정부 63% "따라할 수 없다" 불만 해결\n\n🔹 **이미지/스크린샷** (${helpDocumentation.quality.visualAids}/8)\n   - 주요 단계마다 스크린샷 제공\n   - 클릭 위치, 버튼 위치 표시\n   - 정부 68% "이해할 수 없다" 불만 해결\n\n🔹 **예시/샘플** (${helpDocumentation.quality.examples}/7)\n   - 구체적 예시 제공\n   - 실제 사용 케이스 제시\n   - Before/After 비교`
     }
   }
 }

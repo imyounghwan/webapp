@@ -416,6 +416,30 @@ export interface ErrorRecoverySupport {
   details: string[]              // 발견된 패턴 및 문제점
 }
 
+/**
+ * N10 도움말과 문서 분석 (Nielsen Heuristic #10)
+ * 정부 49개 기관 데이터 기반 평가 기준
+ */
+export interface HelpDocumentation {
+  // 1) 도움말 접근성 (Accessibility) - 25점
+  accessibility: {
+    headerFooterLinks: number  // 헤더/푸터 도움말 링크 (0-10점)
+    searchFunction: number     // 검색 기능 (0-8점)
+    faqExists: number          // FAQ 존재 여부 (0-7점)
+    score: number              // 접근성 총점 (0-25점)
+  }
+  // 2) 문서 품질 (Quality) - 25점
+  quality: {
+    listStructure: number      // 리스트 구조 (단계별 설명) (0-10점)
+    visualAids: number         // 이미지/스크린샷 (0-8점)
+    examples: number           // 예시/샘플 (0-7점)
+    score: number              // 품질 총점 (0-25점)
+  }
+  total_score: number          // 전체 점수 (0-50점)
+  status: 'excellent' | 'good' | 'basic' | 'minimal' | 'poor' | 'none'
+  details: string[]            // 발견된 이슈 목록
+}
+
 export interface HTMLStructure {
   url: string
   html?: string  // 원본 HTML (KRDS 평가용)
@@ -429,6 +453,7 @@ export interface HTMLStructure {
   navigationFreedom?: NavigationFreedom   // N3.3 네비게이션 자유도 (선택적)
   languageConsistency: LanguageConsistency // N4.2 언어 일관성 (용어 통일)
   webStandardsCompliance: WebStandardsCompliance // N4.3 웹 표준 준수 (W-CORE)
+  helpDocumentation?: HelpDocumentation // N10 도움말과 문서
 }
 
 export interface NavigationStructure {
@@ -584,6 +609,7 @@ export function analyzeHTML(
   const navigationFreedom = analyzeNavigationFreedom(html, url)
   const languageConsistency = analyzeLanguageConsistency(html)
   const webStandardsCompliance = analyzeWebStandardsCompliance(html)
+  const helpDocumentation = analyzeHelpDocumentation(html)  // N10 도움말과 문서
 
   return {
     url,
@@ -597,7 +623,8 @@ export function analyzeHTML(
     userControlFreedom,
     navigationFreedom,
     languageConsistency,
-    webStandardsCompliance
+    webStandardsCompliance,
+    helpDocumentation  // N10 추가
   }
 }
 
@@ -1920,6 +1947,185 @@ function analyzeErrorRecovery(html: string): ErrorRecoverySupport {
     },
     score: totalScore,
     quality,
+    details
+  }
+}
+
+/**
+ * N10 도움말과 문서 분석
+ * 정부 49개 기관 데이터 기반 평가 (2축 모델)
+ * 
+ * === 정부 데이터 기반 평가 기준 ===
+ * 1) 도움말 접근성 (Accessibility) - 25점
+ *    - 헤더/푸터 도움말 링크: 10점 (정부 95% 헤더 배치)
+ *    - 검색 기능: 8점
+ *    - FAQ 존재: 7점
+ * 
+ * 2) 문서 품질 (Quality) - 25점
+ *    - 리스트 구조 (단계별 설명): 10점
+ *    - 이미지/스크린샷: 8점
+ *    - 예시/샘플: 7점
+ * 
+ * === 정부 불만 데이터 반영 ===
+ * - "따라할 수 없다": 63% 불만
+ * - "이해할 수 없다": 68% 불만
+ * - 도움말 페이지 이탈률: 45%
+ */
+function analyzeHelpDocumentation(html: string): HelpDocumentation {
+  const details: string[] = []
+  
+  // 1) 도움말 접근성 (Accessibility) - 25점
+  // 1.1 헤더/푸터 도움말 링크 (10점) - 정부 95% 헤더 배치
+  let headerFooterLinks = 0
+  const headerFooter = html.match(/<header[^>]*>[\s\S]*?<\/header>|<footer[^>]*>[\s\S]*?<\/footer>/gi) || []
+  const helpKeywords = /help|도움말|faq|support|지원|안내|guide|가이드/i
+  
+  headerFooter.forEach(section => {
+    const helpLinks = (section.match(/<a[^>]+>/gi) || []).filter(link => helpKeywords.test(link))
+    if (helpLinks.length > 0) {
+      headerFooterLinks = 10
+      details.push(`✅ 헤더/푸터 도움말 링크: ${helpLinks.length}개 발견`)
+    }
+  })
+  
+  if (headerFooterLinks === 0) {
+    details.push(`❌ 헤더/푸터 도움말 링크 미제공 (정부 95% 헤더 배치 기준)`)
+  }
+  
+  // 1.2 검색 기능 (8점)
+  let searchFunction = 0
+  const searchPatterns = [
+    /<input[^>]+type\s*=\s*["']search["'][^>]*>/gi,
+    /<input[^>]+(?:placeholder|name|id)\s*=\s*["'][^"']*(search|검색)[^"']*["'][^>]*>/gi,
+    /<form[^>]+(?:class|id)\s*=\s*["'][^"']*(search|검색)[^"']*["'][^>]*>/gi
+  ]
+  
+  searchPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      searchFunction = 8
+      details.push(`✅ 검색 기능: 제공됨`)
+    }
+  })
+  
+  if (searchFunction === 0) {
+    details.push(`❌ 검색 기능 미제공`)
+  }
+  
+  // 1.3 FAQ 존재 여부 (7점)
+  let faqExists = 0
+  const faqPatterns = [
+    /<(?:section|div|article)[^>]*(?:class|id)\s*=\s*["'][^"']*(faq|자주묻는질문|질문답변)[^"']*["'][^>]*>/gi,
+    /FAQ|자주\s*묻는\s*질문|Q&A|질문과\s*답변/gi
+  ]
+  
+  faqPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      faqExists = 7
+      details.push(`✅ FAQ 제공: ${matches.length}개 영역 발견`)
+    }
+  })
+  
+  if (faqExists === 0) {
+    details.push(`❌ FAQ 미제공`)
+  }
+  
+  const accessibilityScore = headerFooterLinks + searchFunction + faqExists
+  
+  // 2) 문서 품질 (Quality) - 25점
+  // 2.1 리스트 구조 (단계별 설명) (10점) - 정부 63% "따라할 수 없다" 불만
+  let listStructure = 0
+  const lists = html.match(/<(?:ol|ul)[^>]*>[\s\S]*?<\/(?:ol|ul)>/gi) || []
+  const stepsKeywords = /단계|step|절차|과정|방법|순서/i
+  const meaningfulLists = lists.filter(list => {
+    const listItems = (list.match(/<li[^>]*>/gi) || []).length
+    return listItems >= 3 && stepsKeywords.test(list)
+  })
+  
+  if (meaningfulLists.length >= 5) {
+    listStructure = 10
+    details.push(`✅ 리스트 구조 우수: ${meaningfulLists.length}개 단계별 설명`)
+  } else if (meaningfulLists.length >= 3) {
+    listStructure = 7
+    details.push(`⚠️ 리스트 구조 보통: ${meaningfulLists.length}개`)
+  } else if (meaningfulLists.length > 0) {
+    listStructure = 4
+    details.push(`⚠️ 리스트 구조 부족: ${meaningfulLists.length}개`)
+  } else {
+    details.push(`❌ 리스트 구조 미제공 (정부 63% "따라할 수 없다" 불만)`)
+  }
+  
+  // 2.2 이미지/스크린샷 (8점)
+  let visualAids = 0
+  const images = html.match(/<img[^>]*>/gi) || []
+  const helpImages = images.filter(img => 
+    /guide|tutorial|example|설명|안내|예시|스크린샷|screenshot/i.test(img)
+  )
+  
+  if (helpImages.length >= 5) {
+    visualAids = 8
+    details.push(`✅ 이미지/스크린샷: ${helpImages.length}개 제공`)
+  } else if (helpImages.length >= 3) {
+    visualAids = 5
+    details.push(`⚠️ 이미지/스크린샷: ${helpImages.length}개 (부족)`)
+  } else if (helpImages.length > 0) {
+    visualAids = 3
+    details.push(`⚠️ 이미지/스크린샷: ${helpImages.length}개 (매우 부족)`)
+  } else {
+    details.push(`❌ 이미지/스크린샷 미제공 (정부 68% "이해할 수 없다" 불만)`)
+  }
+  
+  // 2.3 예시/샘플 (7점)
+  let examples = 0
+  const exampleKeywords = /예시|example|샘플|sample|예제|케이스|case/gi
+  const exampleMatches = html.match(exampleKeywords) || []
+  
+  if (exampleMatches.length >= 5) {
+    examples = 7
+    details.push(`✅ 예시/샘플: ${exampleMatches.length}개 제공`)
+  } else if (exampleMatches.length >= 3) {
+    examples = 4
+    details.push(`⚠️ 예시/샘플: ${exampleMatches.length}개 (부족)`)
+  } else if (exampleMatches.length > 0) {
+    examples = 2
+    details.push(`⚠️ 예시/샘플: ${exampleMatches.length}개 (매우 부족)`)
+  } else {
+    details.push(`❌ 예시/샘플 미제공`)
+  }
+  
+  const qualityScore = listStructure + visualAids + examples
+  
+  // 총점 및 품질 등급
+  const totalScore = accessibilityScore + qualityScore
+  let status: 'excellent' | 'good' | 'basic' | 'minimal' | 'poor' | 'none'
+  
+  if (totalScore >= 45) status = 'excellent'       // 45-50점
+  else if (totalScore >= 35) status = 'good'       // 35-44점
+  else if (totalScore >= 25) status = 'basic'      // 25-34점
+  else if (totalScore >= 15) status = 'minimal'    // 15-24점
+  else if (totalScore > 0) status = 'poor'         // 1-14점
+  else status = 'none'                             // 0점
+  
+  details.unshift(
+    `총점: ${totalScore}/50 (접근성 ${accessibilityScore}/25 + 품질 ${qualityScore}/25)`
+  )
+  
+  return {
+    accessibility: {
+      headerFooterLinks,
+      searchFunction,
+      faqExists,
+      score: accessibilityScore
+    },
+    quality: {
+      listStructure,
+      visualAids,
+      examples,
+      score: qualityScore
+    },
+    total_score: totalScore,
+    status,
     details
   }
 }

@@ -271,25 +271,29 @@
     },
     
     "N10_1_help_visibility": {
-      "base_score": 3.5,
+      "base_score": 3.0,
       "conditions": [
-        {"field": "navigation.searchExists", "operator": "==", "value": true, "adjustment": 1.0},
-        {"field": "navigation.linkCount", "operator": ">", "value": 30, "adjustment": 0.5},
-        {"field": "content.listCount", "operator": ">", "value": 3, "adjustment": 0.5}
+        {"field": "helpDocumentation.accessibility.score", "operator": ">=", "value": 20, "adjustment": 2.0},
+        {"field": "helpDocumentation.accessibility.score", "operator": ">=", "value": 15, "adjustment": 1.5},
+        {"field": "helpDocumentation.accessibility.score", "operator": ">=", "value": 10, "adjustment": 1.0},
+        {"field": "helpDocumentation.accessibility.score", "operator": ">=", "value": 5, "adjustment": 0.5},
+        {"field": "helpDocumentation.accessibility.score", "operator": "==", "value": 0, "adjustment": 0}
       ],
-      "default_adjustment": -0.5,
-      "description": "검색 존재, 링크 30개 초과, 또는 리스트 3개 초과 시 가산점"
+      "default_adjustment": 0,
+      "description": "도움말 접근성 평가 (25점 만점): 20점 이상 우수, 15점 이상 양호, 10점 이상 보통, 5점 이상 미흡, 0점 평가 불가. 정부 95% 헤더 배치 기준"
     },
     
     "N10_2_documentation": {
-      "base_score": 3.5,
+      "base_score": 3.0,
       "conditions": [
-        {"field": "content.listCount", "operator": ">", "value": 5, "adjustment": 1.5},
-        {"field": "content.listCount", "operator": ">", "value": 3, "adjustment": 1.0},
-        {"field": "content.listCount", "operator": ">", "value": 0, "adjustment": 0}
+        {"field": "helpDocumentation.quality.score", "operator": ">=", "value": 20, "adjustment": 2.0},
+        {"field": "helpDocumentation.quality.score", "operator": ">=", "value": 15, "adjustment": 1.5},
+        {"field": "helpDocumentation.quality.score", "operator": ">=", "value": 10, "adjustment": 1.0},
+        {"field": "helpDocumentation.quality.score", "operator": ">=", "value": 5, "adjustment": 0.5},
+        {"field": "helpDocumentation.quality.score", "operator": "==", "value": 0, "adjustment": 0}
       ],
-      "default_adjustment": -0.5,
-      "description": "리스트 5개 초과 최고, 3개 초과 양호, 1개 이상 중립"
+      "default_adjustment": 0,
+      "description": "문서 품질 평가 (25점 만점): 20점 이상 우수, 15점 이상 양호, 10점 이상 보통, 5점 이상 미흡, 0점 평가 불가. 정부 63% '따라할 수 없다' 불만 반영"
     }
   }
 }

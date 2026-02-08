@@ -764,6 +764,7 @@ function aggregateResults(pageResults: any[]): any {
   
   // WebStandardsCompliance 종합 (메인 페이지 우선, 없으면 첫 페이지)
   const avgWebStandardsCompliance = mainPage.structure.webStandardsCompliance || allPages[0].webStandardsCompliance
+  const avgHelpDocumentation = mainPage.structure.helpDocumentation || allPages[0].helpDocumentation
   
   return {
     html: mainPage.structure.html || '',  // 메인 페이지 HTML 사용 (KRDS 평가용)
@@ -776,7 +777,8 @@ function aggregateResults(pageResults: any[]): any {
     userControlFreedom: avgUserControlFreedom,
     navigationFreedom: avgNavigationFreedom,
     languageConsistency: avgLanguageConsistency,
-    webStandardsCompliance: avgWebStandardsCompliance
+    webStandardsCompliance: avgWebStandardsCompliance,
+    helpDocumentation: avgHelpDocumentation  // N10 추가
   }
 }
 
@@ -1555,7 +1557,8 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         userControlFreedom: structure.userControlFreedom,
         navigationFreedom: structure.navigationFreedom,
         languageConsistency: structure.languageConsistency,
-        webStandardsCompliance: structure.webStandardsCompliance
+        webStandardsCompliance: structure.webStandardsCompliance,
+        helpDocumentation: structure.helpDocumentation  // N10 추가
       },
       predicted_score: {
         overall: Math.round(overall * 100) / 100,
