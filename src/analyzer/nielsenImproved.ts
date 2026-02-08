@@ -1422,25 +1422,33 @@ button:active {
     },
     
     N9_2_recovery_support: {
-      description: forms.validationExists
-      ? `✅ 폼 검증으로 오류 복구를 지원합니다.`
-      : forms.formCount === 0
-        ? `ℹ️ 폼이 없어 복구 지원이 필요하지 않습니다.`
-        : `⚠️ 오류 복구 지원이 미흡합니다.`,
-      recommendation: forms.validationExists
-        ? `✅ 폼 검증으로 오류 복구를 지원합니다.`
-        : forms.formCount === 0
-          ? `ℹ️ 폼이 없어 복구 지원이 필요하지 않습니다.`
-          : `⚠️ 오류 복구 지원이 미흡합니다.`
+      description: forms.errorRecovery?.score === 0
+        ? `ℹ️ 현재 오류 요소 없음 - 평가 대상 없음`
+        : forms.errorRecovery?.score >= 80
+          ? `✅ 오류 회복 우수 (${forms.errorRecovery.score}/100): 인식 ${forms.errorRecovery.recognition.score}/30, 진단 ${forms.errorRecovery.diagnosis.score}/40, 복구 ${forms.errorRecovery.recovery.score}/30`
+          : forms.errorRecovery?.score >= 60
+            ? `😊 오류 회복 양호 (${forms.errorRecovery.score}/100): 인식 ${forms.errorRecovery.recognition.score}/30, 진단 ${forms.errorRecovery.diagnosis.score}/40, 복구 ${forms.errorRecovery.recovery.score}/30`
+            : `⚠️ 오류 회복 미흡 (${forms.errorRecovery?.score || 0}/100)\n\n📊 3단계 프로세스 분석:\n- 인식 ${forms.errorRecovery?.recognition.score || 0}/30: 사용자가 오류를 즉시 알아챌 수 있는가?\n- 진단 ${forms.errorRecovery?.diagnosis.score || 0}/40: 사용자 언어로 원인을 설명하는가? (정부 72% 불만)\n- 복구 ${forms.errorRecovery?.recovery.score || 0}/30: 해결 방법을 제시하는가? (정부 65% 불만)`,
+      recommendation: forms.errorRecovery?.score === 0
+        ? `ℹ️ 오류 요소 없음 - 평가 대상 없음`
+        : forms.errorRecovery?.score >= 60
+          ? `현재 상태를 유지하세요.`
+          : `⚠️ 긴급 개선 필요 (${forms.errorRecovery?.score || 0}/100 → 60점+ 목표):\n\n🔹 **1단계: 오류 인식 강화 (${forms.errorRecovery?.recognition.score || 0}/30)**\n   - 빨간색 강조 + 아이콘 사용\n   - role="alert", aria-invalid 속성 추가\n\n🔹 **2단계: 원인 진단 명확화 (${forms.errorRecovery?.diagnosis.score || 0}/40)**\n   - 전문 용어 제거 (정부 72% "무슨 말인지 모르겠다" 불만)\n   - 구체적 원인 설명: "무엇이" + "어떻게" 잘못됐는지\n   - 예: "404 Error" → "요청하신 페이지를 찾을 수 없습니다"\n\n🔹 **3단계: 복구 실행 지원 (${forms.errorRecovery?.recovery.score || 0}/30)**\n   - 복구 액션 버튼: "다시 시도", "비밀번호 찾기"\n   - 도움말/FAQ 링크 제공\n   - 정부 베스트 프랙티스: 홈택스 "빨간 테두리 + 인라인 메시지"`
     },
     
     N9_4_error_guidance: {
-      description: content.listCount > 3
-        ? `리스트 ${content.listCount}개가 체계적인 안내를 제공할 가능성이 높습니다.`
-        : `구조화된 안내 정보가 부족합니다.`,
-      recommendation: content.listCount > 3
-        ? '현재 상태를 유지하세요.'
-        : '구조화된 안내 정보가 부족합니다. 개선이 필요합니다.'
+      description: forms.errorRecovery?.score === 0
+        ? `ℹ️ 현재 오류 요소 없음 - 평가 대상 없음`
+        : forms.errorRecovery?.diagnosis.score >= 32
+          ? `✅ 원인 진단 우수 (${forms.errorRecovery.diagnosis.score}/40): 사용자 친화 언어 ${forms.errorRecovery.diagnosis.userLanguage}/20, 구체적 원인 ${forms.errorRecovery.diagnosis.specificReason}/15`
+          : forms.errorRecovery?.diagnosis.score >= 24
+            ? `😊 원인 진단 양호 (${forms.errorRecovery.diagnosis.score}/40): 사용자 친화 언어 ${forms.errorRecovery.diagnosis.userLanguage}/20, 구체적 원인 ${forms.errorRecovery.diagnosis.specificReason}/15`
+            : `❌ 원인 진단 미흡 (${forms.errorRecovery?.diagnosis.score || 0}/40)\n\n정부 72% 국민 불만: "오류 메시지 이해 못함"\n\n현재 문제점:\n- 전문 용어 사용: ${20 - (forms.errorRecovery?.diagnosis.userLanguage || 0)}건\n- 모호한 원인 설명: ${15 - (forms.errorRecovery?.diagnosis.specificReason || 0)}점 손실`,
+      recommendation: forms.errorRecovery?.score === 0
+        ? `ℹ️ 오류 요소 없음 - 평가 대상 없음`
+        : forms.errorRecovery?.diagnosis.score >= 24
+          ? `현재 상태를 유지하세요.`
+          : `⚠️ 긴급 개선 필요:\n\n🔹 **전문 용어 → 사용자 언어 변환** (+${20 - (forms.errorRecovery?.diagnosis.userLanguage || 0)}점)\n   - "404 Error" → "요청하신 페이지를 찾을 수 없습니다"\n   - "Invalid input" → "입력 형식이 올바르지 않습니다"\n   - 정부24 방식 벤치마킹\n\n🔹 **구체적 원인 설명** (+${15 - (forms.errorRecovery?.diagnosis.specificReason || 0)}점)\n   - "무엇이" 잘못됐는지: 이메일, 비밀번호, 파일 등\n   - "어떻게" 잘못됐는지: 형식, 길이, 조건 등\n   - 예: "비밀번호 형식이 올바르지 않습니다. 8자 이상 입력하세요"\n\n정부 베스트 프랙티스:\n- 정부24: "비밀번호가 틀렸습니다. [비밀번호 찾기] 버튼을 눌러주세요"\n- 홈택스: 오류 필드 빨간 테두리 + 인라인 메시지\n- 국세청: "일시적 오류입니다. 잠시 후 다시 시도해주세요"`
     },
     
     N10_1_help_visibility: {

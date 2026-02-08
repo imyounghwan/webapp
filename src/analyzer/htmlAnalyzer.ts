@@ -374,6 +374,48 @@ export interface WebStandardsCompliance {
   }
 }
 
+/**
+ * 오류 회복 3단계 프로세스 분석 결과 (N9 강화)
+ * Error Recovery Score = 오류 인식(30점) + 원인 진단(40점) + 복구 실행(30점)
+ * 
+ * 정부 49개 기관 실증 데이터:
+ * - 오류 메시지 이해 못함: 국민 72%
+ * - 오류 위치 파악 불가: 68%
+ * - 해결 방법 모름: 65%
+ * - 입력 데이터 손실: 55%
+ */
+export interface ErrorRecoverySupport {
+  // 1단계: 오류 인식 (Error Recognition) - 30점
+  recognition: {
+    colorEmphasis: number        // 빨간색 계열 강조 (10점)
+    iconUsage: number            // 아이콘/경고 심볼 (10점)
+    ariaSupport: number          // role="alert", aria-invalid (5점)
+    positioning: number          // 필드 근처 또는 상단 배치 (5점)
+    score: number                // 0-30점
+  }
+  
+  // 2단계: 원인 진단 (Error Diagnosis) - 40점
+  diagnosis: {
+    userLanguage: number         // 사용자 언어 vs 전문 용어 (20점)
+    specificReason: number       // 구체적 원인 설명 (15점)
+    friendlyTone: number         // 사용자 친화적 톤 (5점)
+    score: number                // 0-40점
+  }
+  
+  // 3단계: 복구 실행 (Error Recovery) - 30점
+  recovery: {
+    actionButtons: number        // 복구 액션 버튼/링크 (15점)
+    helpLinks: number            // 도움말/FAQ 링크 (10점)
+    guidanceClarity: number      // 구체적 해결 방법 제시 (5점)
+    score: number                // 0-30점
+  }
+  
+  // 종합
+  score: number                  // 0-100점
+  quality: 'excellent' | 'good' | 'basic' | 'minimal' | 'poor' | 'none'
+  details: string[]              // 발견된 패턴 및 문제점
+}
+
 export interface HTMLStructure {
   url: string
   html?: string  // 원본 HTML (KRDS 평가용)
@@ -509,6 +551,7 @@ export interface FormStructure {
   constraintQuality?: ConstraintQuality    // 제약 조건 품질 (N5.3 강화)
   memoryLoadSupport?: MemoryLoadSupport    // 기억 부담 최소화 지원 (N6.3 강화)
   flexibilityEfficiency?: FlexibilityEfficiencySupport  // 유연성과 효율성 지원 (N7 재구성)
+  errorRecovery?: ErrorRecoverySupport     // 오류 회복 3단계 프로세스 (N9 강화)
 }
 
 export interface VisualStructure {
@@ -1146,6 +1189,9 @@ function analyzeForms(html: string, navigation: NavigationStructure): FormStruct
   
   // 유연성과 효율성 지원 분석 추가 (N7 재구성)
   const flexibilityEfficiency = analyzeFlexibilityEfficiency(html)
+  
+  // 오류 회복 3단계 프로세스 분석 추가 (N9 강화)
+  const errorRecovery = analyzeErrorRecovery(html)
 
   return {
     formCount: formMatches.length,
@@ -1156,7 +1202,8 @@ function analyzeForms(html: string, navigation: NavigationStructure): FormStruct
     realtimeValidation,
     constraintQuality,
     memoryLoadSupport,
-    flexibilityEfficiency
+    flexibilityEfficiency,
+    errorRecovery
   }
 }
 
@@ -1629,6 +1676,247 @@ function analyzeFlexibilityEfficiency(html: string): FlexibilityEfficiencySuppor
       selectAll,
       bulkActions,
       score: batchOperationsScore
+    },
+    score: totalScore,
+    quality,
+    details
+  }
+}
+
+/**
+ * N9: 오류 회복 3단계 프로세스 분석
+ * 정부 49개 기관 실증 데이터 기반
+ */
+function analyzeErrorRecovery(html: string): ErrorRecoverySupport {
+  const details: string[] = []
+  
+  // 오류 관련 요소 탐지
+  const errorElements = [
+    ...Array.from(html.matchAll(/<[^>]+(?:role\s*=\s*["']alert["']|class\s*=\s*["'][^"']*\b(?:error|invalid|danger)[^"']*["']|aria-invalid\s*=\s*["']true["'])[^>]*>/gi))
+  ]
+  
+  // 오류 메시지 텍스트 추출
+  const errorMessages: string[] = []
+  const errorTextMatches = html.match(/<[^>]+(?:class|role)\s*=\s*["'][^"']*\b(?:error|invalid|alert)[^"']*["'][^>]*>([^<]+)<\//gi) || []
+  errorTextMatches.forEach(match => {
+    const textMatch = match.match(/>([^<]+)</)
+    if (textMatch && textMatch[1].trim().length > 0) {
+      errorMessages.push(textMatch[1].trim())
+    }
+  })
+  
+  // 오류가 없으면 기본 점수 반환
+  if (errorElements.length === 0 && errorMessages.length === 0) {
+    return {
+      recognition: {
+        colorEmphasis: 0,
+        iconUsage: 0,
+        ariaSupport: 0,
+        positioning: 0,
+        score: 0
+      },
+      diagnosis: {
+        userLanguage: 0,
+        specificReason: 0,
+        friendlyTone: 0,
+        score: 0
+      },
+      recovery: {
+        actionButtons: 0,
+        helpLinks: 0,
+        guidanceClarity: 0,
+        score: 0
+      },
+      score: 0,
+      quality: 'none',
+      details: ['ℹ️ 현재 오류 요소 없음 - 평가 대상 없음']
+    }
+  }
+  
+  // === 1단계: 오류 인식 (Error Recognition) - 30점 ===
+  
+  // 1.1 색상 강조 (10점) - 빨간색 계열
+  let colorEmphasis = 0
+  const redColorPatterns = [
+    /(?:color|border-color|background-color)\s*:\s*(?:red|#[fF][0-9a-fA-F]{5}|rgb\s*\(\s*2[0-9]{2}|rgba\s*\(\s*2[0-9]{2})/gi,
+    /class\s*=\s*["'][^"']*\b(?:text-red|bg-red|border-red|text-danger|bg-danger)[^"']*["']/gi
+  ]
+  
+  redColorPatterns.forEach(pattern => {
+    const matches = html.match(pattern) || []
+    if (matches.length > 0) {
+      colorEmphasis = Math.min(10, matches.length * 3)
+      details.push(`✅ 색상 강조: ${matches.length}개 요소`)
+    }
+  })
+  
+  // 1.2 아이콘/경고 심볼 (10점)
+  let iconUsage = 0
+  const errorIconPatterns = [
+    /<i\s+[^>]*class\s*=\s*["'][^"']*\b(?:fa-exclamation|fa-warning|fa-error|alert-icon)[^"']*["']/gi,
+    /<svg[^>]*>(?:[^<]*<path[^>]*>[^<]*)*<\/svg>/gi,
+    /⚠️|❌|🚫|⛔/g
+  ]
+  
+  errorIconPatterns.forEach(pattern => {
+    const matches = html.match(pattern) || []
+    if (matches.length > 0) {
+      iconUsage = Math.min(10, matches.length * 4)
+      details.push(`✅ 오류 아이콘: ${matches.length}개`)
+    }
+  })
+  
+  // 1.3 ARIA 지원 (5점)
+  let ariaSupport = 0
+  const ariaErrorCount = (html.match(/(?:role\s*=\s*["']alert["']|aria-invalid\s*=\s*["']true["']|aria-errormessage)/gi) || []).length
+  if (ariaErrorCount > 0) {
+    ariaSupport = 5
+    details.push(`✅ ARIA 오류 지원: ${ariaErrorCount}개`)
+  }
+  
+  // 1.4 위치 배치 (5점) - 필드 근처 또는 상단
+  let positioning = 0
+  if (errorElements.length > 0) {
+    positioning = 5
+    details.push(`✅ 오류 요소 위치: ${errorElements.length}개 배치`)
+  }
+  
+  const recognitionScore = colorEmphasis + iconUsage + ariaSupport + positioning
+  
+  // === 2단계: 원인 진단 (Error Diagnosis) - 40점 ===
+  
+  // 2.1 사용자 언어 vs 전문 용어 (20점)
+  let userLanguage = 20
+  let technicalTermCount = 0
+  const technicalTerms = /\b(?:404|500|error code|exception|null|undefined|invalid input|database|server error|syntax error|timeout)/gi
+  
+  errorMessages.forEach(msg => {
+    const matches = msg.match(technicalTerms)
+    if (matches) {
+      technicalTermCount += matches.length
+      userLanguage = Math.max(0, 20 - technicalTermCount * 7)
+      details.push(`❌ 전문 용어 사용: "${msg.substring(0, 50)}..." (정부 72% 불만)`)
+    }
+  })
+  
+  if (technicalTermCount === 0 && errorMessages.length > 0) {
+    details.push(`✅ 사용자 친화 언어 사용`)
+  }
+  
+  // 2.2 구체적 원인 설명 (15점)
+  let specificReason = 0
+  let specificCount = 0
+  
+  errorMessages.forEach(msg => {
+    const hasWhat = /이메일|비밀번호|전화번호|파일|날짜|이름|주소|카드/gi.test(msg)
+    const hasHow = /형식|길이|크기|조건|이상|이하|필수|올바르지|입력하세요/gi.test(msg)
+    
+    if (hasWhat && hasHow) {
+      specificCount++
+      details.push(`✅ 구체적 원인: "${msg.substring(0, 50)}..."`)
+    } else if (!hasWhat && !hasHow) {
+      details.push(`❌ 모호한 오류: "${msg.substring(0, 50)}..." (정부 68% 불만)`)
+    }
+  })
+  
+  if (errorMessages.length > 0) {
+    specificReason = Math.round((specificCount / errorMessages.length) * 15)
+  }
+  
+  // 2.3 사용자 친화적 톤 (5점)
+  let friendlyTone = 5
+  const unfriendlyPatterns = /잘못|틀렸|invalid|wrong|fail|incorrect/gi
+  
+  errorMessages.forEach(msg => {
+    if (unfriendlyPatterns.test(msg)) {
+      friendlyTone = 0
+      details.push(`⚠️ 비친화적 톤: "${msg.substring(0, 50)}..."`)
+    }
+  })
+  
+  const diagnosisScore = userLanguage + specificReason + friendlyTone
+  
+  // === 3단계: 복구 실행 (Error Recovery) - 30점 ===
+  
+  // 3.1 복구 액션 버튼/링크 (15점)
+  let actionButtons = 0
+  const recoveryActions = [
+    /다시\s*시도|재시도|retry/gi,
+    /비밀번호\s*찾기|아이디\s*찾기|find\s*password/gi,
+    /문의|도움말|help|support|contact/gi
+  ]
+  
+  recoveryActions.forEach(pattern => {
+    const matches = html.match(pattern) || []
+    if (matches.length > 0) {
+      actionButtons = Math.min(15, matches.length * 5)
+      details.push(`✅ 복구 액션: ${matches.length}개 발견`)
+    }
+  })
+  
+  if (actionButtons === 0) {
+    details.push(`❌ 복구 방법 없음 (정부 65% 불만)`)
+  }
+  
+  // 3.2 도움말/FAQ 링크 (10점)
+  let helpLinks = 0
+  const helpPatterns = [
+    /<a[^>]+href\s*=\s*["'][^"']*(?:help|faq|support|guide)["'][^>]*>/gi,
+    /도움말|FAQ|가이드|안내/gi
+  ]
+  
+  helpPatterns.forEach(pattern => {
+    const matches = html.match(pattern) || []
+    if (matches.length > 0) {
+      helpLinks = 10
+      details.push(`✅ 도움말 링크: ${matches.length}개`)
+    }
+  })
+  
+  // 3.3 구체적 해결 방법 제시 (5점)
+  let guidanceClarity = 0
+  errorMessages.forEach(msg => {
+    if (/다시|재입력|확인|변경|선택|입력하세요/gi.test(msg)) {
+      guidanceClarity = 5
+      details.push(`✅ 해결 방법 제시: "${msg.substring(0, 50)}..."`)
+    }
+  })
+  
+  const recoveryScore = actionButtons + helpLinks + guidanceClarity
+  
+  // === 종합 점수 계산 ===
+  const totalScore = recognitionScore + diagnosisScore + recoveryScore
+  
+  let quality: 'excellent' | 'good' | 'basic' | 'minimal' | 'poor' | 'none' = 'none'
+  if (totalScore >= 80) quality = 'excellent'
+  else if (totalScore >= 60) quality = 'good'
+  else if (totalScore >= 40) quality = 'basic'
+  else if (totalScore >= 20) quality = 'minimal'
+  else if (totalScore > 0) quality = 'poor'
+  
+  details.unshift(
+    `총점: ${totalScore}/100 (인식 ${recognitionScore}/30 + 진단 ${diagnosisScore}/40 + 복구 ${recoveryScore}/30)`
+  )
+  
+  return {
+    recognition: {
+      colorEmphasis,
+      iconUsage,
+      ariaSupport,
+      positioning,
+      score: recognitionScore
+    },
+    diagnosis: {
+      userLanguage,
+      specificReason,
+      friendlyTone,
+      score: diagnosisScore
+    },
+    recovery: {
+      actionButtons,
+      helpLinks,
+      guidanceClarity,
+      score: recoveryScore
     },
     score: totalScore,
     quality,

@@ -248,21 +248,26 @@
     "N9_2_recovery_support": {
       "base_score": 3.0,
       "conditions": [
-        {"field": "forms.validationExists", "operator": "==", "value": true, "adjustment": 1.0},
-        {"field": "forms.formCount", "operator": "==", "value": 0, "adjustment": 0}
+        {"field": "forms.errorRecovery.score", "operator": ">=", "value": 80, "adjustment": 2.0},
+        {"field": "forms.errorRecovery.score", "operator": ">=", "value": 60, "adjustment": 1.5},
+        {"field": "forms.errorRecovery.score", "operator": ">=", "value": 40, "adjustment": 1.0},
+        {"field": "forms.errorRecovery.score", "operator": ">=", "value": 20, "adjustment": 0.5},
+        {"field": "forms.errorRecovery.score", "operator": "==", "value": 0, "adjustment": 0}
       ],
-      "default_adjustment": -1.0,
-      "description": "폼 검증 존재 시 가산점, 폼 없으면 중립"
+      "default_adjustment": -0.5,
+      "description": "오류 회복 3단계 프로세스 (인식+진단+복구) 점수 기반: 80점 이상 우수, 60점 이상 양호, 40점 이상 보통, 20점 이상 미흡, 0점 평가 없음"
     },
     
     "N9_4_error_guidance": {
       "base_score": 3.5,
       "conditions": [
-        {"field": "content.listCount", "operator": ">", "value": 3, "adjustment": 1.0},
-        {"field": "content.listCount", "operator": ">", "value": 0, "adjustment": 0.5}
+        {"field": "forms.errorRecovery.diagnosis.score", "operator": ">=", "value": 32, "adjustment": 1.5},
+        {"field": "forms.errorRecovery.diagnosis.score", "operator": ">=", "value": 24, "adjustment": 1.0},
+        {"field": "forms.errorRecovery.diagnosis.score", "operator": ">=", "value": 16, "adjustment": 0.5},
+        {"field": "forms.errorRecovery.score", "operator": "==", "value": 0, "adjustment": 0}
       ],
-      "default_adjustment": 0,
-      "description": "리스트 3개 초과 시 가산점, 1개 이상 시 중간"
+      "default_adjustment": -0.5,
+      "description": "원인 진단 점수 기반 (정부 72% 불만 반영): 32점 이상(80%) 우수, 24점 이상(60%) 양호, 16점 이상(40%) 보통"
     },
     
     "N10_1_help_visibility": {
