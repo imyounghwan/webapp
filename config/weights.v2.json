@@ -173,7 +173,7 @@
       "description": "기억 부담 최소화 품질 평가: 80점 이상 excellent(5.0), 60점 good(4.0), 40점 basic(3.0), 20점 minimal(2.0), 그 이하 poor(1.0). Breadcrumb(40점) + autocomplete(30점) + 기본값(20점) + datalist(10점)"
     },
     
-    "N7_1_quick_access": {
+    "N7_1_accelerators": {
       "base_score": 1.0,
       "conditions": [
         {"field": "forms.flexibilityEfficiency.accelerators.score", "operator": ">=", "value": 35, "adjustment": 4.0},
@@ -186,7 +186,7 @@
       "description": "가속 장치 평가 (키보드 단축키 + 빠른 메뉴 + 최근 이용 + Skip Nav): 35점 이상 5.0, 25점 4.0, 15점 3.0, 5점 2.0, 그 이하 1.0. 정부 평균: 키보드 단축키 90% 미제공"
     },
     
-    "N7_2_customization": {
+    "N7_2_personalization": {
       "base_score": 1.0,
       "conditions": [
         {"field": "forms.flexibilityEfficiency.personalization.score", "operator": ">=", "value": 30, "adjustment": 4.0},
@@ -199,7 +199,7 @@
       "description": "개인화 평가 (설정 + 글자 크기 + 테마 + 언어): 30점 이상 5.0, 20점 4.0, 10점 3.0, 5점 2.0, 그 이하 1.0. 정부 평균: 85% 미제공, 고령층 글자 크기 불편"
     },
     
-    "N7_3_search_filter": {
+    "N7_3_batch_operations": {
       "base_score": 1.0,
       "conditions": [
         {"field": "forms.flexibilityEfficiency.batchOperations.score", "operator": ">=", "value": 20, "adjustment": 4.0},

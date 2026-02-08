@@ -38,10 +38,10 @@ export interface ImprovedNielsenScores {
   N6_2_recognition_cues: number      // 인식 단서 - 아이콘, 툴팁 등으로 사용자가 기억하지 않아도 기능을 인식
   N6_3_memory_load: number           // 기억 부담 최소화 - Breadcrumb, 명확한 레이블로 정보 기억 부담 감소
   
-  // N7: 유연성과 효율성 (3개 항목) - N7.1 단축키 교체 → N7.1 빠른 접근
-  N7_1_quick_access: number          // 빠른 접근 - 메인 메뉴, GNB 등으로 주요 기능에 클릭 1~2회로 도달
-  N7_2_customization: number         // 맞춤 설정 - 반응형 디자인, 글자 크기 조절 등 사용자 환경 조정
-  N7_3_search_filter: number         // 검색/필터 - 사이트 내 검색으로 원하는 정보를 빠르게 찾음 (새 항목)
+  // N7: 유연성과 효율성 (3개 항목) - 엠진의 '숙련도 기반 효율성 3축 모델'
+  N7_1_accelerators: number          // 가속 장치 - 키보드 단축키, 빠른 메뉴, 최근 이용, Skip Nav (40점)
+  N7_2_personalization: number       // 개인화 - 설정, 글자 크기, 테마, 언어 (35점)
+  N7_3_batch_operations: number      // 일괄 처리 - 전체 선택, 일괄 작업 (25점)
   
   // N8: 미니멀 디자인 (3개 항목)
   N8_1_essential_info: number        // 핵심 정보 - 불필요한 내용 없이 꼭 필요한 정보만 간결하게 제공
@@ -228,17 +228,17 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
     ),
     
     // N7: 유연성과 효율성
-    N7_1_quick_access: calculateScore(
-      weights.N7_1_quick_access.base_score,
-      calculateAdjustment(structure, weights.N7_1_quick_access)
+    N7_1_accelerators: calculateScore(
+      weights.N7_1_accelerators.base_score,
+      calculateAdjustment(structure, weights.N7_1_accelerators)
     ),
-    N7_2_customization: calculateScore(
-      weights.N7_2_customization.base_score,
-      calculateAdjustment(structure, weights.N7_2_customization)
+    N7_2_personalization: calculateScore(
+      weights.N7_2_personalization.base_score,
+      calculateAdjustment(structure, weights.N7_2_personalization)
     ),
-    N7_3_search_filter: calculateScore(
-      weights.N7_3_search_filter.base_score,
-      calculateAdjustment(structure, weights.N7_3_search_filter)
+    N7_3_batch_operations: calculateScore(
+      weights.N7_3_batch_operations.base_score,
+      calculateAdjustment(structure, weights.N7_3_batch_operations)
     ),
     
     // N8: 미니멀 디자인
@@ -1171,7 +1171,7 @@ button:active {
     // - 평균 68점, 상위 10% 87점
     // - 숙련자 43% 불만, 반복 작업 8.3분/일 소요
     
-    N7_1_quick_access: (() => {
+    N7_1_accelerators: (() => {
       const fe = forms.flexibilityEfficiency
       
       if (!fe) {
@@ -1254,7 +1254,7 @@ button:active {
       return { description, recommendation }
     })(),
     
-    N7_2_customization: (() => {
+    N7_2_personalization: (() => {
       const fe = forms.flexibilityEfficiency
       
       if (!fe) {
@@ -1337,7 +1337,7 @@ button:active {
       return { description, recommendation }
     })(),
     
-    N7_3_search_filter: (() => {
+    N7_3_batch_operations: (() => {
       const fe = forms.flexibilityEfficiency
       
       if (!fe) {
