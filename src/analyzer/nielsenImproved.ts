@@ -957,13 +957,13 @@ button:active {
       description: (() => {
         if (!forms.constraintQuality) {
           return forms.formCount === 0 
-            ? `ℹ️ 입력 필드가 없어 제약 조건 표시가 필요하지 않습니다.`
+            ? `ℹ️ 입력 필드가 없어 제약 조건 평가가 불가능합니다. (N/A)`
             : `⚠️ 제약 조건 분석 데이터가 없습니다.`
         }
         
         const cq = forms.constraintQuality
         if (cq.totalInputs === 0) {
-          return `ℹ️ 입력 필드가 없어 제약 조건 표시가 필요하지 않습니다.`
+          return `ℹ️ 입력 필드가 없어 제약 조건 평가가 불가능합니다. (N/A)`
         }
         
         const emoji = cq.quality === 'excellent' ? '✅' : 
@@ -980,7 +980,7 @@ button:active {
       
       recommendation: (() => {
         if (!forms.constraintQuality || forms.constraintQuality.totalInputs === 0) {
-          return '현재 상태를 유지하세요.'
+          return 'ℹ️ 입력 필드가 없어 평가 대상이 아닙니다.'
         }
         
         const cq = forms.constraintQuality

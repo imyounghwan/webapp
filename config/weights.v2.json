@@ -145,10 +145,10 @@
         {"field": "forms.constraintQuality.score", "operator": ">=", "value": 75, "adjustment": 2.0},
         {"field": "forms.constraintQuality.score", "operator": ">=", "value": 60, "adjustment": 1.0},
         {"field": "forms.constraintQuality.score", "operator": ">=", "value": 40, "adjustment": 0.0},
-        {"field": "forms.constraintQuality.totalInputs", "operator": "==", "value": 0, "adjustment": 3.0}
+        {"field": "forms.constraintQuality.totalInputs", "operator": "==", "value": 0, "adjustment": 0.0}
       ],
       "default_adjustment": -1.0,
-      "description": "제약조건 명시 품질 평가: 90점 이상 excellent(5.0), 75점 good(4.0), 60점 basic(3.0), 40점 minimal(2.0), 그 이하 poor(1.0). PIGS 프레임워크: 명시적 규칙(35%) + 예시 제공(30%) + 필수 표시(35%)"
+      "description": "제약조건 명시 품질 평가: 90점 이상 excellent(5.0), 75점 good(4.0), 60점 basic(3.0), 40점 minimal(2.0), 그 이하 poor(1.0). 입력 필드 없음 N/A(2.0 중립). PIGS 프레임워크: 명시적 규칙(35%) + 예시 제공(30%) + 필수 표시(35%)"
     },
     
     "N6_2_recognition_cues": {

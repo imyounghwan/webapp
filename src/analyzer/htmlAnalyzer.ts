@@ -1115,8 +1115,8 @@ function analyzeConstraintQuality(html: string): ConstraintQuality {
       hasExamples: 0,
       hasRequiredMarker: 0,
       quality: 'none',
-      score: 100,
-      details: ['입력 필드가 없어 제약조건 표시가 필요하지 않습니다.']
+      score: 0,  // 입력 필드 없음 → 0점 (평가 불가)
+      details: ['입력 필드가 없어 제약조건 평가가 불가능합니다.']
     }
   }
 
