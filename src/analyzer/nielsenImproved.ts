@@ -1165,32 +1165,234 @@ button:active {
       return { description, recommendation }
     })(),
     
-    N7_1_quick_access: {
-      description: navigation.menuCount >= 1
-        ? `${navigation.menuCount}개의 메뉴로 주요 기능에 빠르게 접근할 수 있습니다.`
-        : `메뉴가 없어 빠른 접근이 제한적입니다.`,
-      recommendation: navigation.menuCount >= 1
-        ? '현재 상태를 유지하세요.'
-        : '메뉴가 없어 빠른 접근이 제한적입니다 개선이 필요합니다.'
-    },
+    // ===== N7: 유연성과 효율성 (Flexibility and Efficiency of Use) =====
+    // 엠진의 '숙련도 기반 효율성 3축 모델'
+    // - 정부 49개 기관 실증 데이터 기반
+    // - 평균 68점, 상위 10% 87점
+    // - 숙련자 43% 불만, 반복 작업 8.3분/일 소요
     
-    N7_2_customization: {
-      description: visuals.iconCount > 3
-        ? `시각적 요소가 충분하여 맞춤 설정 가능성이 있습니다.`
-        : `맞춤 설정 옵션이 제한적으로 보입니다.`,
-      recommendation: visuals.iconCount > 3
-        ? '현재 상태를 유지하세요.'
-        : '맞춤 설정 옵션이 제한적으로 보입니다 개선이 필요합니다.'
-    },
+    N7_1_quick_access: (() => {
+      const fe = forms.flexibilityEfficiency
+      
+      if (!fe) {
+        return {
+          description: 'ℹ️ 가속 장치 분석 데이터가 없습니다.',
+          recommendation: '⚠️ 분석 데이터 부재로 평가 불가'
+        }
+      }
+      
+      const { accelerators } = fe
+      const { keyboardShortcuts, quickMenu, recentItems, skipNavigation, score } = accelerators
+      
+      let description = `📊 가속 장치 ${score}/40점:\n\n`
+      
+      // 1. 키보드 단축키 (15점)
+      if (keyboardShortcuts > 0) {
+        description += `✅ 키보드 단축키 제공 (${keyboardShortcuts}점)\n`
+      } else {
+        description += `❌ 키보드 단축키 미제공 (정부 90% 미제공)\n`
+      }
+      
+      // 2. 빠른 메뉴/즐겨찾기 (12점)
+      if (quickMenu > 0) {
+        description += `✅ 빠른 메뉴/즐겨찾기 제공 (${quickMenu}점)\n`
+      } else {
+        description += `❌ 빠른 메뉴/즐겨찾기 미제공\n`
+      }
+      
+      // 3. 최근 이용 기록 (8점)
+      if (recentItems > 0) {
+        description += `✅ 최근 이용 기록 제공 (${recentItems}점)\n`
+      } else {
+        description += `❌ 최근 이용 기록 미제공 (정부 62% 미제공, 재탐색 불만)\n`
+      }
+      
+      // 4. Skip Navigation (5점)
+      if (skipNavigation > 0) {
+        description += `✅ Skip Navigation 제공 (${skipNavigation}점)`
+      } else {
+        description += `⚠️ Skip Navigation 미제공`
+      }
+      
+      // 권고사항 생성
+      let recommendation = ''
+      const recommendations: string[] = []
+      
+      if (keyboardShortcuts === 0) {
+        recommendations.push(
+          `🔹 **키보드 단축키 추가**: Ctrl+K (검색), Ctrl+S (저장), accesskey 속성 활용`
+        )
+      }
+      
+      if (quickMenu === 0) {
+        recommendations.push(
+          `🔹 **빠른 메뉴/즐겨찾기 추가**: "자주 찾는 서비스", "마이 메뉴" (정부24 벤치마킹)`
+        )
+      }
+      
+      if (recentItems === 0) {
+        recommendations.push(
+          `🔹 **최근 이용 기록 추가**: 최근 본 페이지, 최근 검색어 자동 저장`
+        )
+      }
+      
+      if (skipNavigation === 0) {
+        recommendations.push(
+          `🔹 **Skip Navigation 추가**: <a href="#content">본문 바로가기</a>`
+        )
+      }
+      
+      // 최종 권고
+      if (score >= 35) {
+        recommendation = `✅ 가속 장치가 우수합니다 (${score}/40점). 현재 상태를 유지하세요.`
+      } else if (recommendations.length > 0) {
+        recommendation = `⚠️ 긴급 개선 필요 (${score}점 → 35점+ 목표):\n\n` + recommendations.join('\n\n')
+      } else {
+        recommendation = `😊 가속 장치가 양호합니다 (${score}/40점). 현재 상태를 유지하세요.`
+      }
+      
+      return { description, recommendation }
+    })(),
     
-    N7_3_search_filter: {
-      description: navigation.searchExists
-        ? `${url}에서 검색 기능이 발견되어 효율적인 정보 탐색이 가능합니다.`
-        : `검색 기능이 없어 정보 탐색 효율성이 낮을 수 있습니다.`,
-      recommendation: navigation.searchExists
-        ? '${url}에서 검색 기능이 발견되어 효율적인 정보 탐색이 가능합니다. 현재 상태를 유지하세요.'
-        : '검색 기능이 없어 정보 탐색 효율성이 낮을 수 있습니다 개선이 필요합니다.'
-    },
+    N7_2_customization: (() => {
+      const fe = forms.flexibilityEfficiency
+      
+      if (!fe) {
+        return {
+          description: 'ℹ️ 개인화 분석 데이터가 없습니다.',
+          recommendation: '⚠️ 분석 데이터 부재로 평가 불가'
+        }
+      }
+      
+      const { personalization } = fe
+      const { settings, fontSize, theme, language, score } = personalization
+      
+      let description = `📊 개인화 ${score}/35점:\n\n`
+      
+      // 1. 설정 개인화 (15점)
+      if (settings > 0) {
+        description += `✅ 설정 개인화 제공 (${settings}점)\n`
+      } else {
+        description += `❌ 설정 개인화 미제공 (정부 85% 미제공)\n`
+      }
+      
+      // 2. 글자 크기 조절 (10점)
+      if (fontSize > 0) {
+        description += `✅ 글자 크기 조절 제공 (${fontSize}점)\n`
+      } else {
+        description += `❌ 글자 크기 조절 미제공 (정부 70% 미제공, 고령층 불편)\n`
+      }
+      
+      // 3. 다크모드/테마 (5점)
+      if (theme > 0) {
+        description += `✅ 다크모드/테마 제공 (${theme}점)\n`
+      } else {
+        description += `⚠️ 다크모드/테마 미제공\n`
+      }
+      
+      // 4. 언어 선택 (5점)
+      if (language > 0) {
+        description += `✅ 언어 선택 제공 (${language}점)`
+      } else {
+        description += `ℹ️ 언어 선택 미제공 (필요 시 다국어 지원)`
+      }
+      
+      // 권고사항 생성
+      let recommendation = ''
+      const recommendations: string[] = []
+      
+      if (settings === 0) {
+        recommendations.push(
+          `🔹 **설정 개인화 추가**: 내 정보, 환경설정, 마이페이지 제공`
+        )
+      }
+      
+      if (fontSize === 0) {
+        recommendations.push(
+          `🔹 **글자 크기 조절 추가**: 글자 크기 확대/축소 버튼 (고령층 필수)`
+        )
+      }
+      
+      if (theme === 0) {
+        recommendations.push(
+          `🔹 **다크모드/테마 추가**: 다크모드 토글 제공 (야간 사용 편의성)`
+        )
+      }
+      
+      if (language === 0) {
+        recommendations.push(
+          `🔹 **언어 선택 추가**: 한국어/English 선택 옵션 (다국어 지원)`
+        )
+      }
+      
+      // 최종 권고
+      if (score >= 30) {
+        recommendation = `✅ 개인화가 우수합니다 (${score}/35점). 현재 상태를 유지하세요.`
+      } else if (recommendations.length > 0) {
+        recommendation = `⚠️ 긴급 개선 필요 (${score}점 → 30점+ 목표):\n\n` + recommendations.join('\n\n')
+      } else {
+        recommendation = `😊 개인화가 양호합니다 (${score}/35점). 현재 상태를 유지하세요.`
+      }
+      
+      return { description, recommendation }
+    })(),
+    
+    N7_3_search_filter: (() => {
+      const fe = forms.flexibilityEfficiency
+      
+      if (!fe) {
+        return {
+          description: 'ℹ️ 일괄 처리 분석 데이터가 없습니다.',
+          recommendation: '⚠️ 분석 데이터 부재로 평가 불가'
+        }
+      }
+      
+      const { batchOperations } = fe
+      const { selectAll, bulkActions, score } = batchOperations
+      
+      let description = `📊 일괄 처리 ${score}/25점:\n\n`
+      
+      // 1. 전체 선택 기능 (15점)
+      if (selectAll > 0) {
+        description += `✅ 전체 선택 기능 제공 (${selectAll}점)\n`
+      } else {
+        description += `❌ 전체 선택 기능 미제공 (정부 78% 미제공)\n`
+      }
+      
+      // 2. 일괄 작업 버튼 (10점)
+      if (bulkActions > 0) {
+        description += `✅ 일괄 작업 버튼 제공 (${bulkActions}점)`
+      } else {
+        description += `❌ 일괄 작업 버튼 미제공`
+      }
+      
+      // 권고사항 생성
+      let recommendation = ''
+      const recommendations: string[] = []
+      
+      if (selectAll === 0) {
+        recommendations.push(
+          `🔹 **전체 선택 기능 추가**: <input type="checkbox" id="selectAll"> + JavaScript로 전체 체크박스 제어`
+        )
+      }
+      
+      if (bulkActions === 0) {
+        recommendations.push(
+          `🔹 **일괄 작업 버튼 추가**: "선택 삭제", "선택 다운로드", "선택 수정" 버튼`
+        )
+      }
+      
+      // 최종 권고
+      if (score >= 20) {
+        recommendation = `✅ 일괄 처리가 우수합니다 (${score}/25점). 현재 상태를 유지하세요.`
+      } else if (recommendations.length > 0) {
+        recommendation = `⚠️ 긴급 개선 필요 (${score}점 → 20점+ 목표):\n\n` + recommendations.join('\n\n')
+      } else {
+        recommendation = `😊 일괄 처리가 양호합니다 (${score}/25점). 현재 상태를 유지하세요.`
+      }
+      
+      return { description, recommendation }
+    })(),
     
     N8_1_essential_info: {
       description: content.paragraphCount >= 5 && content.paragraphCount <= 30

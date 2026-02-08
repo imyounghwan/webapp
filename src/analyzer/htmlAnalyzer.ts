@@ -460,6 +460,45 @@ export interface MemoryLoadSupport {
   details: string[]                // 상세 분석 내용
 }
 
+/**
+ * 유연성과 효율성 지원 분석 (N7: Flexibility and Efficiency of Use)
+ * 엠진의 '숙련도 기반 효율성 3축 모델'
+ * - 1축: Accelerators (가속 장치) 40점
+ * - 2축: Personalization (개인화) 35점
+ * - 3축: Batch Operations (일괄 처리) 25점
+ */
+export interface FlexibilityEfficiencySupport {
+  // 1축: Accelerators (가속 장치) - 총 40점
+  accelerators: {
+    keyboardShortcuts: number      // 키보드 단축키 (15점)
+    quickMenu: number               // 빠른 메뉴/즐겨찾기 (12점)
+    recentItems: number             // 최근 이용 기록 (8점)
+    skipNavigation: number          // Skip Navigation (5점)
+    score: number                   // 가속 장치 총점 (0-40)
+  }
+  
+  // 2축: Personalization (개인화) - 총 35점
+  personalization: {
+    settings: number                // 설정 개인화 (15점)
+    fontSize: number                // 글자 크기 조절 (10점)
+    theme: number                   // 다크모드/테마 (5점)
+    language: number                // 언어 선택 (5점)
+    score: number                   // 개인화 총점 (0-35)
+  }
+  
+  // 3축: Batch Operations (일괄 처리) - 총 25점
+  batchOperations: {
+    selectAll: number               // 전체 선택 기능 (15점)
+    bulkActions: number             // 일괄 작업 버튼 (10점)
+    score: number                   // 일괄 처리 총점 (0-25)
+  }
+  
+  // 종합
+  score: number                     // 총점 (0-100)
+  quality: 'excellent' | 'good' | 'basic' | 'minimal' | 'poor' | 'none'
+  details: string[]
+}
+
 export interface FormStructure {
   formCount: number
   inputCount: number
@@ -469,6 +508,7 @@ export interface FormStructure {
   realtimeValidation?: RealtimeValidation  // 실시간 검증 분석 (신규)
   constraintQuality?: ConstraintQuality    // 제약 조건 품질 (N5.3 강화)
   memoryLoadSupport?: MemoryLoadSupport    // 기억 부담 최소화 지원 (N6.3 강화)
+  flexibilityEfficiency?: FlexibilityEfficiencySupport  // 유연성과 효율성 지원 (N7 재구성)
 }
 
 export interface VisualStructure {
@@ -1103,6 +1143,9 @@ function analyzeForms(html: string, navigation: NavigationStructure): FormStruct
   
   // 기억 부담 최소화 지원 분석 추가 (N6.3 강화)
   const memoryLoadSupport = analyzeMemoryLoadSupport(html, navigation)
+  
+  // 유연성과 효율성 지원 분석 추가 (N7 재구성)
+  const flexibilityEfficiency = analyzeFlexibilityEfficiency(html)
 
   return {
     formCount: formMatches.length,
@@ -1112,7 +1155,8 @@ function analyzeForms(html: string, navigation: NavigationStructure): FormStruct
     interactiveFeedbackExists,
     realtimeValidation,
     constraintQuality,
-    memoryLoadSupport
+    memoryLoadSupport,
+    flexibilityEfficiency
   }
 }
 
@@ -1326,6 +1370,266 @@ function analyzeMemoryLoadSupport(html: string, navigation: NavigationStructure)
     autocompleteCount,
     defaultValueCount,
     datalistCount,
+    score: totalScore,
+    quality,
+    details
+  }
+}
+
+/**
+ * 유연성과 효율성 지원 분석 (N7: Flexibility and Efficiency of Use)
+ * 엠진의 '숙련도 기반 효율성 3축 모델'
+ * - 정부 49개 기관 실증 데이터 기반
+ * - 평균 68점, 상위 10% 87점
+ * - 숙련자 43% 불만, 반복 작업 8.3분/일 소요
+ */
+function analyzeFlexibilityEfficiency(html: string): FlexibilityEfficiencySupport {
+  const details: string[] = []
+  
+  // === 1축: Accelerators (가속 장치) - 총 40점 ===
+  
+  // 1.1 키보드 단축키 (15점)
+  let keyboardShortcuts = 0
+  const shortcutPatterns = [
+    /accesskey\s*=\s*["'][^"']+["']/gi,           // accesskey 속성
+    /\b(?:ctrl|alt|shift)\s*\+\s*[a-z0-9]/gi,    // Ctrl+K, Alt+S 등
+    /단축키|shortcut|keyboard/gi                   // 단축키 안내
+  ]
+  
+  shortcutPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      keyboardShortcuts = 15
+      details.push(`✅ 키보드 단축키: ${matches.length}개 발견`)
+    }
+  })
+  
+  if (keyboardShortcuts === 0) {
+    details.push(`❌ 키보드 단축키 미제공 (정부 90% 미제공)`)
+  }
+  
+  // 1.2 빠른 메뉴/즐겨찾기 (12점)
+  let quickMenu = 0
+  const quickMenuPatterns = [
+    /즐겨찾기|favorite|bookmark/gi,
+    /자주\s*찾는|빠른\s*메뉴|quick\s*menu/gi,
+    /마이\s*메뉴|my\s*menu/gi
+  ]
+  
+  quickMenuPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      quickMenu = 12
+      details.push(`✅ 빠른 메뉴/즐겨찾기: 발견`)
+    }
+  })
+  
+  if (quickMenu === 0) {
+    details.push(`❌ 빠른 메뉴/즐겨찾기 미제공`)
+  }
+  
+  // 1.3 최근 이용 기록 (8점)
+  let recentItems = 0
+  const recentPatterns = [
+    /최근\s*(?:본|이용|방문|검색)/gi,
+    /recent(?:ly)?\s*(?:viewed|visited|searched)/gi,
+    /history/gi
+  ]
+  
+  recentPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      recentItems = 8
+      details.push(`✅ 최근 이용 기록: 발견`)
+    }
+  })
+  
+  if (recentItems === 0) {
+    details.push(`❌ 최근 이용 기록 미제공 (정부 62% 미제공, 재탐색 불만)`)
+  }
+  
+  // 1.4 Skip Navigation (5점)
+  let skipNavigation = 0
+  const skipPatterns = [
+    /<a[^>]*href\s*=\s*["']#(?:content|main|skip)["'][^>]*>/gi,
+    /본문\s*바로가기|skip\s*to\s*(?:content|main)/gi
+  ]
+  
+  skipPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      skipNavigation = 5
+      details.push(`✅ Skip Navigation: 발견`)
+    }
+  })
+  
+  if (skipNavigation === 0) {
+    details.push(`⚠️ Skip Navigation 미제공`)
+  }
+  
+  const acceleratorsScore = keyboardShortcuts + quickMenu + recentItems + skipNavigation
+  
+  // === 2축: Personalization (개인화) - 총 35점 ===
+  
+  // 2.1 설정 개인화 (15점)
+  let settings = 0
+  const settingsPatterns = [
+    /설정|환경설정|내\s*정보|마이페이지/gi,
+    /settings?|preferences|my\s*page|profile/gi
+  ]
+  
+  settingsPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      settings = 15
+      details.push(`✅ 설정 개인화: 발견`)
+    }
+  })
+  
+  if (settings === 0) {
+    details.push(`❌ 설정 개인화 미제공 (정부 85% 미제공)`)
+  }
+  
+  // 2.2 글자 크기 조절 (10점)
+  let fontSize = 0
+  const fontSizePatterns = [
+    /글자\s*크기|font\s*size/gi,
+    /\b(?:text|font)-(?:size|scale|zoom)/gi,
+    /확대|축소|zoom/gi
+  ]
+  
+  fontSizePatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      fontSize = 10
+      details.push(`✅ 글자 크기 조절: 발견`)
+    }
+  })
+  
+  if (fontSize === 0) {
+    details.push(`❌ 글자 크기 조절 미제공 (정부 70% 미제공, 고령층 불편)`)
+  }
+  
+  // 2.3 다크모드/테마 (5점)
+  let theme = 0
+  const themePatterns = [
+    /다크\s*모드|dark\s*mode/gi,
+    /테마|theme/gi,
+    /\bmode\s*=\s*["'](?:dark|light)["']/gi
+  ]
+  
+  themePatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      theme = 5
+      details.push(`✅ 다크모드/테마: 발견`)
+    }
+  })
+  
+  if (theme === 0) {
+    details.push(`⚠️ 다크모드/테마 미제공`)
+  }
+  
+  // 2.4 언어 선택 (5점)
+  let language = 0
+  const languagePatterns = [
+    /<select[^>]*>(?:[^<]*<option[^>]*>)*[^<]*(?:한국어|english|日本語|中文)[^<]*<\/option>/gi,
+    /언어\s*선택|language\s*select/gi,
+    /\blang\s*=\s*["'](?:ko|en|ja|zh)["']/gi
+  ]
+  
+  languagePatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      language = 5
+      details.push(`✅ 언어 선택: 발견`)
+    }
+  })
+  
+  if (language === 0) {
+    details.push(`ℹ️ 언어 선택 미제공 (필요 시 다국어 지원)`)
+  }
+  
+  const personalizationScore = settings + fontSize + theme + language
+  
+  // === 3축: Batch Operations (일괄 처리) - 총 25점 ===
+  
+  // 3.1 전체 선택 기능 (15점)
+  let selectAll = 0
+  const selectAllPatterns = [
+    /전체\s*선택|select\s*all/gi,
+    /<input[^>]*type\s*=\s*["']checkbox["'][^>]*(?:id|name)\s*=\s*["'](?:selectAll|checkAll)["']/gi
+  ]
+  
+  selectAllPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      selectAll = 15
+      details.push(`✅ 전체 선택 기능: 발견`)
+    }
+  })
+  
+  if (selectAll === 0) {
+    details.push(`❌ 전체 선택 기능 미제공 (정부 78% 미제공)`)
+  }
+  
+  // 3.2 일괄 작업 버튼 (10점)
+  let bulkActions = 0
+  const bulkPatterns = [
+    /일괄|batch|bulk/gi,
+    /선택\s*(?:삭제|수정|다운로드)/gi
+  ]
+  
+  bulkPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches && matches.length > 0) {
+      bulkActions = 10
+      details.push(`✅ 일괄 작업 버튼: 발견`)
+    }
+  })
+  
+  if (bulkActions === 0) {
+    details.push(`❌ 일괄 작업 버튼 미제공`)
+  }
+  
+  const batchOperationsScore = selectAll + bulkActions
+  
+  // === 종합 점수 계산 ===
+  const totalScore = acceleratorsScore + personalizationScore + batchOperationsScore
+  
+  // 품질 등급 결정
+  let quality: FlexibilityEfficiencySupport['quality']
+  if (totalScore >= 85) quality = 'excellent'      // 상위 10% (87점 기준)
+  else if (totalScore >= 70) quality = 'good'       // 평균 이상 (68점 기준)
+  else if (totalScore >= 50) quality = 'basic'
+  else if (totalScore >= 30) quality = 'minimal'
+  else if (totalScore > 0) quality = 'poor'
+  else quality = 'none'
+  
+  details.unshift(
+    `총점: ${totalScore}/100 (가속장치 ${acceleratorsScore}점 + 개인화 ${personalizationScore}점 + 일괄처리 ${batchOperationsScore}점)`
+  )
+  
+  return {
+    accelerators: {
+      keyboardShortcuts,
+      quickMenu,
+      recentItems,
+      skipNavigation,
+      score: acceleratorsScore
+    },
+    personalization: {
+      settings,
+      fontSize,
+      theme,
+      language,
+      score: personalizationScore
+    },
+    batchOperations: {
+      selectAll,
+      bulkActions,
+      score: batchOperationsScore
+    },
     score: totalScore,
     quality,
     details

@@ -174,32 +174,42 @@
     },
     
     "N7_1_quick_access": {
-      "base_score": 3.5,
+      "base_score": 1.0,
       "conditions": [
-        {"field": "navigation.menuCount", "operator": ">=", "value": 1, "adjustment": 1.0},
-        {"field": "navigation.linkCount", "operator": ">", "value": 20, "adjustment": 0.5}
+        {"field": "forms.flexibilityEfficiency.accelerators.score", "operator": ">=", "value": 35, "adjustment": 4.0},
+        {"field": "forms.flexibilityEfficiency.accelerators.score", "operator": ">=", "value": 25, "adjustment": 3.0},
+        {"field": "forms.flexibilityEfficiency.accelerators.score", "operator": ">=", "value": 15, "adjustment": 2.0},
+        {"field": "forms.flexibilityEfficiency.accelerators.score", "operator": ">=", "value": 5, "adjustment": 1.0},
+        {"field": "forms.flexibilityEfficiency.accelerators.score", "operator": ">=", "value": 0, "adjustment": 0.0}
       ],
-      "default_adjustment": -0.5,
-      "description": "메뉴 1개 이상 또는 링크 20개 초과 시 가산점"
+      "default_adjustment": 0.0,
+      "description": "가속 장치 평가 (키보드 단축키 + 빠른 메뉴 + 최근 이용 + Skip Nav): 35점 이상 5.0, 25점 4.0, 15점 3.0, 5점 2.0, 그 이하 1.0. 정부 평균: 키보드 단축키 90% 미제공"
     },
     
     "N7_2_customization": {
-      "base_score": 3.0,
+      "base_score": 1.0,
       "conditions": [
-        {"field": "visuals.iconCount", "operator": ">", "value": 3, "adjustment": 0.5}
+        {"field": "forms.flexibilityEfficiency.personalization.score", "operator": ">=", "value": 30, "adjustment": 4.0},
+        {"field": "forms.flexibilityEfficiency.personalization.score", "operator": ">=", "value": 20, "adjustment": 3.0},
+        {"field": "forms.flexibilityEfficiency.personalization.score", "operator": ">=", "value": 10, "adjustment": 2.0},
+        {"field": "forms.flexibilityEfficiency.personalization.score", "operator": ">=", "value": 5, "adjustment": 1.0},
+        {"field": "forms.flexibilityEfficiency.personalization.score", "operator": ">=", "value": 0, "adjustment": 0.0}
       ],
-      "default_adjustment": 0,
-      "description": "아이콘 3개 초과 시 가산점 (반응형 추정)"
+      "default_adjustment": 0.0,
+      "description": "개인화 평가 (설정 + 글자 크기 + 테마 + 언어): 30점 이상 5.0, 20점 4.0, 10점 3.0, 5점 2.0, 그 이하 1.0. 정부 평균: 85% 미제공, 고령층 글자 크기 불편"
     },
     
     "N7_3_search_filter": {
-      "base_score": 3.5,
+      "base_score": 1.0,
       "conditions": [
-        {"field": "navigation.searchExists", "operator": "==", "value": true, "adjustment": 1.5},
-        {"field": "navigation.menuCount", "operator": ">", "value": 1, "adjustment": 0}
+        {"field": "forms.flexibilityEfficiency.batchOperations.score", "operator": ">=", "value": 20, "adjustment": 4.0},
+        {"field": "forms.flexibilityEfficiency.batchOperations.score", "operator": ">=", "value": 15, "adjustment": 3.0},
+        {"field": "forms.flexibilityEfficiency.batchOperations.score", "operator": ">=", "value": 10, "adjustment": 2.0},
+        {"field": "forms.flexibilityEfficiency.batchOperations.score", "operator": ">=", "value": 5, "adjustment": 1.0},
+        {"field": "forms.flexibilityEfficiency.batchOperations.score", "operator": ">=", "value": 0, "adjustment": 0.0}
       ],
-      "default_adjustment": -1.0,
-      "description": "검색 존재 시 가산점, 메뉴 2개 이상이면 중립"
+      "default_adjustment": 0.0,
+      "description": "일괄 처리 평가 (전체 선택 + 일괄 작업): 20점 이상 5.0, 15점 4.0, 10점 3.0, 5점 2.0, 그 이하 1.0. 정부 평균: 78% 미제공"
     },
     
     "N8_1_essential_info": {

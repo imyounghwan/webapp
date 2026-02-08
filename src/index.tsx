@@ -738,7 +738,9 @@ function aggregateResults(pageResults: any[]): any {
     // constraintQuality: 메인 페이지 우선, 없으면 첫 페이지
     constraintQuality: mainPage.structure.forms.constraintQuality || allPages[0].forms.constraintQuality,
     // memoryLoadSupport: 메인 페이지 우선, 없으면 첫 페이지 (N6.3 기억할 것 최소화)
-    memoryLoadSupport: mainPage.structure.forms.memoryLoadSupport || allPages[0].forms.memoryLoadSupport
+    memoryLoadSupport: mainPage.structure.forms.memoryLoadSupport || allPages[0].forms.memoryLoadSupport,
+    // flexibilityEfficiency: 메인 페이지 우선, 없으면 첫 페이지 (N7 유연성과 효율성)
+    flexibilityEfficiency: mainPage.structure.forms.flexibilityEfficiency || allPages[0].forms.flexibilityEfficiency
   }
   
   // Visuals 종합 (평균)
