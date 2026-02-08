@@ -162,13 +162,15 @@
     },
     
     "N6_3_memory_load": {
-      "base_score": 3.5,
+      "base_score": 2.0,
       "conditions": [
-        {"field": "navigation.breadcrumbExists", "operator": "==", "value": true, "adjustment": 1.0},
-        {"field": "navigation.depthLevel", "operator": "<=", "value": 2, "adjustment": 0.5}
+        {"field": "forms.memoryLoadSupport.score", "operator": ">=", "value": 80, "adjustment": 3.0},
+        {"field": "forms.memoryLoadSupport.score", "operator": ">=", "value": 60, "adjustment": 2.0},
+        {"field": "forms.memoryLoadSupport.score", "operator": ">=", "value": 40, "adjustment": 1.0},
+        {"field": "forms.memoryLoadSupport.score", "operator": ">=", "value": 20, "adjustment": 0.0}
       ],
       "default_adjustment": -1.0,
-      "description": "Breadcrumb 또는 depth 2 이하 시 가산점"
+      "description": "기억 부담 최소화 품질 평가: 80점 이상 excellent(5.0), 60점 good(4.0), 40점 basic(3.0), 20점 minimal(2.0), 그 이하 poor(1.0). Breadcrumb(40점) + autocomplete(30점) + 기본값(20점) + datalist(10점)"
     },
     
     "N7_1_quick_access": {
