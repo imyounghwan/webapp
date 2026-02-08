@@ -1051,49 +1051,114 @@ button:active {
     })(),
     
     N6_3_memory_load: (() => {
-      const hasBreadcrumb = navigation.breadcrumbExists;
-      const depth = navigation.depthLevel || 1;
+      // memoryLoadSupport 데이터 사용 (선택적 필드)
+      const mls = forms.memoryLoadSupport
       
-      // 정부 49개 기관 데이터 (정확한 실증 데이터)
-      const govStandard = 3;  // 3단계 이상 구조에서 Breadcrumb 필수
-      const userComplaint = 68; // Breadcrumb 없으면 68%가 위치 파악 불가 불만
+      // 정부 49개 기관 데이터
+      const govStandard = 3  // 3단계 이상 구조에서 Breadcrumb 필수
+      const userComplaint = 68  // Breadcrumb 없으면 68%가 위치 파악 불가
       
-      let description = '';
-      let recommendation = '';
+      let description = ''
+      let recommendation = ''
       
-      if (hasBreadcrumb) {
-        // Breadcrumb 있음
-        description = `✅ Breadcrumb으로 사용자의 기억 부담을 줄입니다 (현재 깊이: ${depth}단계)`;
+      if (!mls) {
+        // memoryLoadSupport 데이터가 없는 경우 (fallback)
+        const hasBreadcrumb = navigation.breadcrumbExists
+        const depth = navigation.depthLevel || 1
         
-        if (depth >= govStandard) {
-          recommendation = `✅ Breadcrumb이 잘 구현되어 있습니다. ${depth}단계 구조에서 사용자가 현재 위치를 쉽게 파악할 수 있습니다. 현재 상태를 유지하세요.`;
+        if (hasBreadcrumb) {
+          description = `✅ Breadcrumb으로 사용자의 기억 부담을 줄입니다`
+          recommendation = `✅ Breadcrumb이 구현되어 있습니다. 추가로 자동완성(autocomplete)과 기본값 설정을 고려하세요.`
         } else {
-          recommendation = `✅ Breadcrumb이 구현되어 있습니다. 현재 깊이(${depth}단계)는 얕지만, 향후 구조 확장 시에도 Breadcrumb을 유지하세요.`;
+          description = `⚠️ Breadcrumb이 없어 사용자가 현재 위치를 기억해야 합니다`
+          recommendation = `⚠️ Breadcrumb 추가 권장. 정부 지침: ${govStandard}단계 이상은 Breadcrumb 필수`
         }
       } else {
-        // Breadcrumb 없음
-        if (depth >= govStandard) {
-          // 3단계 이상인데 Breadcrumb 없음 (긴급)
-          description = `❌ ${depth}단계 구조인데 Breadcrumb이 없어 사용자 ${userComplaint}%가 위치 파악 불가 (정부 지침: ${govStandard}단계 이상은 Breadcrumb 필수)`;
-          recommendation = `❌ 긴급 개선 필요:\n\n` +
-            `🔹 **Breadcrumb 추가**: ${depth}단계 구조는 정부 지침상 Breadcrumb이 필수입니다. 사용자 ${userComplaint}%가 위치 파악에 어려움을 겪습니다.\n\n` +
-            `🔹 **구현 위치**: 페이지 상단 (로고 아래, 메인 콘텐츠 위)\n\n` +
-            `🔹 **형식 예시**: 홈 > 카테고리 > 하위카테고리 > 현재 페이지\n\n` +
-            `🔹 **정부24 벤치마킹**: 정부24는 모든 페이지에 명확한 Breadcrumb을 제공합니다.`;
-        } else if (depth >= 2) {
-          // 2단계인데 Breadcrumb 없음 (권장)
-          description = `⚠️ ${depth}단계 구조인데 Breadcrumb이 없어 사용자가 현재 위치를 기억해야 합니다`;
-          recommendation = `⚠️ 개선 권장:\n\n` +
-            `🔹 **Breadcrumb 추가 권장**: 현재는 ${depth}단계이지만, Breadcrumb 추가 시 사용자 경험이 개선됩니다.\n\n` +
-            `🔹 **참고**: 정부 지침은 ${govStandard}단계 이상에서 Breadcrumb을 필수로 권장하며, 사용자 ${userComplaint}%가 Breadcrumb 부재 시 위치 파악에 어려움을 겪습니다.`;
+        // memoryLoadSupport 데이터 활용
+        const { hasBreadcrumb, autocompleteCount, defaultValueCount, datalistCount, score, quality } = mls
+        const depth = navigation.depthLevel || 1
+        
+        // 현재 상태 설명
+        const statusParts = []
+        
+        // 1) Breadcrumb
+        if (hasBreadcrumb) {
+          statusParts.push(`✅ Breadcrumb (${depth}단계)`)
+        } else if (depth >= govStandard) {
+          statusParts.push(`❌ Breadcrumb 없음 (${depth}단계, 필수)`)
         } else {
-          // 1단계 (단순 구조)
-          description = `ℹ️ ${depth}단계 단순 구조로 Breadcrumb이 필요하지 않습니다`;
-          recommendation = `ℹ️ 현재 단순 구조(${depth}단계)는 Breadcrumb이 필요하지 않습니다. 향후 구조 확장 시(${govStandard}단계 이상) Breadcrumb을 추가하세요.`;
+          statusParts.push(`ℹ️ Breadcrumb 없음 (${depth}단계)`)
+        }
+        
+        // 2) 자동완성
+        if (autocompleteCount > 0) {
+          statusParts.push(`✅ 자동완성 ${autocompleteCount}개`)
+        }
+        
+        // 3) 기본값
+        if (defaultValueCount > 0) {
+          statusParts.push(`✅ 기본값 ${defaultValueCount}개`)
+        }
+        
+        // 4) datalist
+        if (datalistCount > 0) {
+          statusParts.push(`✅ 자동완성 제안 ${datalistCount}개`)
+        }
+        
+        description = `기억 부담 최소화 ${quality.toUpperCase()} (${score}/100): ${statusParts.join(', ')}`
+        
+        // 권고사항 생성
+        const recommendations = []
+        
+        // Breadcrumb 권고
+        if (!hasBreadcrumb && depth >= govStandard) {
+          recommendations.push(
+            `❌ **Breadcrumb 긴급 추가**: ${depth}단계 구조는 정부 지침상 Breadcrumb 필수입니다. ` +
+            `사용자 ${userComplaint}%가 위치 파악에 어려움을 겪습니다.`
+          )
+        } else if (!hasBreadcrumb && depth >= 2) {
+          recommendations.push(
+            `⚠️ **Breadcrumb 권장**: 현재 ${depth}단계이지만 Breadcrumb 추가 시 사용자 경험이 개선됩니다.`
+          )
+        }
+        
+        // 자동완성 권고
+        if (autocompleteCount === 0 && forms.inputCount > 0) {
+          recommendations.push(
+            `🔹 **자동완성 추가**: 로그인 폼에 autocomplete="username", autocomplete="email" 속성을 추가하세요. ` +
+            `사용자가 이전 입력값을 기억할 필요가 없어집니다.`
+          )
+        } else if (autocompleteCount < 3 && forms.inputCount >= 3) {
+          recommendations.push(
+            `🔹 **자동완성 확대**: 현재 ${autocompleteCount}개입니다. 주소(address-line1), 전화번호(tel), 생년월일(bday) 등에도 추가하세요.`
+          )
+        }
+        
+        // 기본값 권고
+        if (defaultValueCount === 0 && forms.inputCount > 0) {
+          recommendations.push(
+            `🔹 **기본값 설정**: 이전 선택값이나 추천값을 기본으로 설정하세요 (예: <option selected>, <input checked>).`
+          )
+        }
+        
+        // datalist 권고
+        if (datalistCount === 0 && forms.inputCount > 0) {
+          recommendations.push(
+            `🔹 **자동완성 제안 추가**: <datalist> 요소로 주소, 검색어 자동완성을 제공하세요.`
+          )
+        }
+        
+        // 최종 권고사항
+        if (quality === 'excellent') {
+          recommendation = `✅ 기억 부담 최소화가 우수합니다 (${score}/100). 현재 상태를 유지하세요.`
+        } else if (recommendations.length > 0) {
+          recommendation = `⚠️ 개선 권장 (${score}점 → 80점+ 목표):\n\n` + recommendations.join('\n\n')
+        } else {
+          recommendation = `😊 기억 부담 최소화가 양호합니다 (${score}/100). 현재 상태를 유지하세요.`
         }
       }
       
-      return { description, recommendation };
+      return { description, recommendation }
     })(),
     
     N7_1_quick_access: {

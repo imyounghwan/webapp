@@ -446,6 +446,20 @@ export interface ConstraintQuality {
   details: string[]                // 상세 분석 내용
 }
 
+/**
+ * 기억 부담 최소화 지원 분석 (N6.3 기억할 것 최소화)
+ * Breadcrumb + 자동완성 + 기본값 + 자동완성 제안
+ */
+export interface MemoryLoadSupport {
+  hasBreadcrumb: boolean           // Breadcrumb 존재 여부
+  autocompleteCount: number        // autocomplete 속성 사용 개수
+  defaultValueCount: number        // 기본값 설정 개수 (value, selected, checked)
+  datalistCount: number            // datalist 자동완성 제안 개수
+  score: number                    // 0-100점
+  quality: 'excellent' | 'good' | 'basic' | 'minimal' | 'none'
+  details: string[]                // 상세 분석 내용
+}
+
 export interface FormStructure {
   formCount: number
   inputCount: number
@@ -454,6 +468,7 @@ export interface FormStructure {
   interactiveFeedbackExists: boolean  // 호버/포커스/클릭 피드백 존재 여부
   realtimeValidation?: RealtimeValidation  // 실시간 검증 분석 (신규)
   constraintQuality?: ConstraintQuality    // 제약 조건 품질 (N5.3 강화)
+  memoryLoadSupport?: MemoryLoadSupport    // 기억 부담 최소화 지원 (N6.3 강화)
 }
 
 export interface VisualStructure {
@@ -479,7 +494,7 @@ export function analyzeHTML(
   const navigation = analyzeNavigation(html)
   const accessibility = analyzeAccessibility(html, dynamicLoadingUI)
   const content = analyzeContent(html)
-  const forms = analyzeForms(html)
+  const forms = analyzeForms(html, navigation)  // navigation 전달
   const visuals = analyzeVisuals(html)
   const realWorldMatch = analyzeRealWorldMatch(html)
   const userControlFreedom = analyzeUserControlFreedom(html)
@@ -1069,7 +1084,7 @@ function analyzeRealtimeValidation(html: string): RealtimeValidation {
   }
 }
 
-function analyzeForms(html: string): FormStructure {
+function analyzeForms(html: string, navigation: NavigationStructure): FormStructure {
   const formMatches = html.match(/<form[^>]*>/gi) || []
   const inputMatches = html.match(/<input[^>]*>/gi) || []
   const labelMatches = html.match(/<label[^>]*>/gi) || []
@@ -1085,6 +1100,9 @@ function analyzeForms(html: string): FormStructure {
 
   // 제약조건 품질 분석 추가 (N5.3 강화)
   const constraintQuality = analyzeConstraintQuality(html)
+  
+  // 기억 부담 최소화 지원 분석 추가 (N6.3 강화)
+  const memoryLoadSupport = analyzeMemoryLoadSupport(html, navigation)
 
   return {
     formCount: formMatches.length,
@@ -1093,7 +1111,8 @@ function analyzeForms(html: string): FormStructure {
     validationExists,
     interactiveFeedbackExists,
     realtimeValidation,
-    constraintQuality
+    constraintQuality,
+    memoryLoadSupport
   }
 }
 
@@ -1218,6 +1237,97 @@ function analyzeConstraintQuality(html: string): ConstraintQuality {
     hasRequiredMarker: requiredMarkersCount,
     quality,
     score: totalScore,
+    details
+  }
+}
+
+/**
+ * 기억 부담 최소화 지원 분석 (N6.3 기억할 것 최소화)
+ * Breadcrumb + 자동완성 + 기본값 + 자동완성 제안
+ */
+function analyzeMemoryLoadSupport(html: string, navigation: NavigationStructure): MemoryLoadSupport {
+  const details: string[] = []
+  
+  // 1. Breadcrumb 존재 여부
+  const hasBreadcrumb = navigation.breadcrumbExists
+  if (hasBreadcrumb) {
+    details.push(`✅ Breadcrumb 존재: 현재 위치 파악 용이`)
+  }
+  
+  // 2. autocomplete 속성 사용 개수
+  const autocompletePatterns = [
+    /autocomplete\s*=\s*["'](?:on|name|email|username|tel|address-line1|postal-code|cc-number|cc-exp|cc-csc|bday|sex|url|photo)["']/gi
+  ]
+  
+  let autocompleteCount = 0
+  autocompletePatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches) {
+      autocompleteCount += matches.length
+      details.push(`✅ autocomplete 속성 발견: ${matches.length}개 (예: email, name, tel 등)`)
+    }
+  })
+  
+  // 3. 기본값 설정 개수 (value, selected, checked)
+  const defaultValuePatterns = [
+    /<input[^>]*\svalue\s*=\s*["'][^"']+["'][^>]*>/gi,  // input value
+    /<option[^>]*\sselected[^>]*>/gi,                   // selected option
+    /<input[^>]*type\s*=\s*["'](?:checkbox|radio)["'][^>]*\schecked[^>]*>/gi  // checked
+  ]
+  
+  let defaultValueCount = 0
+  defaultValuePatterns.forEach((pattern, index) => {
+    const matches = html.match(pattern)
+    if (matches) {
+      defaultValueCount += matches.length
+      const type = index === 0 ? 'input value' : index === 1 ? 'selected option' : 'checked'
+      details.push(`✅ 기본값 설정 발견: ${type} ${matches.length}개`)
+    }
+  })
+  
+  // 4. datalist 자동완성 제안 개수
+  const datalistPattern = /<datalist[^>]*>/gi
+  const datalistMatches = html.match(datalistPattern)
+  const datalistCount = datalistMatches ? datalistMatches.length : 0
+  
+  if (datalistCount > 0) {
+    details.push(`✅ datalist 자동완성 제안: ${datalistCount}개`)
+  }
+  
+  // 점수 계산 (100점 만점)
+  // Breadcrumb: 40점
+  const breadcrumbScore = hasBreadcrumb ? 40 : 0
+  
+  // autocomplete: 30점 (3개 이상이면 만점)
+  const autocompleteScore = Math.min(30, (autocompleteCount / 3) * 30)
+  
+  // 기본값: 20점 (2개 이상이면 만점)
+  const defaultValueScore = Math.min(20, (defaultValueCount / 2) * 20)
+  
+  // datalist: 10점 (1개 이상이면 만점)
+  const datalistScore = Math.min(10, datalistCount * 10)
+  
+  const totalScore = Math.round(breadcrumbScore + autocompleteScore + defaultValueScore + datalistScore)
+  
+  // 품질 등급 결정
+  let quality: MemoryLoadSupport['quality']
+  if (totalScore >= 80) quality = 'excellent'
+  else if (totalScore >= 60) quality = 'good'
+  else if (totalScore >= 40) quality = 'basic'
+  else if (totalScore >= 20) quality = 'minimal'
+  else quality = 'none'
+  
+  details.unshift(
+    `총점: ${totalScore}/100 (Breadcrumb ${breadcrumbScore}점 + autocomplete ${Math.round(autocompleteScore)}점 + 기본값 ${Math.round(defaultValueScore)}점 + datalist ${datalistScore}점)`
+  )
+  
+  return {
+    hasBreadcrumb,
+    autocompleteCount,
+    defaultValueCount,
+    datalistCount,
+    score: totalScore,
+    quality,
     details
   }
 }
