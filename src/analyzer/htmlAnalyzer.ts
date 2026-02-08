@@ -1335,12 +1335,42 @@ function analyzeMemoryLoadSupport(html: string, navigation: NavigationStructure)
 function analyzeVisuals(html: string): VisualStructure {
   const imageCount = (html.match(/<img[^>]*>/gi) || []).length
   const videoCount = (html.match(/<video[^>]*>/gi) || []).length
-  const iconMatches = html.match(/fa-|icon-|\.svg|<i\s+class/gi) || []
+  
+  // 아이콘 감지 강화 (다양한 구현 방식 포함)
+  let iconCount = 0
+  
+  // 1. Font Awesome 계열
+  const faMatches = html.match(/\bfa-[a-z0-9-]+/gi) || []
+  iconCount += faMatches.length
+  
+  // 2. <i> 태그 (Font Awesome, Material Icons 등)
+  const iTagMatches = html.match(/<i\s+[^>]*class\s*=\s*["'][^"']*\b(?:fa|icon|material|glyphicon)[^"']*["'][^>]*>/gi) || []
+  iconCount += iTagMatches.length
+  
+  // 3. SVG 아이콘
+  const svgMatches = html.match(/<svg[^>]*>/gi) || []
+  iconCount += svgMatches.length
+  
+  // 4. 아이콘 클래스명 (btn-icon, menu-icon, nav-icon 등)
+  const iconClassMatches = html.match(/\b(?:btn|menu|nav|toolbar|action|ui)-?icon\b/gi) || []
+  iconCount += iconClassMatches.length
+  
+  // 5. 이미지 파일명에 icon 포함 (<img src="icon-*.png">)
+  const iconImgMatches = html.match(/<img[^>]*src\s*=\s*["'][^"']*\bicon[^"']*["'][^>]*>/gi) || []
+  iconCount += iconImgMatches.length
+  
+  // 6. Material Icons
+  const materialMatches = html.match(/\bmaterial-icons\b/gi) || []
+  iconCount += materialMatches.length
+  
+  // 7. Glyphicons
+  const glyphMatches = html.match(/\bglyphicon-[a-z0-9-]+/gi) || []
+  iconCount += glyphMatches.length
 
   return {
     imageCount,
     videoCount,
-    iconCount: iconMatches.length
+    iconCount
   }
 }
 
