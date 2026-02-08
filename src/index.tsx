@@ -1030,9 +1030,9 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         improvedScores.N5_3_constraints,
         improvedScores.N6_2_recognition_cues,
         improvedScores.N6_3_memory_load,
-        improvedScores.N7_1_quick_access,
-        improvedScores.N7_2_customization,
-        improvedScores.N7_3_search_filter,
+        improvedScores.N7_1_accelerators,
+        improvedScores.N7_2_personalization,
+        improvedScores.N7_3_batch_operations,
         improvedScores.N9_2_recovery_support,
         improvedScores.N9_4_error_guidance,
         improvedScores.N10_1_help_visibility,
@@ -1086,7 +1086,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         'N4_2_terminology_consistency', 'N4_3_standard_compliance',
         'N5_1_input_validation', 'N5_2_confirmation_dialog', 'N5_3_constraints',
         'N6_2_recognition_cues', 'N6_3_memory_load',
-        'N7_1_quick_access', 'N7_2_customization', 'N7_3_search_filter',
+        'N7_1_accelerators', 'N7_2_personalization', 'N7_3_batch_operations',
         'N9_2_recovery_support', 'N9_4_error_guidance',
         'N10_1_help_visibility', 'N10_2_documentation'
       ]
@@ -1378,9 +1378,9 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       improvedScores.N5_3_constraints,
       improvedScores.N6_2_recognition_cues,
       improvedScores.N6_3_memory_load,
-      improvedScores.N7_1_quick_access,
-      improvedScores.N7_2_customization,
-      improvedScores.N7_3_search_filter,
+      improvedScores.N7_1_accelerators,
+      improvedScores.N7_2_personalization,
+      improvedScores.N7_3_batch_operations,
       improvedScores.N9_2_recovery_support,
       improvedScores.N9_4_error_guidance,
       improvedScores.N10_1_help_visibility,
@@ -1436,7 +1436,7 @@ app.post('/api/analyze', authMiddleware, async (c) => {
       'N4_2_terminology_consistency', 'N4_3_standard_compliance',
       'N5_1_input_validation', 'N5_2_confirmation_dialog', 'N5_3_constraints',
       'N6_2_recognition_cues', 'N6_3_memory_load',
-      'N7_1_quick_access', 'N7_2_customization', 'N7_3_search_filter',
+      'N7_1_accelerators', 'N7_2_personalization', 'N7_3_batch_operations',
       'N9_2_recovery_support', 'N9_4_error_guidance',
       'N10_1_help_visibility', 'N10_2_documentation',
     ]
@@ -1663,7 +1663,7 @@ function generateImprovedRecommendations(structure: any, scores: any): string[] 
     recommendations.push('👁️ Breadcrumb을 추가하여 사용자가 현재 위치를 파악하도록 하세요. (N1.1)')
   }
 
-  if (scores.N7_3_search_filter < 3.5) {
+  if (scores.N7_3_batch_operations < 3.5) {
     recommendations.push('🔍 검색 또는 필터 기능을 추가하여 정보 탐색을 쉽게 하세요. (N7.3)')
   }
 

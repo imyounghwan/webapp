@@ -889,9 +889,12 @@ function displayAnalysisResult(result) {
             'N6_2_recognition_cues': 'N6.2 인식 단서',
             'N6_3_memory_load': 'N6.3 기억 부담 최소화',
             
-            // N7: 유연성과 효율성 (2개)
+            // N7: 유연성과 효율성 (3개) - 엠진의 '숙련도 기반 효율성 3축 모델'
             'N7_1_shortcuts': 'N7.1 단축키/빠른 접근',
             'N7_2_customization': 'N7.2 맞춤 설정',
+            'N7_1_accelerators': 'N7.1 가속 장치',
+            'N7_2_personalization': 'N7.2 개인화',
+            'N7_3_batch_operations': 'N7.3 일괄 처리',
             
             // N8: 미니멀 디자인 (3개)
             'N8_1_essential_info': 'N8.1 핵심 정보만',
@@ -936,6 +939,9 @@ function displayAnalysisResult(result) {
             
             'N7_1_shortcuts': '숙련된 사용자를 위한 키보드 단축키, 빠른 링크 등 효율적인 작업 수단 제공',
             'N7_2_customization': '사용자가 인터페이스를 개인의 선호에 맞게 조정할 수 있는 기능 (글꼴 크기, 테마 등)',
+            'N7_1_accelerators': '숙련자 가속 장치: 키보드 단축키(15점) + 빠른 메뉴(12점) + 최근 이용(8점) + Skip Nav(5점)',
+            'N7_2_personalization': '개인화: 설정(15점) + 글자 크기(10점) + 테마(5점) + 언어(5점)',
+            'N7_3_batch_operations': '일괄 처리: 전체 선택(15점) + 일괄 작업(10점)',
             
             'N8_1_essential_info': '꼭 필요한 정보만 표시하고 불필요한 요소는 제거하여 인지 부담 감소',
             'N8_2_clean_interface': '깔끔하고 정돈된 레이아웃으로 시각적 혼잡함 최소화',

@@ -89,9 +89,9 @@ export interface Weights {
   N5_3_constraints: WeightConfig
   N6_2_recognition_cues: WeightConfig
   N6_3_memory_load: WeightConfig
-  N7_1_quick_access: WeightConfig
-  N7_2_customization: WeightConfig
-  N7_3_search_filter: WeightConfig
+  N7_1_accelerators: WeightConfig
+  N7_2_personalization: WeightConfig
+  N7_3_batch_operations: WeightConfig
   N8_1_essential_info: WeightConfig
   N8_2_clean_interface: WeightConfig
   N8_3_visual_hierarchy: WeightConfig

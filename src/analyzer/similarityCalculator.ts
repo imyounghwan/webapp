@@ -61,9 +61,9 @@ export interface NielsenScores {
   N6_2_recognition_cues: number      // 인식 단서
   N6_3_memory_load: number           // 기억 부담 최소화
   
-  // N7: 유연성과 효율성 (2개 항목)
+  // N7: 유연성과 효율성 (2개 항목) - 구버전
   N7_1_shortcuts: number             // 단축키/빠른 접근
-  N7_2_customization: number         // 맞춤 설정
+  N7_2_customization: number         // 맞춤 설정 (현재는 N7_2_personalization으로 변경됨)
   
   // N8: 미니멀 디자인 (3개 항목)
   N8_1_essential_info: number        // 핵심 정보만
