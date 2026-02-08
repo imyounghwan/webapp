@@ -432,6 +432,20 @@ export interface RealtimeValidation {
   quality: 'excellent' | 'good' | 'basic' | 'minimal' | 'none'
 }
 
+/**
+ * 제약 조건 품질 분석 (N5.3 제약 표시 강화)
+ * PIGS 프레임워크 기반: Explicit Rules (35점) + Example Provision (30점) + Visual Guidance (35점) = 100점
+ */
+export interface ConstraintQuality {
+  totalInputs: number              // 전체 입력 필드 수
+  hasExplicitRules: number         // 명시적 규칙 개수 ("8자 이상", "영문+숫자" 등)
+  hasExamples: number              // 예시 제공 개수 ("010-1234-5678", placeholder 등)
+  hasRequiredMarker: number        // 필수 표시 개수 (*, 필수, required, aria-required)
+  quality: 'excellent' | 'good' | 'basic' | 'minimal' | 'poor' | 'none'
+  score: number                    // 0-100점
+  details: string[]                // 상세 분석 내용
+}
+
 export interface FormStructure {
   formCount: number
   inputCount: number
@@ -439,6 +453,7 @@ export interface FormStructure {
   validationExists: boolean
   interactiveFeedbackExists: boolean  // 호버/포커스/클릭 피드백 존재 여부
   realtimeValidation?: RealtimeValidation  // 실시간 검증 분석 (신규)
+  constraintQuality?: ConstraintQuality    // 제약 조건 품질 (N5.3 강화)
 }
 
 export interface VisualStructure {
@@ -1068,13 +1083,142 @@ function analyzeForms(html: string): FormStructure {
     ? labelMatches.length / inputMatches.length 
     : 1
 
+  // 제약조건 품질 분석 추가 (N5.3 강화)
+  const constraintQuality = analyzeConstraintQuality(html)
+
   return {
     formCount: formMatches.length,
     inputCount: inputMatches.length,
     labelRatio,
     validationExists,
     interactiveFeedbackExists,
-    realtimeValidation
+    realtimeValidation,
+    constraintQuality
+  }
+}
+
+/**
+ * 제약조건 품질 분석 (N5.3 강화 - 입력 조건 미리 알리기)
+ * 4계층 PIGS 프레임워크 기반
+ */
+function analyzeConstraintQuality(html: string): ConstraintQuality {
+  // 전체 입력 필드 수 계산
+  const inputMatches = html.match(/<input[^>]*>/gi) || []
+  const textareaMatches = html.match(/<textarea[^>]*>/gi) || []
+  const selectMatches = html.match(/<select[^>]*>/gi) || []
+  const totalInputs = inputMatches.length + textareaMatches.length + selectMatches.length
+
+  if (totalInputs === 0) {
+    return {
+      totalInputs: 0,
+      hasExplicitRules: 0,
+      hasExamples: 0,
+      hasRequiredMarker: 0,
+      quality: 'none',
+      score: 100,
+      details: ['입력 필드가 없어 제약조건 표시가 필요하지 않습니다.']
+    }
+  }
+
+  const details: string[] = []
+
+  // 1계층: 명시적 규칙 탐지 (Explicit Rules)
+  // 정규식: "N자 이상", "영문", "숫자", "특수문자", "형식", "필수" 등
+  const explicitRulePatterns = [
+    /\d+자\s*이상/gi,
+    /\d+자\s*이하/gi,
+    /영문/gi,
+    /숫자/gi,
+    /특수문자/gi,
+    /형식/gi,
+    /필수/gi,
+    /조건/gi,
+    /입력\s*방법/gi,
+    /\d+글자/gi,
+    /[a-zA-Z가-힣]+\s*포함/gi
+  ]
+
+  let explicitRulesCount = 0
+  explicitRulePatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches) {
+      explicitRulesCount += matches.length
+      details.push(`명시적 규칙 발견: ${pattern.source} (${matches.length}개)`)
+    }
+  })
+
+  // 2계층: 예시 제공 탐지 (Example Provision)
+  // placeholder, aria-describedby, 예시 텍스트
+  const examplePatterns = [
+    /placeholder\s*=\s*["'][^"']{3,}["']/gi,
+    /aria-describedby/gi,
+    /예:/gi,
+    /example:/gi,
+    /e\.g\./gi,
+    /예시/gi,
+    /\(예:\s*/gi,
+    /ex\)/gi
+  ]
+
+  let examplesCount = 0
+  examplePatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches) {
+      examplesCount += matches.length
+      details.push(`예시 제공 발견: ${pattern.source} (${matches.length}개)`)
+    }
+  })
+
+  // 4계층: 필수 입력 시각적 표시 탐지 (Visual Guidance)
+  // *, required, aria-required
+  const requiredPatterns = [
+    /\*/g,
+    /required/gi,
+    /aria-required\s*=\s*["']true["']/gi,
+    /필수\s*항목/gi,
+    /필수\s*입력/gi,
+    /<span[^>]*class\s*=\s*["'][^"']*required[^"']*["']/gi
+  ]
+
+  let requiredMarkersCount = 0
+  requiredPatterns.forEach(pattern => {
+    const matches = html.match(pattern)
+    if (matches) {
+      requiredMarkersCount += matches.length
+      details.push(`필수 표시 발견: ${pattern.source} (${matches.length}개)`)
+    }
+  })
+
+  // 점수 계산 (100점 만점)
+  // 1계층 명시적 규칙: 35점
+  const explicitRulesScore = Math.min(35, (explicitRulesCount / totalInputs) * 35)
+  
+  // 2계층 예시 제공: 30점
+  const examplesScore = Math.min(30, (examplesCount / totalInputs) * 30)
+  
+  // 4계층 필수 표시: 35점 (3계층 Real-time Hints는 정적 분석 불가로 제외, 비중 재분배)
+  const requiredMarkersScore = Math.min(35, (requiredMarkersCount / totalInputs) * 35)
+
+  const totalScore = Math.round(explicitRulesScore + examplesScore + requiredMarkersScore)
+
+  // 품질 등급 결정
+  let quality: ConstraintQuality['quality']
+  if (totalScore >= 90) quality = 'excellent'
+  else if (totalScore >= 75) quality = 'good'
+  else if (totalScore >= 60) quality = 'basic'
+  else if (totalScore >= 40) quality = 'minimal'
+  else quality = 'poor'
+
+  details.unshift(`총 입력 필드: ${totalInputs}개, 명시적 규칙: ${explicitRulesCount}개, 예시: ${examplesCount}개, 필수 표시: ${requiredMarkersCount}개`)
+
+  return {
+    totalInputs,
+    hasExplicitRules: explicitRulesCount,
+    hasExamples: examplesCount,
+    hasRequiredMarker: requiredMarkersCount,
+    quality,
+    score: totalScore,
+    details
   }
 }
 

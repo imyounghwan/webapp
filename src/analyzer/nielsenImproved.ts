@@ -954,24 +954,61 @@ button:active {
     },
     
     N5_3_constraints: {
-      description: forms.labelRatio > 0.8
-      ? `✅ 폼 레이블 비율 ${(forms.labelRatio * 100).toFixed(0)}%로 입력 제약사항을 명확히 표시합니다.`
-      : forms.formCount === 0
-        ? `ℹ️ 폼이 없어 제약 조건 표시가 필요하지 않습니다.`
-        : `⚠️ 레이블 비율 ${(forms.labelRatio * 100).toFixed(0)}%로 제약 조건이 불명확합니다.`,
-    
-    N6_2_recognition_cues: visuals.iconCount > 5
-        ? `${visuals.iconCount}개의 아이콘이 인식 단서를 제공합니다.`
-        : `아이콘이 부족(${visuals.iconCount}개)하여 인식 단서가 제한적입니다.`,
-      recommendation: forms.labelRatio > 0.8
-      ? `✅ 폼 레이블 비율 ${(forms.labelRatio * 100).toFixed(0)}%로 입력 제약사항을 명확히 표시합니다.`
-      : forms.formCount === 0
-        ? `ℹ️ 폼이 없어 제약 조건 표시가 필요하지 않습니다.`
-        : `⚠️ 레이블 비율 ${(forms.labelRatio * 100).toFixed(0)}%로 제약 조건이 불명확합니다.`,
-    
-    N6_2_recognition_cues: visuals.iconCount > 5
-        ? '${visuals. 현재 상태를 유지하세요.'
-        : '아이콘이 부족(${visuals 개선이 필요합니다.'
+      description: (() => {
+        if (!forms.constraintQuality) {
+          return forms.formCount === 0 
+            ? `ℹ️ 입력 필드가 없어 제약 조건 표시가 필요하지 않습니다.`
+            : `⚠️ 제약 조건 분석 데이터가 없습니다.`
+        }
+        
+        const cq = forms.constraintQuality
+        if (cq.totalInputs === 0) {
+          return `ℹ️ 입력 필드가 없어 제약 조건 표시가 필요하지 않습니다.`
+        }
+        
+        const emoji = cq.quality === 'excellent' ? '✅' : 
+                      cq.quality === 'good' ? '✅' :
+                      cq.quality === 'basic' ? '⚠️' :
+                      cq.quality === 'minimal' ? '⚠️' : '❌'
+        
+        return `${emoji} 입력 제약 조건 품질: ${cq.quality.toUpperCase()} (${cq.score}점/100점)\n` +
+               `- 총 입력 필드: ${cq.totalInputs}개\n` +
+               `- 명시적 규칙: ${cq.hasExplicitRules}개 (예: "8자 이상", "영문+숫자")\n` +
+               `- 예시 제공: ${cq.hasExamples}개 (placeholder, 도움말)\n` +
+               `- 필수 표시: ${cq.hasRequiredMarker}개 (*, required, aria-required)`
+      })(),
+      
+      recommendation: (() => {
+        if (!forms.constraintQuality || forms.constraintQuality.totalInputs === 0) {
+          return '현재 상태를 유지하세요.'
+        }
+        
+        const cq = forms.constraintQuality
+        
+        if (cq.quality === 'excellent' || cq.quality === 'good') {
+          return '✅ 입력 제약 조건이 명확히 표시되어 있습니다. 현재 상태를 유지하세요.'
+        }
+        
+        const recommendations: string[] = []
+        
+        if (cq.hasExplicitRules < cq.totalInputs * 0.7) {
+          recommendations.push(`🔹 명시적 규칙 강화: 비밀번호 조건("8자 이상, 영문+숫자+특수문자"), 파일 업로드 제한("10MB 이하, JPG/PNG만"), 날짜 형식("YYYY-MM-DD") 등을 입력 필드 근처에 명시하세요.`)
+        }
+        
+        if (cq.hasExamples < cq.totalInputs * 0.5) {
+          recommendations.push(`🔹 예시 제공: placeholder에 "010-1234-5678", "abc@example.com" 등 구체적인 예시를 추가하세요. 또는 입력 필드 아래에 "예: 2024-01-15" 형식으로 도움말을 제공하세요.`)
+        }
+        
+        if (cq.hasRequiredMarker < cq.totalInputs * 0.3) {
+          recommendations.push(`🔹 필수 표시 일관성: 모든 필수 입력 필드에 * 또는 "필수" 라벨을 추가하고, aria-required="true" 속성을 설정하세요.`)
+        }
+        
+        if (recommendations.length === 0) {
+          return '⚠️ 제약 조건 표시를 더욱 명확히 개선하세요.'
+        }
+        
+        return `⚠️ 즉시 개선 권장사항 (${cq.score}점 → 90점+ 목표):\n\n` + recommendations.join('\n\n')
+      })()
     },
     
     N6_3_memory_load: {
@@ -1043,40 +1080,42 @@ button:active {
       : forms.formCount === 0
         ? `ℹ️ 폼이 없어 복구 지원이 필요하지 않습니다.`
         : `⚠️ 오류 복구 지원이 미흡합니다.`,
+      recommendation: forms.validationExists
+        ? `✅ 폼 검증으로 오류 복구를 지원합니다.`
+        : forms.formCount === 0
+          ? `ℹ️ 폼이 없어 복구 지원이 필요하지 않습니다.`
+          : `⚠️ 오류 복구 지원이 미흡합니다.`
+    },
     
-    N9_4_error_guidance: content.listCount > 3
+    N9_4_error_guidance: {
+      description: content.listCount > 3
         ? `리스트 ${content.listCount}개가 체계적인 안내를 제공할 가능성이 높습니다.`
         : `구조화된 안내 정보가 부족합니다.`,
-      recommendation: forms.validationExists
-      ? `✅ 폼 검증으로 오류 복구를 지원합니다.`
-      : forms.formCount === 0
-        ? `ℹ️ 폼이 없어 복구 지원이 필요하지 않습니다.`
-        : `⚠️ 오류 복구 지원이 미흡합니다.`,
-    
-    N9_4_error_guidance: content.listCount > 3
-        ? '리스트 ${content. 현재 상태를 유지하세요.'
-        : '구조화된 안내 정보가 부족합니다 개선이 필요합니다.'
+      recommendation: content.listCount > 3
+        ? '현재 상태를 유지하세요.'
+        : '구조화된 안내 정보가 부족합니다. 개선이 필요합니다.'
     },
     
     N10_1_help_visibility: {
       description: navigation.searchExists
-      ? `✅ 검색 기능으로 도움말을 쉽게 찾을 수 있습니다.`
-      : content.listCount > 3
-        ? `✅ 리스트 형태로 도움말 정보가 구조화되어 있습니다.`
-        : `⚠️ 도움말 찾기가 어려울 수 있습니다.`,
+        ? `✅ 검색 기능으로 도움말을 쉽게 찾을 수 있습니다.`
+        : content.listCount > 3
+          ? `✅ 리스트 형태로 도움말 정보가 구조화되어 있습니다.`
+          : `⚠️ 도움말 찾기가 어려울 수 있습니다.`,
+      recommendation: navigation.searchExists
+        ? `✅ 검색 기능으로 도움말을 쉽게 찾을 수 있습니다.`
+        : content.listCount > 3
+          ? `✅ 리스트 형태로 도움말 정보가 구조화되어 있습니다.`
+          : `⚠️ 도움말 찾기가 어려울 수 있습니다.`
+    },
     
-    N10_2_documentation: content.listCount > 5
+    N10_2_documentation: {
+      description: content.listCount > 5
         ? `${content.listCount}개의 리스트로 문서화가 잘 되어 있습니다.`
         : `리스트가 ${content.listCount}개로 문서화가 부족합니다.`,
-      recommendation: navigation.searchExists
-      ? `✅ 검색 기능으로 도움말을 쉽게 찾을 수 있습니다.`
-      : content.listCount > 3
-        ? `✅ 리스트 형태로 도움말 정보가 구조화되어 있습니다.`
-        : `⚠️ 도움말 찾기가 어려울 수 있습니다.`,
-    
-    N10_2_documentation: content.listCount > 5
+      recommendation: content.listCount > 5
         ? '현재 상태를 유지하세요.'
-        : '리스트가 ${content 개선이 필요합니다.'
-    },
+        : '문서화 개선이 필요합니다.'
+    }
   }
 }
