@@ -734,7 +734,9 @@ function aggregateResults(pageResults: any[]): any {
     labelRatio: allPages.reduce((sum, s) => sum + s.forms.labelRatio, 0) / allPages.length,
     validationExists: allPages.filter(s => s.forms.validationExists).length > allPages.length / 3,
     // realtimeValidation: 메인 페이지 우선, 없으면 첫 페이지
-    realtimeValidation: mainPage.structure.forms.realtimeValidation || allPages[0].forms.realtimeValidation
+    realtimeValidation: mainPage.structure.forms.realtimeValidation || allPages[0].forms.realtimeValidation,
+    // constraintQuality: 메인 페이지 우선, 없으면 첫 페이지
+    constraintQuality: mainPage.structure.forms.constraintQuality || allPages[0].forms.constraintQuality
   }
   
   // Visuals 종합 (평균)
