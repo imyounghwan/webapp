@@ -730,6 +730,45 @@ function aggregateResults(pageResults: any[]): any {
   }
   
   // Forms 종합 (평균)
+  // constraintQuality: 모든 페이지의 입력 필드를 합산
+  const allConstraintQualities = allPages
+    .map(s => s.forms.constraintQuality)
+    .filter(cq => cq && cq.totalInputs > 0)
+  
+  let aggregatedConstraintQuality
+  if (allConstraintQualities.length > 0) {
+    // 모든 페이지의 constraintQuality 합산
+    const totalInputs = allConstraintQualities.reduce((sum, cq) => sum + cq.totalInputs, 0)
+    const totalExplicitRules = allConstraintQualities.reduce((sum, cq) => sum + cq.hasExplicitRules, 0)
+    const totalExamples = allConstraintQualities.reduce((sum, cq) => sum + cq.hasExamples, 0)
+    const totalRequiredMarkers = allConstraintQualities.reduce((sum, cq) => sum + cq.hasRequiredMarker, 0)
+    const avgScore = Math.round(allConstraintQualities.reduce((sum, cq) => sum + cq.score, 0) / allConstraintQualities.length)
+    
+    // 모든 페이지의 details 통합
+    const allDetails = allConstraintQualities.flatMap(cq => cq.details || [])
+    
+    aggregatedConstraintQuality = {
+      totalInputs,
+      hasExplicitRules: totalExplicitRules,
+      hasExamples: totalExamples,
+      hasRequiredMarker: totalRequiredMarkers,
+      score: avgScore,
+      quality: avgScore >= 90 ? 'excellent' : avgScore >= 75 ? 'good' : avgScore >= 60 ? 'basic' : avgScore > 0 ? 'minimal' : 'none',
+      details: allDetails
+    }
+  } else {
+    // 입력 필드가 없는 경우
+    aggregatedConstraintQuality = {
+      totalInputs: 0,
+      hasExplicitRules: 0,
+      hasExamples: 0,
+      hasRequiredMarker: 0,
+      score: 0,
+      quality: 'none',
+      details: ['입력 필드가 없어 제약조건 평가가 불가능합니다.']
+    }
+  }
+  
   const avgForms = {
     formCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.formCount, 0) / allPages.length),
     inputCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.inputCount, 0) / allPages.length),
@@ -737,8 +776,8 @@ function aggregateResults(pageResults: any[]): any {
     validationExists: allPages.filter(s => s.forms.validationExists).length > allPages.length / 3,
     // realtimeValidation: 메인 페이지 우선, 없으면 첫 페이지
     realtimeValidation: mainPage.structure.forms.realtimeValidation || allPages[0].forms.realtimeValidation,
-    // constraintQuality: 메인 페이지 우선, 없으면 첫 페이지
-    constraintQuality: mainPage.structure.forms.constraintQuality || allPages[0].forms.constraintQuality,
+    // constraintQuality: 모든 페이지의 입력 필드를 합산하여 계산
+    constraintQuality: aggregatedConstraintQuality,
     // memoryLoadSupport: 메인 페이지 우선, 없으면 첫 페이지 (N6.3 기억할 것 최소화)
     memoryLoadSupport: mainPage.structure.forms.memoryLoadSupport || allPages[0].forms.memoryLoadSupport,
     // flexibilityEfficiency: 메인 페이지 우선, 없으면 첫 페이지 (N7 유연성과 효율성)
