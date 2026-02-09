@@ -205,12 +205,12 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
   },
   'N8_3': {
     id: 'N8.3',
-    name: '중요도 순서대로 배치',
+    name: '정보 찾기 쉽게',
     category: '디자인',
     principle: 'N8: 미니멀 디자인',
-    description: '큰 제목 → 중간 제목 → 본문 순서로 크기를 달리해서 중요도 표현',
-    why_important: '모든 글자가 똑같은 크기면 무엇이 중요한지 알 수 없습니다.',
-    evaluation_criteria: '제목이 본문보다 크고 눈에 띄는지 확인'
+    description: '헤딩 간격, 구조, 강조 분포로 사용자가 정보를 쉽게 스캔하고 찾을 수 있게 구성',
+    why_important: '헤딩이 없거나 텍스트가 빽빽하면 어디서부터 읽어야 할지 모르고 포기합니다.',
+    evaluation_criteria: '1) 스캔 앵커(45%): 헤딩 간격, 첫 화면 헤딩, 연속 텍스트 블록 길이 2) 헤딩 구조(35%): 헤딩 수, 계층 건너뛰기 여부 3) 강조 분포(20%): 강조 요소 비율'
   },
   'N9_2': {
     id: 'N9.2',

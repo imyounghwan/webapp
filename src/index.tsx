@@ -753,7 +753,9 @@ function aggregateResults(pageResults: any[]): any {
     // 시각적 일관성 분석 결과 (메인 페이지 우선, 없으면 첫 페이지)
     visualConsistency: mainPage.structure.visuals.visualConsistency || allPages[0].visuals.visualConsistency,
     // 깔끔한 인터페이스 분석 결과 (N8.2) - 메인 페이지 우선
-    interfaceCleanness: mainPage.structure.visuals.interfaceCleanness || allPages[0].visuals.interfaceCleanness
+    interfaceCleanness: mainPage.structure.visuals.interfaceCleanness || allPages[0].visuals.interfaceCleanness,
+    // 정보 탐색 용이성 분석 결과 (N8.3) - 메인 페이지 우선
+    informationScannability: mainPage.structure.visuals.informationScannability || allPages[0].visuals.informationScannability
   }
   
   // RealWorldMatch 종합 (메인 페이지 우선, 없으면 첫 페이지)

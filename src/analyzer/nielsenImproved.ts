@@ -287,10 +287,21 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
         calculateAdjustment(structure, weights.N8_2_clean_interface)
       )
     })(),
-    N8_3_visual_hierarchy: calculateScore(
-      weights.N8_3_visual_hierarchy.base_score,
-      calculateAdjustment(structure, weights.N8_3_visual_hierarchy)
-    ),
+    N8_3_visual_hierarchy: (() => {
+      const is = structure.visuals?.informationScannability
+      if (is && is.score !== null && is.score !== undefined) {
+        // informationScannability 우선 사용 (0-100점 → 0-5점 변환)
+        const convertedScore = Math.round((is.score / 100) * 5 * 10) / 10
+        console.log('[DEBUG] N8.3 informationScannability 점수 사용:', is.score, '→', convertedScore, '사람 검증:', is.needsManualReview)
+        return convertedScore
+      }
+      // Fallback: 기존 로직
+      console.log('[DEBUG] N8.3 informationScannability 없음 → 기존 로직 사용')
+      return calculateScore(
+        weights.N8_3_visual_hierarchy.base_score,
+        calculateAdjustment(structure, weights.N8_3_visual_hierarchy)
+      )
+    })(),
     
     // N9: 오류 인식과 복구
     N9_2_recovery_support: calculateScore(
@@ -1666,12 +1677,136 @@ button:active {
     },
     
     N8_3_visual_hierarchy: {
-      description: content.headingCount >= 5
-        ? `헤딩 ${content.headingCount}개로 명확한 시각적 계층을 형성합니다.`
-        : `헤딩이 ${content.headingCount}개로 시각적 계층이 약합니다.`,
-      recommendation: content.headingCount >= 5
-        ? '현재 상태를 유지하세요.'
-        : '개선이 필요합니다.'
+      description: (() => {
+        const is = structure.visuals?.informationScannability
+        
+        if (!is) {
+          // Fallback: 기존 로직
+          return content.headingCount >= 5
+            ? `헤딩 ${content.headingCount}개로 명확한 시각적 계층을 형성합니다.`
+            : `헤딩이 ${content.headingCount}개로 시각적 계층이 약합니다.`
+        }
+        
+        // informationScannability 기반 진단
+        
+        // 사람 검증 필요 케이스
+        if (is.needsManualReview) {
+          return `⚠️ 자동 분석 한계 감지 (${is.score}/100점, ${is.grade}등급)\n\n` +
+            `🔍 사람 검증 필요:\n` +
+            `- 헤딩 개수: ${is.headingStructure.h1Count + is.headingStructure.h2Count + is.headingStructure.h3Count}개\n` +
+            `- 평균 텍스트 간격: ${Math.round(is.scanAnchors.avgTextGap)}자\n\n` +
+            `⚠️ 특이 사항:\n` + is.issues.filter(i => i.severity === 'CRITICAL' || i.severity === 'WARNING').map(i => `  • ${i.message}`).join('\n') + `\n\n` +
+            `💡 UI/UX 전문가가 직접 확인하여 다음 항목을 평가해주세요:\n` +
+            `  1. 카드 UI, SPA 등 현대적 레이아웃 여부\n` +
+            `  2. 사용자가 정보를 쉽게 찾을 수 있는지\n` +
+            `  3. 헤딩 없이도 구조가 명확한지 (시각적 그룹핑)`
+        }
+        
+        if (is.grade === 'A') {
+          return `✅ 정보 탐색 용이 (${is.score}/100점, A등급)\n\n` +
+            `📊 3축 분석 결과:\n` +
+            `- 스캔 앵커: 평균 ${Math.round(is.scanAnchors.avgTextGap)}자 간격, 긴 텍스트 블록 ${is.scanAnchors.longGaps}개\n` +
+            `- 헤딩 구조: h1(${is.headingStructure.h1Count}), h2(${is.headingStructure.h2Count}), h3(${is.headingStructure.h3Count}), 최대 깊이 ${is.headingStructure.maxDepth}단계\n` +
+            `- 강조 분포: 강조 비율 ${(is.emphasisDistribution.emphasisRatio * 100).toFixed(1)}%, 헤딩 밀도 ${(is.emphasisDistribution.headingDensity * 100).toFixed(1)}%\n\n` +
+            `🎯 강점:\n` + is.strengths.map(s => `  ${s}`).join('\n')
+        }
+        
+        if (is.grade === 'B') {
+          const topIssues = is.issues.slice(0, 2)
+          return `😊 정보 탐색 양호 (${is.score}/100점, B등급)\n\n` +
+            `📊 주요 지표:\n` +
+            `- 스캔 앵커: 평균 ${Math.round(is.scanAnchors.avgTextGap)}자 간격, 긴 블록 ${is.scanAnchors.longGaps}개\n` +
+            `- 헤딩 구조: h1(${is.headingStructure.h1Count}), h2(${is.headingStructure.h2Count}), h3(${is.headingStructure.h3Count})\n` +
+            `- 강조 분포: ${(is.emphasisDistribution.emphasisRatio * 100).toFixed(1)}%\n\n` +
+            (topIssues.length > 0 ? `⚠️ 개선 포인트 (상위 ${topIssues.length}개):\n` + topIssues.map(issue => `  • ${issue.message}`).join('\n') : '')
+        }
+        
+        if (is.grade === 'C') {
+          const topIssues = is.issues.slice(0, 3)
+          return `⚠️ 정보 탐색 개선 필요 (${is.score}/100점, C등급)\n\n` +
+            `📊 문제 진단:\n` +
+            `- 스캔 앵커: 평균 ${Math.round(is.scanAnchors.avgTextGap)}자, 긴 블록 ${is.scanAnchors.longGaps}개 (권장: 0개)\n` +
+            `- 헤딩 구조: h1(${is.headingStructure.h1Count}), h2(${is.headingStructure.h2Count}) (권장: h1=1, h2=3-7)\n` +
+            `- 강조 비율: ${(is.emphasisDistribution.emphasisRatio * 100).toFixed(1)}% (권장: 30% 이하)\n\n` +
+            `🔴 주요 이슈 (상위 ${topIssues.length}개):\n` + topIssues.map(issue => `  ${issue.severity === 'HIGH' ? '🔴' : '🟡'} ${issue.message}`).join('\n')
+        }
+        
+        // D등급
+        return `❌ 정보 탐색 긴급 개선 필요 (${is.score}/100점, D등급)\n\n` +
+          `🚨 심각한 문제:\n` +
+          `- 스캔 앵커: ${is.scanAnchors.longGaps}개 긴 텍스트 블록 (1,000자 이상)\n` +
+          `- 헤딩 구조: h1(${is.headingStructure.h1Count}), h2(${is.headingStructure.h2Count}) → 구조 파악 어려움\n` +
+          `- 계층 건너뛰기: ${is.headingStructure.hasSkipping ? '있음' : '없음'}\n\n` +
+          `🔴 전체 이슈 목록:\n` + is.issues.map(issue => `  ${issue.severity === 'HIGH' ? '🔴' : issue.severity === 'MEDIUM' ? '🟡' : '🟢'} ${issue.message}`).join('\n')
+      })(),
+      recommendation: (() => {
+        const is = structure.visuals?.informationScannability
+        
+        if (!is) {
+          // Fallback: 기존 로직
+          return content.headingCount >= 5
+            ? '현재 상태를 유지하세요.'
+            : '개선이 필요합니다.'
+        }
+        
+        // 사람 검증 필요 케이스
+        if (is.needsManualReview) {
+          return `⚠️ UI/UX 전문가 직접 평가 필요\n\n` +
+            `📋 평가 체크리스트:\n` +
+            `☐ 사용자가 원하는 정보를 3초 이내에 찾을 수 있는가?\n` +
+            `☐ 페이지를 훑어볼 때 시선을 잡는 요소가 있는가?\n` +
+            `☐ 정보 구조가 논리적으로 명확한가?\n` +
+            `☐ 카드 UI, 대시보드 등 특수 레이아웃인가?\n\n` +
+            `💡 평가 후 점수를 수동으로 입력해주세요.`
+        }
+        
+        if (is.grade === 'A') {
+          return `현재의 정보 탐색 용이성을 유지하세요:\n` +
+            `- 강점 계속 활용: ${is.strengths.slice(0, 2).join(', ')}\n` +
+            `- 정기적 모니터링: 콘텐츠 추가 시 현재 수준 유지`
+        }
+        
+        if (is.grade === 'B') {
+          const topIssues = is.issues.slice(0, 2)
+          return `현재 상태 유지 + 부분 개선:\n\n` +
+            topIssues.map((issue, i) => {
+              if (issue.type === 'LONG_TEXT_GAP' || issue.type === 'WALL_OF_TEXT') {
+                return `${i + 1}. 긴 텍스트 블록 분할:\n   - 300-600자마다 중간 제목(h3) 추가\n   - 강조(<strong>) 태그로 핵심 키워드 표시`
+              }
+              if (issue.type === 'NO_FIRST_SCREEN_ANCHOR') {
+                return `${i + 1}. 첫 화면 앵커 추가:\n   - 페이지 상단 20% 이내에 h1 또는 h2 배치\n   - 사용자 시선을 즉시 잡는 헤딩 제공`
+              }
+              if (issue.type === 'INSUFFICIENT_H2') {
+                return `${i + 1}. 섹션 구분 명확화:\n   - h2 중제목 3-7개 추가\n   - 각 섹션의 주제를 명확히 표현`
+              }
+              return `${i + 1}. ${issue.message}`
+            }).join('\n\n')
+        }
+        
+        // C, D등급: 전체 이슈 해결
+        return `⚠️ 전체 개선 필요 (목표: ${is.score < 55 ? '55점+' : '70점+'})\n\n` +
+          is.issues.map((issue, i) => {
+            if (issue.type === 'NO_H1') {
+              return `${i + 1}. 📝 h1 제목 추가 (${issue.severity}):\n   - 페이지 최상단에 <h1> 추가\n   - 페이지 주제를 명확히 표현\n   - SEO 및 접근성 개선 효과`
+            }
+            if (issue.type === 'WALL_OF_TEXT') {
+              return `${i + 1}. ✂️ 긴 텍스트 분할 (${issue.severity}):\n   - 1,000자 이상 블록을 300-600자로 분할\n   - 중간 제목(h3) 또는 강조(<strong>) 추가\n   - 불릿 포인트(<ul>) 활용`
+            }
+            if (issue.type === 'HIERARCHY_SKIPPING') {
+              return `${i + 1}. 🔗 계층 구조 수정 (${issue.severity}):\n   - ${issue.message}\n   - 헤딩 레벨을 순차적으로 사용 (h1 → h2 → h3)`
+            }
+            if (issue.type === 'NO_FIRST_SCREEN_ANCHOR') {
+              return `${i + 1}. 🎯 첫 화면 앵커 추가 (${issue.severity}):\n   - 상단 20% 이내에 h1 또는 h2 배치\n   - 사용자 시선을 즉시 잡는 요소 제공`
+            }
+            if (issue.type === 'INSUFFICIENT_H2') {
+              return `${i + 1}. 📋 섹션 구분 (${issue.severity}):\n   - h2 중제목 3개 이상 추가\n   - 주요 섹션을 명확히 구분`
+            }
+            if (issue.type === 'EXCESSIVE_EMPHASIS') {
+              return `${i + 1}. 🔥 강조 절제 (${issue.severity}):\n   - ${issue.message}\n   - 정말 중요한 내용만 강조\n   - 강조 방법 통일 (bold vs color)`
+            }
+            return `${i + 1}. ${issue.message}`
+          }).join('\n\n')
+      })()
     },
     
     N9_2_recovery_support: {

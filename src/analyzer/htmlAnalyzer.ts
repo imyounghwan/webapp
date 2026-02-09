@@ -641,6 +641,30 @@ export interface VisualStructure {
     issues: Array<{ type: string; severity: string; message: string }>
     strengths: string[]
   }
+  // ✅ N8.3 정보 탐색 용이성 분석 (선택적 필드 - 하위 호환성 유지)
+  informationScannability?: {
+    score: number          // 0-100점
+    grade: 'A' | 'B' | 'C' | 'D'
+    scanAnchors: {         // 스캔 앵커 (45%)
+      avgTextGap: number
+      longGaps: number
+      hasFirstScreenHeading: boolean
+    }
+    headingStructure: {    // 헤딩 구조 (35%)
+      h1Count: number
+      h2Count: number
+      h3Count: number
+      maxDepth: number
+      hasSkipping: boolean
+    }
+    emphasisDistribution: { // 강조 요소 분포 (20%)
+      emphasisRatio: number
+      headingDensity: number
+    }
+    issues: Array<{ type: string; severity: string; message: string }>
+    strengths: string[]
+    needsManualReview: boolean  // 사람 검증 필요 여부
+  }
 }
 
 /**
@@ -2441,6 +2465,18 @@ function analyzeVisuals(html: string, paragraphCount: number = 0): VisualStructu
     // interfaceCleanness는 선택적 필드이므로 undefined로 유지
   }
   
+  // 🔍 정보 탐색 용이성 분석 추가 (N8.3)
+  let informationScannability: VisualStructure['informationScannability'] | undefined = undefined
+  
+  try {
+    const headingCount = (html.match(/<h[1-6][^>]*>/gi) || []).length
+    informationScannability = analyzeInformationScannability(html, headingCount)
+    console.log('[DEBUG] N8.3 informationScannability 분석 완료:', informationScannability.score, informationScannability.grade, '사람 검증:', informationScannability.needsManualReview)
+  } catch (error) {
+    console.error('[DEBUG] N8.3 informationScannability 분석 오류:', error)
+    // informationScannability는 선택적 필드이므로 undefined로 유지
+  }
+  
   // 7. Glyphicons
   const glyphMatches = html.match(/\bglyphicon-[a-z0-9-]+/gi) || []
   iconCount += glyphMatches.length
@@ -2474,7 +2510,281 @@ function analyzeVisuals(html: string, paragraphCount: number = 0): VisualStructu
     videoCount,
     iconCount,
     visualConsistency,
-    interfaceCleanness  // N8.2 깔끔한 인터페이스 분석 (선택적)
+    interfaceCleanness,      // N8.2 깔끔한 인터페이스 분석 (선택적)
+    informationScannability  // N8.3 정보 탐색 용이성 분석 (선택적)
+  }
+}
+
+/**
+ * 🔍 정보 탐색 용이성 분석 (N8.3)
+ * 3축 분석: 스캔 앵커(45%) + 헤딩 구조(35%) + 강조 분포(20%)
+ * + 사람 검증 필요 여부 판단
+ */
+function analyzeInformationScannability(
+  html: string,
+  headingCount: number
+): {
+  score: number
+  grade: 'A' | 'B' | 'C' | 'D'
+  scanAnchors: {
+    avgTextGap: number
+    longGaps: number
+    hasFirstScreenHeading: boolean
+  }
+  headingStructure: {
+    h1Count: number
+    h2Count: number
+    h3Count: number
+    maxDepth: number
+    hasSkipping: boolean
+  }
+  emphasisDistribution: {
+    emphasisRatio: number
+    headingDensity: number
+  }
+  issues: Array<{ type: string; severity: string; message: string }>
+  strengths: string[]
+  needsManualReview: boolean
+} {
+  let score = 100
+  const issues: Array<{ type: string; severity: string; message: string }> = []
+  const strengths: string[] = []
+  let needsManualReview = false
+
+  // === A축: 스캔 앵커 (45%) ===
+  
+  // 1. 헤딩 간 텍스트 간격 분석
+  const headings = html.match(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi) || []
+  const textGaps: number[] = []
+  
+  if (headings.length > 1) {
+    for (let i = 0; i < headings.length - 1; i++) {
+      const start = html.indexOf(headings[i]) + headings[i].length
+      const end = html.indexOf(headings[i + 1])
+      const segment = html.substring(start, end)
+      const textOnly = segment.replace(/<[^>]+>/g, '').trim()
+      textGaps.push(textOnly.length)
+    }
+  }
+  
+  const avgTextGap = textGaps.length > 0
+    ? textGaps.reduce((a, b) => a + b, 0) / textGaps.length
+    : 0
+  
+  const longGaps = textGaps.filter(gap => gap > 1000).length
+  
+  if (longGaps > 2) {
+    score -= 20
+    issues.push({
+      type: 'WALL_OF_TEXT',
+      severity: 'HIGH',
+      message: `${longGaps}개 구간에서 1,000자 이상 연속 텍스트 → 중간 제목 추가 권장`
+    })
+  } else if (longGaps > 0) {
+    score -= 10
+    issues.push({
+      type: 'LONG_TEXT_GAP',
+      severity: 'MEDIUM',
+      message: `${longGaps}개 구간에서 긴 텍스트 블록 발견 → 훑어보기 어려움`
+    })
+  } else if (avgTextGap > 0 && avgTextGap < 600) {
+    strengths.push('✅ 적절한 헤딩 간격 → 훑어보기 용이')
+  }
+  
+  // 2. 첫 화면 헤딩 존재 여부
+  const firstHeadingPosition = headings.length > 0
+    ? html.indexOf(headings[0]) / html.length
+    : 1
+  
+  const hasFirstScreenHeading = firstHeadingPosition < 0.2
+  
+  if (!hasFirstScreenHeading && headings.length > 0) {
+    score -= 15
+    issues.push({
+      type: 'NO_FIRST_SCREEN_ANCHOR',
+      severity: 'HIGH',
+      message: '첫 화면에 헤딩 없음 → 사용자 시선을 잡을 앵커 부재'
+    })
+  } else if (hasFirstScreenHeading) {
+    strengths.push('✅ 첫 화면 헤딩 존재 → 시선 앵커 확보')
+  }
+
+  // === B축: 헤딩 구조 (35%) ===
+  
+  // 1. 헤딩 레벨별 개수
+  const h1Count = (html.match(/<h1[^>]*>/gi) || []).length
+  const h2Count = (html.match(/<h2[^>]*>/gi) || []).length
+  const h3Count = (html.match(/<h3[^>]*>/gi) || []).length
+  const h4Count = (html.match(/<h4[^>]*>/gi) || []).length
+  const h5Count = (html.match(/<h5[^>]*>/gi) || []).length
+  const h6Count = (html.match(/<h6[^>]*>/gi) || []).length
+  
+  // h1 개수 확인
+  if (h1Count === 0) {
+    score -= 15
+    issues.push({
+      type: 'NO_H1',
+      severity: 'HIGH',
+      message: 'h1 제목 없음 → 페이지 주제 불명확 (SEO 및 접근성 문제)'
+    })
+  } else if (h1Count > 1) {
+    score -= 10
+    issues.push({
+      type: 'MULTIPLE_H1',
+      severity: 'MEDIUM',
+      message: `h1 제목 ${h1Count}개 → 1개로 통일 권장 (명확한 페이지 주제)`
+    })
+  } else {
+    strengths.push('✅ h1 제목 1개 → 명확한 페이지 주제')
+  }
+  
+  // h2 개수 확인
+  if (h2Count < 3 && headingCount > 3) {
+    score -= 10
+    issues.push({
+      type: 'INSUFFICIENT_H2',
+      severity: 'MEDIUM',
+      message: `h2 중제목 ${h2Count}개 → 3개 이상 권장 (주요 섹션 구분)`
+    })
+  } else if (h2Count >= 3 && h2Count <= 7) {
+    strengths.push('✅ 적절한 h2 중제목 → 주요 섹션 구분 명확')
+  }
+  
+  // 2. 계층 건너뛰기 감지
+  const headingLevels: number[] = []
+  const allHeadings = html.match(/<h[1-6][^>]*>/gi) || []
+  allHeadings.forEach(h => {
+    const match = h.match(/<h([1-6])/i)
+    if (match) headingLevels.push(parseInt(match[1]))
+  })
+  
+  let hasSkipping = false
+  for (let i = 0; i < headingLevels.length - 1; i++) {
+    const current = headingLevels[i]
+    const next = headingLevels[i + 1]
+    if (next - current > 1) {
+      hasSkipping = true
+      score -= 12
+      issues.push({
+        type: 'HIERARCHY_SKIPPING',
+        severity: 'HIGH',
+        message: `h${current} → h${next} 직접 연결 → 중간 레벨 (h${current + 1}) 추가 권장`
+      })
+      break
+    }
+  }
+  
+  if (!hasSkipping && headingLevels.length > 1) {
+    strengths.push('✅ 계층 건너뛰기 없음 → 논리적 정보 구조')
+  }
+  
+  // 3. 과도한 깊이 감지
+  const maxDepth = Math.max(...headingLevels, 0)
+  if (maxDepth > 4) {
+    score -= 10
+    issues.push({
+      type: 'EXCESSIVE_DEPTH',
+      severity: 'MEDIUM',
+      message: `헤딩 깊이 ${maxDepth}단계 → 4단계 이하로 단순화 권장`
+    })
+  }
+
+  // === C축: 강조 요소 분포 (20%) ===
+  
+  // 1. 강조 태그 비율
+  const strongTags = html.match(/<(strong|b|em|i)[^>]*>/gi) || []
+  const textElements = html.match(/<(p|span|div|h[1-6])[^>]*>/gi) || []
+  const emphasisRatio = textElements.length > 0 ? strongTags.length / textElements.length : 0
+  
+  if (emphasisRatio > 0.3) {
+    score -= 10
+    issues.push({
+      type: 'EXCESSIVE_EMPHASIS',
+      severity: 'MEDIUM',
+      message: `강조 요소 비율 ${(emphasisRatio * 100).toFixed(1)}% → 30% 이하로 축소 권장`
+    })
+  } else if (emphasisRatio < 0.15) {
+    strengths.push('✅ 절제된 강조 사용 → 핵심 정보 돋보임')
+  }
+  
+  // 2. 헤딩 밀도
+  const totalText = html.replace(/<[^>]+>/g, '').trim()
+  const headingText = headings.map(h => h.replace(/<[^>]+>/g, '').trim()).join('')
+  const headingDensity = totalText.length > 0 ? headingText.length / totalText.length : 0
+  
+  if (headingDensity < 0.05 && headingCount > 0) {
+    score -= 8
+    issues.push({
+      type: 'LOW_HEADING_DENSITY',
+      severity: 'MEDIUM',
+      message: '헤딩 밀도 낮음 → 정보 구조 파악 어려움'
+    })
+  }
+
+  // === 사람 검증 필요 여부 판단 ===
+  
+  // 1. 데이터 부족 케이스
+  if (headingCount === 0) {
+    needsManualReview = true
+    issues.push({
+      type: 'NO_HEADINGS',
+      severity: 'CRITICAL',
+      message: '⚠️ 헤딩 없음 → UI/UX 전문가 확인 필요 (카드 UI, SPA 가능성)'
+    })
+  }
+  
+  // 2. 극단적 케이스
+  if (headingCount > 50) {
+    needsManualReview = true
+    issues.push({
+      type: 'TOO_MANY_HEADINGS',
+      severity: 'WARNING',
+      message: `⚠️ 헤딩 ${headingCount}개 → 자동 분석 한계, 전문가 확인 권장`
+    })
+  }
+  
+  // 3. 모호한 케이스
+  if (avgTextGap === 0 && headingCount > 0) {
+    needsManualReview = true
+    issues.push({
+      type: 'AMBIGUOUS_STRUCTURE',
+      severity: 'WARNING',
+      message: '⚠️ 특이한 구조 감지 → 전문가 확인 권장'
+    })
+  }
+
+  // 최종 점수 보정
+  score = Math.max(0, Math.min(100, score))
+
+  // 등급 결정
+  let grade: 'A' | 'B' | 'C' | 'D'
+  if (score >= 85) grade = 'A'
+  else if (score >= 70) grade = 'B'
+  else if (score >= 55) grade = 'C'
+  else grade = 'D'
+
+  return {
+    score,
+    grade,
+    scanAnchors: {
+      avgTextGap,
+      longGaps,
+      hasFirstScreenHeading
+    },
+    headingStructure: {
+      h1Count,
+      h2Count,
+      h3Count,
+      maxDepth,
+      hasSkipping
+    },
+    emphasisDistribution: {
+      emphasisRatio,
+      headingDensity
+    },
+    issues,
+    strengths,
+    needsManualReview
   }
 }
 
