@@ -769,49 +769,129 @@ function aggregateResults(pageResults: any[]): any {
     }
   }
   
+  // realtimeValidation: 가장 높은 점수를 가진 페이지 선택
+  const bestRealtimeValidation = allPages
+    .map(s => s.forms?.realtimeValidation)
+    .filter(rv => rv && rv.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.forms?.realtimeValidation 
+    || allPages[0].forms?.realtimeValidation
+  
+  // memoryLoadSupport: 가장 높은 점수를 가진 페이지 선택
+  const bestMemoryLoadSupport = allPages
+    .map(s => s.forms?.memoryLoadSupport)
+    .filter(mls => mls && mls.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.forms?.memoryLoadSupport 
+    || allPages[0].forms?.memoryLoadSupport
+  
+  // flexibilityEfficiency: 가장 높은 점수를 가진 페이지 선택
+  const bestFlexibilityEfficiency = allPages
+    .map(s => s.forms?.flexibilityEfficiency)
+    .filter(fe => fe && fe.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.forms?.flexibilityEfficiency 
+    || allPages[0].forms?.flexibilityEfficiency
+  
   const avgForms = {
     formCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.formCount, 0) / allPages.length),
     inputCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.inputCount, 0) / allPages.length),
     labelRatio: allPages.reduce((sum, s) => sum + s.forms.labelRatio, 0) / allPages.length,
     validationExists: allPages.filter(s => s.forms.validationExists).length > allPages.length / 3,
-    // realtimeValidation: 메인 페이지 우선, 없으면 첫 페이지
-    realtimeValidation: mainPage.structure.forms.realtimeValidation || allPages[0].forms.realtimeValidation,
+    // realtimeValidation: 가장 높은 점수 선택
+    realtimeValidation: bestRealtimeValidation,
     // constraintQuality: 모든 페이지의 입력 필드를 합산하여 계산
     constraintQuality: aggregatedConstraintQuality,
-    // memoryLoadSupport: 메인 페이지 우선, 없으면 첫 페이지 (N6.3 기억할 것 최소화)
-    memoryLoadSupport: mainPage.structure.forms.memoryLoadSupport || allPages[0].forms.memoryLoadSupport,
-    // flexibilityEfficiency: 메인 페이지 우선, 없으면 첫 페이지 (N7 유연성과 효율성)
-    flexibilityEfficiency: mainPage.structure.forms.flexibilityEfficiency || allPages[0].forms.flexibilityEfficiency
+    // memoryLoadSupport: 가장 높은 점수 선택 (N6.3 기억할 것 최소화)
+    memoryLoadSupport: bestMemoryLoadSupport,
+    // flexibilityEfficiency: 가장 높은 점수 선택 (N7 유연성과 효율성)
+    flexibilityEfficiency: bestFlexibilityEfficiency
   }
   
-  // Visuals 종합 (평균)
+  // visualConsistency: 가장 높은 점수를 가진 페이지 선택
+  const bestVisualConsistency = allPages
+    .map(s => s.visuals?.visualConsistency)
+    .filter(vc => vc && vc.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.visuals?.visualConsistency 
+    || allPages[0].visuals?.visualConsistency
+  
+  // interfaceCleanness: 가장 높은 점수를 가진 페이지 선택
+  const bestInterfaceCleanness = allPages
+    .map(s => s.visuals?.interfaceCleanness)
+    .filter(ic => ic && ic.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.visuals?.interfaceCleanness 
+    || allPages[0].visuals?.interfaceCleanness
+  
+  // informationScannability: 가장 높은 점수를 가진 페이지 선택
+  const bestInformationScannability = allPages
+    .map(s => s.visuals?.informationScannability)
+    .filter(is => is && is.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.visuals?.informationScannability 
+    || allPages[0].visuals?.informationScannability
+  
+  // Visuals 종합
   const avgVisuals = {
     imageCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.imageCount, 0) / allPages.length),
     videoCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.videoCount, 0) / allPages.length),
     iconCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.iconCount, 0) / allPages.length),
-    // 시각적 일관성 분석 결과 (메인 페이지 우선, 없으면 첫 페이지)
-    visualConsistency: mainPage.structure.visuals.visualConsistency || allPages[0].visuals.visualConsistency,
-    // 깔끔한 인터페이스 분석 결과 (N8.2) - 메인 페이지 우선
-    interfaceCleanness: mainPage.structure.visuals.interfaceCleanness || allPages[0].visuals.interfaceCleanness,
-    // 정보 탐색 용이성 분석 결과 (N8.3) - 메인 페이지 우선
-    informationScannability: mainPage.structure.visuals.informationScannability || allPages[0].visuals.informationScannability
+    // 시각적 일관성 분석 결과: 가장 높은 점수 선택
+    visualConsistency: bestVisualConsistency,
+    // 깔끔한 인터페이스 분석 결과 (N8.2): 가장 높은 점수 선택
+    interfaceCleanness: bestInterfaceCleanness,
+    // 정보 탐색 용이성 분석 결과 (N8.3): 가장 높은 점수 선택
+    informationScannability: bestInformationScannability
   }
   
-  // RealWorldMatch 종합 (메인 페이지 우선, 없으면 첫 페이지)
-  const avgRealWorldMatch = mainPage.structure.realWorldMatch || allPages[0].realWorldMatch
+  // RealWorldMatch 종합: 가장 높은 점수를 가진 페이지 선택
+  const avgRealWorldMatch = allPages
+    .map(s => s.realWorldMatch)
+    .filter(rwm => rwm && rwm.languageFriendliness?.score > 0)
+    .sort((a, b) => (b.languageFriendliness?.score || 0) - (a.languageFriendliness?.score || 0))[0]
+    || mainPage.structure.realWorldMatch 
+    || allPages[0].realWorldMatch
   
-  // UserControlFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
-  const avgUserControlFreedom = mainPage.structure.userControlFreedom || allPages[0].userControlFreedom
+  // UserControlFreedom 종합: 가장 높은 점수를 가진 페이지 선택
+  const avgUserControlFreedom = allPages
+    .map(s => s.userControlFreedom)
+    .filter(ucf => ucf && ucf.totalScore > 0)
+    .sort((a, b) => b.totalScore - a.totalScore)[0]
+    || mainPage.structure.userControlFreedom 
+    || allPages[0].userControlFreedom
   
-  // NavigationFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
-  const avgNavigationFreedom = mainPage.structure.navigationFreedom || allPages[0].navigationFreedom
+  // NavigationFreedom 종합: 가장 높은 점수를 가진 페이지 선택
+  const avgNavigationFreedom = allPages
+    .map(s => s.navigationFreedom)
+    .filter(nf => nf && nf.totalScore > 0)
+    .sort((a, b) => b.totalScore - a.totalScore)[0]
+    || mainPage.structure.navigationFreedom 
+    || allPages[0].navigationFreedom
   
-  // LanguageConsistency 종합 (메인 페이지 우선, 없으면 첫 페이지)
-  const avgLanguageConsistency = mainPage.structure.languageConsistency || allPages[0].languageConsistency
+  // LanguageConsistency 종합: 가장 높은 점수를 가진 페이지 선택
+  const avgLanguageConsistency = allPages
+    .map(s => s.languageConsistency)
+    .filter(lc => lc && lc.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.languageConsistency 
+    || allPages[0].languageConsistency
   
-  // WebStandardsCompliance 종합 (메인 페이지 우선, 없으면 첫 페이지)
-  const avgWebStandardsCompliance = mainPage.structure.webStandardsCompliance || allPages[0].webStandardsCompliance
-  const avgHelpDocumentation = mainPage.structure.helpDocumentation || allPages[0].helpDocumentation
+  // WebStandardsCompliance 종합: 가장 높은 점수를 가진 페이지 선택
+  const avgWebStandardsCompliance = allPages
+    .map(s => s.webStandardsCompliance)
+    .filter(wsc => wsc && wsc.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+    || mainPage.structure.webStandardsCompliance 
+    || allPages[0].webStandardsCompliance
+  
+  // HelpDocumentation 종합: 가장 높은 점수를 가진 페이지 선택
+  const avgHelpDocumentation = allPages
+    .map(s => s.helpDocumentation)
+    .filter(hd => hd && hd.totalScore > 0)
+    .sort((a, b) => b.totalScore - a.totalScore)[0]
+    || mainPage.structure.helpDocumentation 
+    || allPages[0].helpDocumentation
   
   return {
     html: mainPage.structure.html || '',  // 메인 페이지 HTML 사용 (KRDS 평가용)
