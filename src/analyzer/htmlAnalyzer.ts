@@ -2137,12 +2137,12 @@ function analyzeVisuals(html: string): VisualStructure {
   // 아이콘 감지 강화 (다양한 구현 방식 포함)
   let iconCount = 0
   
-  // 1. Font Awesome 계열
-  const faMatches = html.match(/\bfa-[a-z0-9-]+/gi) || []
+  // 1. Font Awesome 계열 (fa-, fas-, far-, fab-)
+  const faMatches = html.match(/\b(?:fa|fas|far|fab|fal|fad)-[a-z0-9-]+/gi) || []
   iconCount += faMatches.length
   
   // 2. <i> 태그 (Font Awesome, Material Icons 등)
-  const iTagMatches = html.match(/<i\s+[^>]*class\s*=\s*["'][^"']*\b(?:fa|icon|material|glyphicon)[^"']*["'][^>]*>/gi) || []
+  const iTagMatches = html.match(/<i\s+[^>]*class\s*=\s*["'][^"']*\b(?:fa|icon|material|glyphicon|bi|ti|ri|xi)[^"']*["'][^>]*>/gi) || []
   iconCount += iTagMatches.length
   
   // 3. SVG 아이콘
@@ -2158,12 +2158,36 @@ function analyzeVisuals(html: string): VisualStructure {
   iconCount += iconImgMatches.length
   
   // 6. Material Icons
-  const materialMatches = html.match(/\bmaterial-icons\b/gi) || []
+  const materialMatches = html.match(/\b(?:material-icons|md-|mdi-)/gi) || []
   iconCount += materialMatches.length
   
   // 7. Glyphicons
   const glyphMatches = html.match(/\bglyphicon-[a-z0-9-]+/gi) || []
   iconCount += glyphMatches.length
+  
+  // 8. Bootstrap Icons
+  const bootstrapMatches = html.match(/\bbi-[a-z0-9-]+/gi) || []
+  iconCount += bootstrapMatches.length
+  
+  // 9. Tabler Icons
+  const tablerMatches = html.match(/\bti-[a-z0-9-]+/gi) || []
+  iconCount += tablerMatches.length
+  
+  // 10. Remix Icon
+  const remixMatches = html.match(/\bri-[a-z0-9-]+/gi) || []
+  iconCount += remixMatches.length
+  
+  // 11. Xeicon (한국)
+  const xeiconMatches = html.match(/\bxi-[a-z0-9-]+/gi) || []
+  iconCount += xeiconMatches.length
+  
+  // 12. Heroicons (Tailwind)
+  const heroMatches = html.match(/\bhero-[a-z0-9-]+/gi) || []
+  iconCount += heroMatches.length
+  
+  // 13. Feather Icons
+  const featherMatches = html.match(/\bfeather-[a-z0-9-]+/gi) || []
+  iconCount += featherMatches.length
 
   return {
     imageCount,
@@ -2397,12 +2421,12 @@ function analyzeInterfaceFriendliness(text: string, details: string[]): RealWorl
   const lowerText = text.toLowerCase()
   let friendlyScore = 0
   
-  // 긍정 신호: 행동 중심의 명확한 동사
-  const actionWords = text.match(/시작하|만들|보내|저장하|찾아보|확인하|선택하|클릭|눌러|등록|신청|조회|검색/g) || []
+  // 긍정 신호: 행동 중심의 명확한 동사 (30개 확장)
+  const actionWords = text.match(/시작하|만들|보내|저장하|찾아보|확인하|선택하|클릭|눌러|등록|신청|조회|검색|다운로드|업로드|공유하|복사하|붙여넣|삭제하|수정하|편집하|추가하|제거하|취소하|완료하|제출하|전송하|예약하|결제하|구매하/g) || []
   friendlyScore += actionWords.length * 3
   
-  // 긍정 신호: 사용자 중심 언어
-  const userCentricWords = text.match(/당신|여러분|회원님|고객님|함께|도와드|안내|이용|편리|간편|쉽게/g) || []
+  // 긍정 신호: 사용자 중심 언어 (20개 확장)
+  const userCentricWords = text.match(/당신|여러분|회원님|고객님|함께|도와드|안내|이용|편리|간편|쉽게|빠르게|안전하게|무료|할인|혜택|포인트|적립|맞춤|추천/g) || []
   friendlyScore += userCentricWords.length * 2
   
   // 긍정 신호: 친근한 설명
@@ -2413,8 +2437,8 @@ function analyzeInterfaceFriendliness(text: string, details: string[]): RealWorl
   const systemWords = text.match(/시스템|데이터베이스|서버|관리자|운영자|처리|수행|실행|구동|배포/g) || []
   friendlyScore -= systemWords.length * 3
   
-  // 긍정 신호: 현실 세계 은유 (아이콘, 버튼 텍스트)
-  const metaphors = text.match(/장바구니|폴더|휴지통|집|홈|담기|꺼내기|넣기|빼기|보관함|서랍/g) || []
+  // 긍정 신호: 현실 세계 은유 (아이콘, 버튼 텍스트) - 50개로 대폭 확장
+  const metaphors = text.match(/장바구니|카트|폴더|휴지통|집|홈|담기|꺼내기|넣기|빼기|보관함|서랍|책갈피|북마크|별표|즐겨찾기|하트|좋아요|공유|댓글|메시지|편지|우편|전화|벨|알림|시계|달력|일정|지도|위치|핀|돋보기|검색|필터|정렬|새로고침|되돌리기|앞으로|뒤로|위|아래|좌|우|확대|축소|재생|정지|일시정지|음소거|볼륨|설정|톱니바퀴|프로필|사진|카메라|갤러리/g) || []
   friendlyScore += metaphors.length * 5
   
   // 점수 정규화 (0-100점)
