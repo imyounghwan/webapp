@@ -76,8 +76,8 @@ export function evaluateItemRelevance(pageResults: any[]): Map<string, string[]>
   // N6.3 - Breadcrumb (서브 페이지)
   itemRelevance.set('N6_3', pageResults.filter(p => !p.isMainPage).map(p => p.url))
   
-  // N7.1 - 메뉴 (주로 메인 페이지)
-  itemRelevance.set('N7_1', [pageResults[0].url])
+  // N7.1 - 가속 장치 (모든 페이지)
+  itemRelevance.set('N7_1', pageResults.map(p => p.url))
   
   // N7.2 - 맞춤설정 (모든 페이지)
   itemRelevance.set('N7_2', pageResults.map(p => p.url))
