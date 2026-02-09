@@ -583,6 +583,12 @@ export interface VisualStructure {
   imageCount: number
   videoCount: number
   iconCount: number
+  visualConsistency: {
+    score: number
+    grade: 'A' | 'B' | 'C' | 'D'
+    issues: Array<{ type: string; severity: string; message: string }>
+    strengths: string[]
+  }
 }
 
 /**
@@ -2161,6 +2167,9 @@ function analyzeVisuals(html: string): VisualStructure {
   const materialMatches = html.match(/\b(?:material-icons|md-|mdi-)/gi) || []
   iconCount += materialMatches.length
   
+  // 🎨 시각적 일관성 분석 추가 (HTML 기반)
+  const visualConsistency = analyzeVisualConsistencyFromHTML(html, imageCount)
+  
   // 7. Glyphicons
   const glyphMatches = html.match(/\bglyphicon-[a-z0-9-]+/gi) || []
   iconCount += glyphMatches.length
@@ -2192,8 +2201,138 @@ function analyzeVisuals(html: string): VisualStructure {
   return {
     imageCount,
     videoCount,
-    iconCount
+    iconCount,
+    visualConsistency
   }
+}
+
+/**
+ * 🎨 시각적 일관성 분석 (HTML 기반)
+ * CSS 파싱 없이 HTML 구조만으로 시각적 일관성 평가
+ */
+function analyzeVisualConsistencyFromHTML(html: string, imageCount: number): {
+  score: number
+  grade: 'A' | 'B' | 'C' | 'D'
+  issues: Array<{ type: string; severity: string; message: string }>
+  strengths: string[]
+} {
+  let score = 100
+  const issues: Array<{ type: string; severity: string; message: string }> = []
+  const strengths: string[] = []
+  
+  // 1. 인라인 스타일 과다 사용 감지 (일관성 저해 요인)
+  const inlineStyles = html.match(/\sstyle\s*=\s*["'][^"']+["']/gi) || []
+  if (inlineStyles.length > 50) {
+    score -= 30
+    issues.push({
+      type: 'EXCESSIVE_INLINE_STYLES',
+      severity: 'HIGH',
+      message: `인라인 스타일 ${inlineStyles.length}개 → CSS 클래스로 통일 권장 (유지보수성 저하)`
+    })
+  } else if (inlineStyles.length > 20) {
+    score -= 15
+    issues.push({
+      type: 'INLINE_STYLE_WARNING',
+      severity: 'MEDIUM',
+      message: `인라인 스타일 ${inlineStyles.length}개 발견 → 일부 CSS 클래스로 전환 권장`
+    })
+  } else if (inlineStyles.length < 5) {
+    strengths.push('CSS 클래스 기반 스타일링 → 일관성 유지 용이')
+  }
+  
+  // 2. 이미지 alt 텍스트 일관성 (설명 스타일 통일)
+  const images = html.match(/<img[^>]*alt\s*=\s*["']([^"']*)["'][^>]*>/gi) || []
+  const altTexts = images.map(img => {
+    const match = img.match(/alt\s*=\s*["']([^"']*)["']/)
+    return match ? match[1] : ''
+  }).filter(alt => alt.length > 0)
+  
+  if (altTexts.length > 3) {
+    // alt 텍스트 스타일 분석
+    const hasDescriptive = altTexts.filter(alt => alt.length > 20).length
+    const hasShort = altTexts.filter(alt => alt.length <= 20).length
+    
+    if (hasDescriptive > 0 && hasShort > 0 && Math.abs(hasDescriptive - hasShort) < altTexts.length * 0.3) {
+      score -= 10
+      issues.push({
+        type: 'INCONSISTENT_ALT_STYLE',
+        severity: 'LOW',
+        message: '이미지 alt 텍스트 스타일 혼재 → 짧은 설명 또는 긴 설명 중 하나로 통일'
+      })
+    }
+  }
+  
+  // 3. 버튼/링크 클래스 일관성 분석
+  const buttons = html.match(/<button[^>]*class\s*=\s*["']([^"']*)["'][^>]*>/gi) || []
+  const buttonClasses = buttons.map(btn => {
+    const match = btn.match(/class\s*=\s*["']([^"']*)["']/)
+    return match ? match[1] : ''
+  })
+  
+  const uniqueButtonClasses = new Set(buttonClasses.filter(c => c.length > 0))
+  if (uniqueButtonClasses.size > 10) {
+    score -= 20
+    issues.push({
+      type: 'BUTTON_CLASS_FRAGMENTATION',
+      severity: 'MEDIUM',
+      message: `버튼 클래스 ${uniqueButtonClasses.size}종 사용 → 통일된 디자인 시스템 권장`
+    })
+  } else if (uniqueButtonClasses.size <= 5) {
+    strengths.push('버튼 스타일 체계적 관리 (5종 이내)')
+  }
+  
+  // 4. 이미지 확장자 일관성 (일관된 이미지 형식 사용)
+  const imgSources = html.match(/<img[^>]*src\s*=\s*["']([^"']*)["'][^>]*>/gi) || []
+  const extensions = imgSources.map(img => {
+    const match = img.match(/\.([a-z]{3,4})(?:["'\s?#])/i)
+    return match ? match[1].toLowerCase() : ''
+  }).filter(ext => ext.length > 0)
+  
+  const extensionCount = new Set(extensions)
+  if (extensionCount.size > 4) {
+    score -= 10
+    issues.push({
+      type: 'IMAGE_FORMAT_INCONSISTENCY',
+      severity: 'LOW',
+      message: `이미지 형식 ${extensionCount.size}종 혼용 (${Array.from(extensionCount).join(', ')}) → WebP 통일 권장`
+    })
+  }
+  
+  // 5. 반복 요소 (카드, 리스트) 구조 일관성
+  const cards = html.match(/<(?:div|article|section)[^>]*class\s*=\s*["'][^"']*\b(?:card|item|box|panel)[^"']*["'][^>]*>/gi) || []
+  if (cards.length >= 3) {
+    strengths.push(`반복 요소 ${cards.length}개 → 체계적 레이아웃 구조`)
+  }
+  
+  // 6. 이미지 개수 기반 추가 평가 (기존 로직 개선)
+  if (imageCount === 0) {
+    score -= 10
+    issues.push({
+      type: 'NO_VISUAL_ELEMENTS',
+      severity: 'MEDIUM',
+      message: '시각적 요소 부족 → 사용자 몰입도 저하'
+    })
+  } else if (imageCount > 100) {
+    score -= 15
+    issues.push({
+      type: 'IMAGE_OVERLOAD',
+      severity: 'MEDIUM',
+      message: `이미지 ${imageCount}개로 과다 → 로딩 속도 및 집중도 저하 우려`
+    })
+  } else if (imageCount >= 5 && imageCount <= 50) {
+    strengths.push('적절한 시각적 밀도 (5-50개 범위)')
+  }
+  
+  // 최종 점수 및 등급
+  score = Math.max(0, Math.min(100, score))
+  
+  let grade: 'A' | 'B' | 'C' | 'D'
+  if (score >= 90) grade = 'A'
+  else if (score >= 75) grade = 'B'
+  else if (score >= 60) grade = 'C'
+  else grade = 'D'
+  
+  return { score, grade, issues, strengths }
 }
 
 /**

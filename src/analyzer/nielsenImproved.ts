@@ -161,10 +161,20 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
     ),
     
     // N4: 일관성과 표준
-    N4_1_visual_consistency: calculateScore(
-      weights.N4_1_visual_consistency.base_score,
-      calculateAdjustment(structure, weights.N4_1_visual_consistency)
-    ),
+    N4_1_visual_consistency: (() => {
+      // visualConsistency 데이터 활용 (100점 → 5점 스케일 변환)
+      if (structure.visuals?.visualConsistency) {
+        const totalScore = structure.visuals.visualConsistency.score;
+        // 100점 만점을 5점 만점으로 변환 (90점 = 4.5점, 75점 = 3.75점)
+        const convertedScore = (totalScore / 100) * 5;
+        return Math.round(convertedScore * 10) / 10; // 소수점 1자리
+      }
+      // Fallback: 기존 방식
+      return calculateScore(
+        weights.N4_1_visual_consistency.base_score,
+        calculateAdjustment(structure, weights.N4_1_visual_consistency)
+      );
+    })(),
     N4_2_terminology_consistency: (() => {
       // LanguageConsistency 데이터 활용 (100점 → 5점 스케일 변환)
       if (structure.languageConsistency) {
@@ -819,12 +829,57 @@ button:active {
     },
     
     N4_1_visual_consistency: {
-      description: visuals.imageCount > 3 && visuals.imageCount < 30
-        ? `이미지 ${visuals.imageCount}개로 적절한 시각적 일관성을 유지합니다.`
-        : `이미지 수(${visuals.imageCount})가 시각적 일관성에 영향을 줄 수 있습니다.`,
-      recommendation: visuals.imageCount > 3 && visuals.imageCount < 30
-        ? '현재 상태를 유지하세요.'
-        : '개선이 필요합니다.'
+      description: (() => {
+        const vc = visuals.visualConsistency
+        
+        // 안전 체크: visualConsistency가 없으면 기본값
+        if (!vc) {
+          return `이미지 ${visuals.imageCount}개로 시각적 요소를 제공합니다.`
+        }
+        
+        if (vc.grade === 'A') {
+          return `✅ 시각적 일관성 우수 (${vc.score}/100점)\n\n**강점:**\n${vc.strengths.map(s => `• ${s}`).join('\n')}`
+        } else if (vc.grade === 'B') {
+          return `✓ 시각적 일관성 양호 (${vc.score}/100점)\n\n**발견된 문제:**\n${vc.issues.slice(0, 2).map(i => `• ${i.message}`).join('\n')}`
+        } else if (vc.grade === 'C') {
+          return `⚠️ 시각적 일관성 개선 필요 (${vc.score}/100점)\n\n**주요 문제:**\n${vc.issues.slice(0, 3).map(i => `• [${i.severity}] ${i.message}`).join('\n')}`
+        } else {
+          return `❌ 시각적 일관성 미흡 (${vc.score}/100점)\n\n**긴급 개선 필요:**\n${vc.issues.map(i => `• [${i.severity}] ${i.message}`).join('\n')}`
+        }
+      })(),
+      recommendation: (() => {
+        const vc = visuals.visualConsistency
+        
+        // 안전 체크
+        if (!vc) {
+          return '시각적 일관성 분석 데이터가 없습니다.'
+        }
+        
+        if (vc.grade === 'A') {
+          return '✅ 현재 시각적 일관성을 유지하세요. 디자인 시스템이 잘 구축되어 있습니다.'
+        } else if (vc.grade === 'B') {
+          const topIssue = vc.issues[0]
+          return `경미한 개선 권장: ${topIssue ? topIssue.message : 'CSS 클래스 체계 정리'}`
+        } else {
+          const recommendations = []
+          
+          vc.issues.forEach(issue => {
+            if (issue.type === 'EXCESSIVE_INLINE_STYLES') {
+              recommendations.push('1. 인라인 스타일을 CSS 클래스로 전환 (Tailwind CSS 또는 BEM 방법론 권장)')
+            } else if (issue.type === 'BUTTON_CLASS_FRAGMENTATION') {
+              recommendations.push('2. 버튼 디자인 시스템 구축 (Primary, Secondary, Outline 등 3-5종으로 통일)')
+            } else if (issue.type === 'IMAGE_OVERLOAD') {
+              recommendations.push('3. 이미지 최적화 및 Lazy Loading 적용')
+            }
+          })
+          
+          if (recommendations.length === 0) {
+            recommendations.push('디자인 시스템 문서화 및 컴포넌트 라이브러리 구축')
+          }
+          
+          return recommendations.join('\n')
+        }
+      })()
     },
     
     N4_2_terminology_consistency: (() => {

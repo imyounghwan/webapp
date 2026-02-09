@@ -747,7 +747,9 @@ function aggregateResults(pageResults: any[]): any {
   const avgVisuals = {
     imageCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.imageCount, 0) / allPages.length),
     videoCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.videoCount, 0) / allPages.length),
-    iconCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.iconCount, 0) / allPages.length)
+    iconCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.iconCount, 0) / allPages.length),
+    // 시각적 일관성 분석 결과 (메인 페이지 우선, 없으면 첫 페이지)
+    visualConsistency: mainPage.structure.visuals.visualConsistency || allPages[0].visuals.visualConsistency
   }
   
   // RealWorldMatch 종합 (메인 페이지 우선, 없으면 첫 페이지)
