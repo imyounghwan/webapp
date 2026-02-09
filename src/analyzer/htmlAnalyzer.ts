@@ -618,6 +618,29 @@ export interface VisualStructure {
     issues: Array<{ type: string; severity: string; message: string }>
     strengths: string[]
   }
+  // ✅ N8.2 깔끔한 인터페이스 분석 (선택적 필드 - 하위 호환성 유지)
+  interfaceCleanness?: {
+    score: number          // 0-100점
+    grade: 'A' | 'B' | 'C' | 'D'
+    informationLoad: {     // 정보 처리 부담 (40%)
+      longParagraphs: number
+      avgParagraphLength: number
+      actionDensity: number
+      groupingRatio: number
+    }
+    breathingSpace: {      // 시각적 호흡 공간 (35%)
+      sectionCount: number
+      domComplexity: number
+      repeatedPatterns: number
+    }
+    visualNoise: {         // 시각적 노이즈 (25%)
+      intrusiveCount: number
+      animationCount: number
+      emphasisRatio: number
+    }
+    issues: Array<{ type: string; severity: string; message: string }>
+    strengths: string[]
+  }
 }
 
 /**
@@ -638,7 +661,7 @@ export function analyzeHTML(
   const accessibility = analyzeAccessibility(html, dynamicLoadingUI)
   const content = analyzeContent(html)
   const forms = analyzeForms(html, navigation)  // navigation 전달
-  const visuals = analyzeVisuals(html)
+  const visuals = analyzeVisuals(html, content.paragraphCount)  // paragraphCount 전달
   const realWorldMatch = analyzeRealWorldMatch(html)
   const userControlFreedom = analyzeUserControlFreedom(html)
   const navigationFreedom = analyzeNavigationFreedom(html, url)
@@ -2373,7 +2396,7 @@ function analyzeHelpDocumentation(html: string): HelpDocumentation {
   }
 }
 
-function analyzeVisuals(html: string): VisualStructure {
+function analyzeVisuals(html: string, paragraphCount: number = 0): VisualStructure {
   const imageCount = (html.match(/<img[^>]*>/gi) || []).length
   const videoCount = (html.match(/<video[^>]*>/gi) || []).length
   
@@ -2407,6 +2430,17 @@ function analyzeVisuals(html: string): VisualStructure {
   // 🎨 시각적 일관성 분석 추가 (HTML 기반)
   const visualConsistency = analyzeVisualConsistencyFromHTML(html, imageCount)
   
+  // 🧹 깔끔한 인터페이스 분석 추가 (N8.2)
+  let interfaceCleanness: VisualStructure['interfaceCleanness'] | undefined = undefined
+  
+  try {
+    interfaceCleanness = analyzeInterfaceCleanness(html, imageCount, iconCount, paragraphCount)
+    console.log('[DEBUG] N8.2 interfaceCleanness 분석 완료:', interfaceCleanness.score, interfaceCleanness.grade)
+  } catch (error) {
+    console.error('[DEBUG] N8.2 interfaceCleanness 분석 오류:', error)
+    // interfaceCleanness는 선택적 필드이므로 undefined로 유지
+  }
+  
   // 7. Glyphicons
   const glyphMatches = html.match(/\bglyphicon-[a-z0-9-]+/gi) || []
   iconCount += glyphMatches.length
@@ -2439,7 +2473,262 @@ function analyzeVisuals(html: string): VisualStructure {
     imageCount,
     videoCount,
     iconCount,
-    visualConsistency
+    visualConsistency,
+    interfaceCleanness  // N8.2 깔끔한 인터페이스 분석 (선택적)
+  }
+}
+
+/**
+ * 🧹 깔끔한 인터페이스 분석 (N8.2)
+ * 3축 분석: 정보 처리 부담(40%) + 시각적 호흡 공간(35%) + 시각적 노이즈(25%)
+ */
+function analyzeInterfaceCleanness(
+  html: string,
+  imageCount: number,
+  iconCount: number,
+  paragraphCount: number
+): {
+  score: number
+  grade: 'A' | 'B' | 'C' | 'D'
+  informationLoad: {
+    longParagraphs: number
+    avgParagraphLength: number
+    actionDensity: number
+    groupingRatio: number
+  }
+  breathingSpace: {
+    sectionCount: number
+    domComplexity: number
+    repeatedPatterns: number
+  }
+  visualNoise: {
+    intrusiveCount: number
+    animationCount: number
+    emphasisRatio: number
+  }
+  issues: Array<{ type: string; severity: string; message: string }>
+  strengths: string[]
+} {
+  let score = 100
+  const issues: Array<{ type: string; severity: string; message: string }> = []
+  const strengths: string[] = []
+
+  // === A축: 정보 처리 부담 (40%) ===
+  
+  // 1. Wall of Text 감지 (긴 문단)
+  const paragraphs = html.match(/<p[^>]*>[\s\S]*?<\/p>/gi) || []
+  const paragraphLengths = paragraphs.map(p => p.replace(/<[^>]+>/g, '').trim().length)
+  const longParagraphs = paragraphLengths.filter(len => len > 300).length
+  const avgParagraphLength = paragraphLengths.length > 0
+    ? paragraphLengths.reduce((a, b) => a + b, 0) / paragraphLengths.length
+    : 0
+
+  if (longParagraphs > 5) {
+    score -= 20
+    issues.push({
+      type: 'WALL_OF_TEXT',
+      severity: 'HIGH',
+      message: `긴 문단 ${longParagraphs}개 → 2-3줄씩 분할하고 소제목으로 구조화 권장`
+    })
+  } else if (longParagraphs > 3) {
+    score -= 10
+    issues.push({
+      type: 'LONG_PARAGRAPHS',
+      severity: 'MEDIUM',
+      message: `긴 문단 ${longParagraphs}개 발견 → 가독성을 위해 짧게 분할 권장`
+    })
+  } else if (longParagraphs === 0 && paragraphLengths.length > 0) {
+    strengths.push('✅ 적절한 문단 길이 유지 → 읽기 편안함')
+  }
+
+  // 2. 선택 과부하 감지 (액션 밀도)
+  const totalText = html.replace(/<[^>]+>/g, '').trim()
+  const linkText = (html.match(/<a[^>]*>[\s\S]*?<\/a>/gi) || [])
+    .map(link => link.replace(/<[^>]+>/g, '').trim())
+    .join('')
+  const buttonText = (html.match(/<button[^>]*>[\s\S]*?<\/button>/gi) || [])
+    .map(btn => btn.replace(/<[^>]+>/g, '').trim())
+    .join('')
+  const actionTextLength = linkText.length + buttonText.length
+  const actionDensity = totalText.length > 0 ? actionTextLength / totalText.length : 0
+
+  if (actionDensity > 0.4) {
+    score -= 15
+    issues.push({
+      type: 'CHOICE_OVERLOAD',
+      severity: 'HIGH',
+      message: `액션 밀도 ${(actionDensity * 100).toFixed(1)}% → 주요 액션 3-5개로 제한 권장`
+    })
+  } else if (actionDensity > 0.25) {
+    score -= 8
+    issues.push({
+      type: 'HIGH_ACTION_DENSITY',
+      severity: 'MEDIUM',
+      message: `액션 밀도 ${(actionDensity * 100).toFixed(1)}% → 일부 링크를 그룹화 권장`
+    })
+  } else if (actionDensity < 0.15) {
+    strengths.push('✅ 적절한 액션 밀도 → 선택 부담 최소화')
+  }
+
+  // 3. 정보 그룹핑 저하 감지
+  const sections = html.match(/<section[^>]*>/gi) || []
+  const articles = html.match(/<article[^>]*>/gi) || []
+  const divs = html.match(/<div[^>]*>/gi) || []
+  const semanticSections = sections.length + articles.length
+  const groupingRatio = divs.length > 0 ? semanticSections / divs.length : 0
+
+  if (groupingRatio < 0.05 && divs.length > 20) {
+    score -= 12
+    issues.push({
+      type: 'POOR_GROUPING',
+      severity: 'MEDIUM',
+      message: `정보 그룹핑 비율 ${(groupingRatio * 100).toFixed(1)}% → <section>, <article> 태그로 의미 구조화 권장`
+    })
+  } else if (groupingRatio > 0.15) {
+    strengths.push('✅ 의미 있는 정보 그룹핑 → 구조 파악 용이')
+  }
+
+  // === B축: 시각적 호흡 공간 (35%) ===
+
+  // 1. 주요 섹션 과다 감지
+  const sectionCount = semanticSections + (html.match(/<nav[^>]*>/gi) || []).length
+  if (sectionCount > 10) {
+    score -= 15
+    issues.push({
+      type: 'TOO_MANY_SECTIONS',
+      severity: 'HIGH',
+      message: `주요 섹션 ${sectionCount}개 → 7개 이하로 통합 권장`
+    })
+  } else if (sectionCount > 7) {
+    score -= 8
+    issues.push({
+      type: 'SECTION_OVERLOAD',
+      severity: 'MEDIUM',
+      message: `주요 섹션 ${sectionCount}개 발견 → 우선순위에 따라 일부 통합 권장`
+    })
+  } else if (sectionCount >= 3 && sectionCount <= 7) {
+    strengths.push('✅ 적절한 섹션 구성 → 시각적 호흡 공간 확보')
+  }
+
+  // 2. DOM 복잡도 감지
+  const allTags = html.match(/<[^>]+>/g) || []
+  const domComplexity = allTags.length
+  if (domComplexity > 2000) {
+    score -= 12
+    issues.push({
+      type: 'HIGH_DOM_COMPLEXITY',
+      severity: 'HIGH',
+      message: `DOM 요소 ${domComplexity}개 → 컴포넌트 분할 및 지연 로딩 권장`
+    })
+  } else if (domComplexity < 500) {
+    strengths.push('✅ 가벼운 DOM 구조 → 렌더링 성능 우수')
+  }
+
+  // 3. 반복 패턴 과다 감지
+  const listItems = html.match(/<li[^>]*>/gi) || []
+  const tableRows = html.match(/<tr[^>]*>/gi) || []
+  const repeatedPatterns = listItems.length + tableRows.length
+  if (repeatedPatterns > 50) {
+    score -= 10
+    issues.push({
+      type: 'TOO_MANY_REPEATED_ITEMS',
+      severity: 'MEDIUM',
+      message: `반복 항목 ${repeatedPatterns}개 → 페이지네이션 또는 무한 스크롤 고려`
+    })
+  } else if (repeatedPatterns > 20 && repeatedPatterns <= 50) {
+    strengths.push('✅ 적절한 항목 수 → 스크롤 부담 최소화')
+  }
+
+  // === C축: 시각적 노이즈 (25%) ===
+
+  // 1. 방해 요소 감지
+  const modals = html.match(/\b(modal|popup|overlay|dialog)\b/gi) || []
+  const ads = html.match(/\b(ad|advertisement|banner)\b/gi) || []
+  const iframes = html.match(/<iframe[^>]*>/gi) || []
+  const intrusiveCount = modals.length + ads.length + iframes.length
+  if (intrusiveCount > 5) {
+    score -= 20
+    issues.push({
+      type: 'INTRUSIVE_ELEMENTS',
+      severity: 'HIGH',
+      message: `방해 요소 ${intrusiveCount}개 → 팝업/광고/iframe 최소화 권장`
+    })
+  } else if (intrusiveCount > 3) {
+    score -= 10
+    issues.push({
+      type: 'MODERATE_INTRUSION',
+      severity: 'MEDIUM',
+      message: `방해 요소 ${intrusiveCount}개 발견 → 사용자 경험 저해 가능`
+    })
+  } else if (intrusiveCount === 0) {
+    strengths.push('✅ 방해 요소 없음 → 집중력 유지 용이')
+  }
+
+  // 2. 애니메이션/모션 과다 감지
+  const animations = html.match(/\b(animate|animation|transition|motion)\b/gi) || []
+  const animationCount = animations.length
+  if (animationCount > 15) {
+    score -= 12
+    issues.push({
+      type: 'EXCESSIVE_ANIMATIONS',
+      severity: 'HIGH',
+      message: `애니메이션 ${animationCount}개 → 필수 요소만 남기고 축소 권장`
+    })
+  } else if (animationCount > 8) {
+    score -= 6
+    issues.push({
+      type: 'ANIMATION_WARNING',
+      severity: 'MEDIUM',
+      message: `애니메이션 ${animationCount}개 발견 → 사용자에게 전환 제어 옵션 제공 권장`
+    })
+  }
+
+  // 3. 강조 남발 감지
+  const strongTags = html.match(/<(strong|b|em|i)[^>]*>/gi) || []
+  const textElements = html.match(/<(p|span|div|h[1-6])[^>]*>/gi) || []
+  const emphasisRatio = textElements.length > 0 ? strongTags.length / textElements.length : 0
+  if (emphasisRatio > 0.3) {
+    score -= 10
+    issues.push({
+      type: 'EMPHASIS_OVERLOAD',
+      severity: 'MEDIUM',
+      message: `강조 비율 ${(emphasisRatio * 100).toFixed(1)}% → 정말 중요한 내용만 강조 권장`
+    })
+  } else if (emphasisRatio < 0.1) {
+    strengths.push('✅ 절제된 강조 사용 → 핵심 정보 돋보임')
+  }
+
+  // 최종 점수 보정
+  score = Math.max(0, Math.min(100, score))
+
+  // 등급 결정
+  let grade: 'A' | 'B' | 'C' | 'D'
+  if (score >= 85) grade = 'A'
+  else if (score >= 70) grade = 'B'
+  else if (score >= 55) grade = 'C'
+  else grade = 'D'
+
+  return {
+    score,
+    grade,
+    informationLoad: {
+      longParagraphs,
+      avgParagraphLength,
+      actionDensity,
+      groupingRatio
+    },
+    breathingSpace: {
+      sectionCount,
+      domComplexity,
+      repeatedPatterns
+    },
+    visualNoise: {
+      intrusiveCount,
+      animationCount,
+      emphasisRatio
+    },
+    issues,
+    strengths
   }
 }
 

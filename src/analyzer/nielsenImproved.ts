@@ -272,10 +272,21 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
         calculateAdjustment(structure, weights.N8_1_essential_info)
       )
     })(),
-    N8_2_clean_interface: calculateScore(
-      weights.N8_2_clean_interface.base_score,
-      calculateAdjustment(structure, weights.N8_2_clean_interface)
-    ),
+    N8_2_clean_interface: (() => {
+      const ic = structure.visuals?.interfaceCleanness
+      if (ic && ic.score !== null && ic.score !== undefined) {
+        // interfaceCleanness 우선 사용 (0-100점 → 0-5점 변환)
+        const convertedScore = Math.round((ic.score / 100) * 5 * 10) / 10
+        console.log('[DEBUG] N8.2 interfaceCleanness 점수 사용:', ic.score, '→', convertedScore)
+        return convertedScore
+      }
+      // Fallback: 기존 로직
+      console.log('[DEBUG] N8.2 interfaceCleanness 없음 → 기존 로직 사용')
+      return calculateScore(
+        weights.N8_2_clean_interface.base_score,
+        calculateAdjustment(structure, weights.N8_2_clean_interface)
+      )
+    })(),
     N8_3_visual_hierarchy: calculateScore(
       weights.N8_3_visual_hierarchy.base_score,
       calculateAdjustment(structure, weights.N8_3_visual_hierarchy)
@@ -1543,12 +1554,115 @@ button:active {
     },
     
     N8_2_clean_interface: {
-      description: visuals.imageCount >= 3 && visuals.imageCount <= 20
-        ? `이미지 ${visuals.imageCount}개로 깔끔한 인터페이스를 유지합니다.`
-        : `이미지 수(${visuals.imageCount})가 인터페이스 깔끔함에 영향을 줍니다.`,
-      recommendation: visuals.imageCount >= 3 && visuals.imageCount <= 20
-        ? '현재 상태를 유지하세요.'
-        : '개선이 필요합니다.'
+      description: (() => {
+        const ic = structure.visuals?.interfaceCleanness
+        
+        if (!ic) {
+          // Fallback: 기존 로직
+          return visuals.imageCount >= 3 && visuals.imageCount <= 20
+            ? `이미지 ${visuals.imageCount}개로 깔끔한 인터페이스를 유지합니다.`
+            : `이미지 수(${visuals.imageCount})가 인터페이스 깔끔함에 영향을 줍니다.`
+        }
+        
+        // interfaceCleanness 기반 진단
+        if (ic.grade === 'A') {
+          return `✅ 매우 깔끔한 인터페이스 (${ic.score}/100점, A등급)\n\n` +
+            `📊 3축 분석 결과:\n` +
+            `- 정보 처리 부담: 긴 문단 ${ic.informationLoad.longParagraphs}개, 액션 밀도 ${(ic.informationLoad.actionDensity * 100).toFixed(1)}%\n` +
+            `- 시각적 호흡 공간: 섹션 ${ic.breathingSpace.sectionCount}개, DOM ${ic.breathingSpace.domComplexity}개 요소\n` +
+            `- 시각적 노이즈: 방해 요소 ${ic.visualNoise.intrusiveCount}개, 애니메이션 ${ic.visualNoise.animationCount}개\n\n` +
+            `🎯 강점:\n` + ic.strengths.map(s => `  ${s}`).join('\n')
+        }
+        
+        if (ic.grade === 'B') {
+          const topIssues = ic.issues.slice(0, 2)
+          return `😊 깔끔한 인터페이스 (${ic.score}/100점, B등급)\n\n` +
+            `📊 주요 지표:\n` +
+            `- 정보 처리: 긴 문단 ${ic.informationLoad.longParagraphs}개, 액션 밀도 ${(ic.informationLoad.actionDensity * 100).toFixed(1)}%\n` +
+            `- 호흡 공간: 섹션 ${ic.breathingSpace.sectionCount}개\n` +
+            `- 노이즈: 방해 요소 ${ic.visualNoise.intrusiveCount}개\n\n` +
+            (topIssues.length > 0 ? `⚠️ 개선 포인트 (상위 ${topIssues.length}개):\n` + topIssues.map(issue => `  • ${issue.message}`).join('\n') : '')
+        }
+        
+        if (ic.grade === 'C') {
+          const topIssues = ic.issues.slice(0, 3)
+          return `⚠️ 인터페이스 개선 필요 (${ic.score}/100점, C등급)\n\n` +
+            `📊 문제 진단:\n` +
+            `- 정보 과부하: 긴 문단 ${ic.informationLoad.longParagraphs}개 (권장: 3개 이하)\n` +
+            `- 액션 밀도: ${(ic.informationLoad.actionDensity * 100).toFixed(1)}% (권장: 25% 이하)\n` +
+            `- 방해 요소: ${ic.visualNoise.intrusiveCount}개 (권장: 3개 이하)\n\n` +
+            `🔴 주요 이슈 (상위 ${topIssues.length}개):\n` + topIssues.map(issue => `  ${issue.severity === 'HIGH' ? '🔴' : '🟡'} ${issue.message}`).join('\n')
+        }
+        
+        // D등급
+        return `❌ 인터페이스 긴급 개선 필요 (${ic.score}/100점, D등급)\n\n` +
+          `🚨 심각한 문제:\n` +
+          `- 정보 처리 부담: 긴 문단 ${ic.informationLoad.longParagraphs}개, 액션 밀도 ${(ic.informationLoad.actionDensity * 100).toFixed(1)}%\n` +
+          `- 호흡 공간 부족: 섹션 ${ic.breathingSpace.sectionCount}개, DOM ${ic.breathingSpace.domComplexity}개\n` +
+          `- 시각적 노이즈: 방해 요소 ${ic.visualNoise.intrusiveCount}개, 강조 ${(ic.visualNoise.emphasisRatio * 100).toFixed(1)}%\n\n` +
+          `🔴 전체 이슈 목록:\n` + ic.issues.map(issue => `  ${issue.severity === 'HIGH' ? '🔴' : issue.severity === 'MEDIUM' ? '🟡' : '🟢'} ${issue.message}`).join('\n')
+      })(),
+      recommendation: (() => {
+        const ic = structure.visuals?.interfaceCleanness
+        
+        if (!ic) {
+          // Fallback: 기존 로직
+          return visuals.imageCount >= 3 && visuals.imageCount <= 20
+            ? '현재 상태를 유지하세요.'
+            : '개선이 필요합니다.'
+        }
+        
+        // interfaceCleanness 기반 권고
+        if (ic.grade === 'A') {
+          return `현재의 깔끔한 인터페이스를 유지하세요:\n` +
+            `- 강점 계속 활용: ${ic.strengths.slice(0, 2).join(', ')}\n` +
+            `- 정기적 모니터링: 콘텐츠 추가 시 현재 수준 유지`
+        }
+        
+        if (ic.grade === 'B') {
+          const topIssues = ic.issues.slice(0, 2)
+          return `현재 상태 유지 + 부분 개선:\n\n` +
+            topIssues.map((issue, i) => {
+              if (issue.type === 'LONG_PARAGRAPHS' || issue.type === 'WALL_OF_TEXT') {
+                return `${i + 1}. 긴 문단 분할:\n   - 문단 2-3줄로 분할\n   - 소제목 추가로 구조화`
+              }
+              if (issue.type === 'HIGH_ACTION_DENSITY' || issue.type === 'CHOICE_OVERLOAD') {
+                return `${i + 1}. 액션 그룹화:\n   - 주요 액션 3-5개로 제한\n   - 나머지는 "더보기" 메뉴로 이동`
+              }
+              if (issue.type === 'SECTION_OVERLOAD' || issue.type === 'TOO_MANY_SECTIONS') {
+                return `${i + 1}. 섹션 통합:\n   - 유사 섹션 병합\n   - 우선순위 기반 재정렬`
+              }
+              return `${i + 1}. ${issue.message}`
+            }).join('\n\n')
+        }
+        
+        // C, D등급: 전체 이슈 해결
+        return `⚠️ 전체 개선 필요 (목표: ${ic.score < 55 ? '55점+' : '70점+'})\n\n` +
+          ic.issues.map((issue, i) => {
+            if (issue.type === 'WALL_OF_TEXT' || issue.type === 'LONG_PARAGRAPHS') {
+              return `${i + 1}. 📝 긴 문단 분할 (${issue.severity}):\n   - 각 문단 150자 이하로 제한\n   - <h3> 소제목으로 구조화\n   - 불릿 포인트 활용`
+            }
+            if (issue.type === 'CHOICE_OVERLOAD' || issue.type === 'HIGH_ACTION_DENSITY') {
+              return `${i + 1}. 🔗 액션 정리 (${issue.severity}):\n   - 주요 액션 3-5개만 노출\n   - 나머지는 접기/펼치기 메뉴로 이동\n   - CTA 버튼 명확히 구분`
+            }
+            if (issue.type === 'INTRUSIVE_ELEMENTS') {
+              return `${i + 1}. 🚫 방해 요소 제거 (${issue.severity}):\n   - 팝업 최소화 (필수 시 타이밍 조정)\n   - 광고 위치 재조정 (콘텐츠와 분리)\n   - iframe 필수 여부 재검토`
+            }
+            if (issue.type === 'TOO_MANY_SECTIONS' || issue.type === 'SECTION_OVERLOAD') {
+              return `${i + 1}. 📑 섹션 통합 (${issue.severity}):\n   - 유사 섹션 병합 (예: 공지+뉴스 → 소식)\n   - 우선순위 낮은 섹션 하위로 이동\n   - 탭 메뉴 활용 고려`
+            }
+            if (issue.type === 'HIGH_DOM_COMPLEXITY') {
+              return `${i + 1}. ⚡ DOM 최적화 (${issue.severity}):\n   - 중복 div 제거\n   - 컴포넌트 분할 (지연 로딩)\n   - 테이블 대신 카드 UI 고려`
+            }
+            if (issue.type === 'EXCESSIVE_ANIMATIONS' || issue.type === 'ANIMATION_WARNING') {
+              return `${i + 1}. 🎬 애니메이션 축소 (${issue.severity}):\n   - 필수 요소만 애니메이션 유지\n   - prefers-reduced-motion 반영\n   - 사용자 제어 옵션 제공`
+            }
+            if (issue.type === 'EMPHASIS_OVERLOAD') {
+              return `${i + 1}. 🔥 강조 절제 (${issue.severity}):\n   - 정말 중요한 내용만 강조\n   - 강조 방법 통일 (bold vs color)\n   - 계층적 강조 적용`
+            }
+            return `${i + 1}. ${issue.message}`
+          }).join('\n\n')
+      })()
     },
     
     N8_3_visual_hierarchy: {
