@@ -769,246 +769,49 @@ function aggregateResults(pageResults: any[]): any {
     }
   }
   
-  // realtimeValidation: 모든 페이지 평균
-  const allRealtimeValidations = allPages
-    .map(s => s.forms.realtimeValidation)
-    .filter(rv => rv && rv.totalForms > 0)
-  
-  let aggregatedRealtimeValidation
-  if (allRealtimeValidations.length > 0) {
-    aggregatedRealtimeValidation = {
-      totalForms: allRealtimeValidations.reduce((sum, rv) => sum + rv.totalForms, 0),
-      formsWithValidation: allRealtimeValidations.reduce((sum, rv) => sum + rv.formsWithValidation, 0),
-      validationRatio: allRealtimeValidations.reduce((sum, rv) => sum + rv.validationRatio, 0) / allRealtimeValidations.length,
-      features: {
-        hasBrowserValidation: allRealtimeValidations.some(rv => rv.features?.hasBrowserValidation),
-        hasPatternValidation: allRealtimeValidations.some(rv => rv.features?.hasPatternValidation),
-        hasCustomValidation: allRealtimeValidations.some(rv => rv.features?.hasCustomValidation),
-        hasInlineErrors: allRealtimeValidations.some(rv => rv.features?.hasInlineErrors),
-        hasAriaInvalid: allRealtimeValidations.some(rv => rv.features?.hasAriaInvalid)
-      },
-      score: Math.round(allRealtimeValidations.reduce((sum, rv) => sum + rv.score, 0) / allRealtimeValidations.length),
-      quality: '',
-      details: allRealtimeValidations.flatMap(rv => rv.details || [])
-    }
-    const s = aggregatedRealtimeValidation.score
-    aggregatedRealtimeValidation.quality = s === 30 ? 'excellent' : s >= 20 ? 'good' : s >= 10 ? 'basic' : s > 0 ? 'minimal' : 'none'
-  } else {
-    aggregatedRealtimeValidation = mainPage.structure.forms.realtimeValidation || allPages[0].forms.realtimeValidation
-  }
-  
-  // memoryLoadSupport: 모든 페이지 평균
-  const allMemoryLoadSupports = allPages
-    .map(s => s.forms.memoryLoadSupport)
-    .filter(mls => mls && mls.totalInputs > 0)
-  
-  let aggregatedMemoryLoadSupport
-  if (allMemoryLoadSupports.length > 0) {
-    const avgScore = Math.round(allMemoryLoadSupports.reduce((sum, mls) => sum + mls.score, 0) / allMemoryLoadSupports.length)
-    aggregatedMemoryLoadSupport = {
-      totalInputs: allMemoryLoadSupports.reduce((sum, mls) => sum + mls.totalInputs, 0),
-      autocompleteInputs: allMemoryLoadSupports.reduce((sum, mls) => sum + mls.autocompleteInputs, 0),
-      savedInputs: allMemoryLoadSupports.reduce((sum, mls) => sum + mls.savedInputs, 0),
-      defaultValues: allMemoryLoadSupports.reduce((sum, mls) => sum + mls.defaultValues, 0),
-      datalistInputs: allMemoryLoadSupports.reduce((sum, mls) => sum + mls.datalistInputs, 0),
-      score: avgScore,
-      quality: avgScore >= 90 ? 'excellent' : avgScore >= 70 ? 'good' : avgScore >= 50 ? 'basic' : avgScore > 0 ? 'minimal' : 'none',
-      details: allMemoryLoadSupports.flatMap(mls => mls.details || [])
-    }
-  } else {
-    aggregatedMemoryLoadSupport = mainPage.structure.forms.memoryLoadSupport || allPages[0].forms.memoryLoadSupport
-  }
-  
-  // flexibilityEfficiency: 모든 페이지 평균
-  const allFlexibilityEfficiencies = allPages
-    .map(s => s.forms.flexibilityEfficiency)
-    .filter(fe => fe && fe.score > 0)
-  
-  let aggregatedFlexibilityEfficiency
-  if (allFlexibilityEfficiencies.length > 0) {
-    const avgScore = Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + fe.score, 0) / allFlexibilityEfficiencies.length)
-    aggregatedFlexibilityEfficiency = {
-      accelerators: {
-        keyboardShortcuts: allFlexibilityEfficiencies.some(fe => fe.accelerators?.keyboardShortcuts > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + (fe.accelerators?.keyboardShortcuts || 0), 0) / allFlexibilityEfficiencies.length) : 0,
-        quickMenu: allFlexibilityEfficiencies.some(fe => fe.accelerators?.quickMenu > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + (fe.accelerators?.quickMenu || 0), 0) / allFlexibilityEfficiencies.length) : 0,
-        recentItems: allFlexibilityEfficiencies.some(fe => fe.accelerators?.recentItems > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + (fe.accelerators?.recentItems || 0), 0) / allFlexibilityEfficiencies.length) : 0,
-        skipNavigation: allFlexibilityEfficiencies.some(fe => fe.accelerators?.skipNavigation > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + (fe.accelerators?.skipNavigation || 0), 0) / allFlexibilityEfficiencies.length) : 0
-      },
-      personalization: {
-        settings: allFlexibilityEfficiencies.some(fe => fe.personalization?.settings > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + (fe.personalization?.settings || 0), 0) / allFlexibilityEfficiencies.length) : 0,
-        fontSize: allFlexibilityEfficiencies.some(fe => fe.personalization?.fontSize > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + (fe.personalization?.fontSize || 0), 0) / allFlexibilityEfficiencies.length) : 0,
-        language: allFlexibilityEfficiencies.some(fe => fe.personalization?.language > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + (fe.personalization?.language || 0), 0) / allFlexibilityEfficiencies.length) : 0
-      },
-      batchOperations: allFlexibilityEfficiencies.some(fe => fe.batchOperations > 0) ? Math.round(allFlexibilityEfficiencies.reduce((sum, fe) => sum + fe.batchOperations, 0) / allFlexibilityEfficiencies.length) : 0,
-      score: avgScore,
-      quality: avgScore >= 90 ? 'excellent' : avgScore >= 70 ? 'good' : avgScore >= 50 ? 'basic' : avgScore > 0 ? 'minimal' : 'none',
-      details: allFlexibilityEfficiencies.flatMap(fe => fe.details || [])
-    }
-  } else {
-    aggregatedFlexibilityEfficiency = mainPage.structure.forms.flexibilityEfficiency || allPages[0].forms.flexibilityEfficiency
-  }
-  
   const avgForms = {
     formCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.formCount, 0) / allPages.length),
     inputCount: Math.round(allPages.reduce((sum, s) => sum + s.forms.inputCount, 0) / allPages.length),
     labelRatio: allPages.reduce((sum, s) => sum + s.forms.labelRatio, 0) / allPages.length,
     validationExists: allPages.filter(s => s.forms.validationExists).length > allPages.length / 3,
-    // realtimeValidation: 모든 페이지 평균
-    realtimeValidation: aggregatedRealtimeValidation,
+    // realtimeValidation: 메인 페이지 우선, 없으면 첫 페이지
+    realtimeValidation: mainPage.structure.forms.realtimeValidation || allPages[0].forms.realtimeValidation,
     // constraintQuality: 모든 페이지의 입력 필드를 합산하여 계산
     constraintQuality: aggregatedConstraintQuality,
-    // memoryLoadSupport: 모든 페이지 평균 (N6.3 기억할 것 최소화)
-    memoryLoadSupport: aggregatedMemoryLoadSupport,
-    // flexibilityEfficiency: 모든 페이지 평균 (N7 유연성과 효율성)
-    flexibilityEfficiency: aggregatedFlexibilityEfficiency
+    // memoryLoadSupport: 메인 페이지 우선, 없으면 첫 페이지 (N6.3 기억할 것 최소화)
+    memoryLoadSupport: mainPage.structure.forms.memoryLoadSupport || allPages[0].forms.memoryLoadSupport,
+    // flexibilityEfficiency: 메인 페이지 우선, 없으면 첫 페이지 (N7 유연성과 효율성)
+    flexibilityEfficiency: mainPage.structure.forms.flexibilityEfficiency || allPages[0].forms.flexibilityEfficiency
   }
   
-  // visualConsistency: 모든 페이지 평균
-  const allVisualConsistencies = allPages
-    .map(s => s.visuals.visualConsistency)
-    .filter(vc => vc && vc.score > 0)
-  
-  let aggregatedVisualConsistency
-  if (allVisualConsistencies.length > 0) {
-    const avgScore = Math.round(allVisualConsistencies.reduce((sum, vc) => sum + vc.score, 0) / allVisualConsistencies.length)
-    aggregatedVisualConsistency = {
-      colorCount: Math.round(allVisualConsistencies.reduce((sum, vc) => sum + (vc.colorCount || 0), 0) / allVisualConsistencies.length),
-      fontCount: Math.round(allVisualConsistencies.reduce((sum, vc) => sum + (vc.fontCount || 0), 0) / allVisualConsistencies.length),
-      buttonStyleCount: Math.round(allVisualConsistencies.reduce((sum, vc) => sum + (vc.buttonStyleCount || 0), 0) / allVisualConsistencies.length),
-      layoutConsistency: allVisualConsistencies.reduce((sum, vc) => sum + (vc.layoutConsistency || 0), 0) / allVisualConsistencies.length,
-      score: avgScore,
-      grade: avgScore >= 85 ? 'A' : avgScore >= 70 ? 'B' : avgScore >= 55 ? 'C' : 'D',
-      details: allVisualConsistencies.flatMap(vc => vc.details || [])
-    }
-  } else {
-    aggregatedVisualConsistency = mainPage.structure.visuals.visualConsistency || allPages[0].visuals.visualConsistency
-  }
-  
-  // interfaceCleanness: 모든 페이지 평균
-  const allInterfaceCleannesses = allPages
-    .map(s => s.visuals.interfaceCleanness)
-    .filter(ic => ic && ic.score > 0)
-  
-  let aggregatedInterfaceCleanness
-  if (allInterfaceCleannesses.length > 0) {
-    const avgScore = Math.round(allInterfaceCleannesses.reduce((sum, ic) => sum + ic.score, 0) / allInterfaceCleannesses.length)
-    aggregatedInterfaceCleanness = {
-      textDensity: allInterfaceCleannesses.reduce((sum, ic) => sum + (ic.textDensity || 0), 0) / allInterfaceCleannesses.length,
-      whitespaceRatio: allInterfaceCleannesses.reduce((sum, ic) => sum + (ic.whitespaceRatio || 0), 0) / allInterfaceCleannesses.length,
-      visualBalance: allInterfaceCleannesses.reduce((sum, ic) => sum + (ic.visualBalance || 0), 0) / allInterfaceCleannesses.length,
-      score: avgScore,
-      grade: avgScore >= 85 ? 'A' : avgScore >= 70 ? 'B' : avgScore >= 55 ? 'C' : 'D',
-      issues: allInterfaceCleannesses.flatMap(ic => ic.issues || []),
-      strengths: allInterfaceCleannesses.flatMap(ic => ic.strengths || [])
-    }
-  } else {
-    aggregatedInterfaceCleanness = mainPage.structure.visuals.interfaceCleanness || allPages[0].visuals.interfaceCleanness
-  }
-  
-  // informationScannability: 모든 페이지 평균
-  const allInformationScannabilities = allPages
-    .map(s => s.visuals.informationScannability)
-    .filter(is => is && is.score > 0)
-  
-  let aggregatedInformationScannability
-  if (allInformationScannabilities.length > 0) {
-    const avgScore = Math.round(allInformationScannabilities.reduce((sum, is) => sum + is.score, 0) / allInformationScannabilities.length)
-    aggregatedInformationScannability = {
-      scanAnchors: {
-        avgTextGap: Math.round(allInformationScannabilities.reduce((sum, is) => sum + (is.scanAnchors.avgTextGap || 0), 0) / allInformationScannabilities.length),
-        longGaps: Math.round(allInformationScannabilities.reduce((sum, is) => sum + (is.scanAnchors.longGaps || 0), 0) / allInformationScannabilities.length),
-        hasFirstScreenHeading: allInformationScannabilities.some(is => is.scanAnchors.hasFirstScreenHeading)
-      },
-      headingStructure: {
-        h1Count: Math.round(allInformationScannabilities.reduce((sum, is) => sum + (is.headingStructure.h1Count || 0), 0) / allInformationScannabilities.length),
-        h2Count: Math.round(allInformationScannabilities.reduce((sum, is) => sum + (is.headingStructure.h2Count || 0), 0) / allInformationScannabilities.length),
-        h3Count: Math.round(allInformationScannabilities.reduce((sum, is) => sum + (is.headingStructure.h3Count || 0), 0) / allInformationScannabilities.length),
-        maxDepth: Math.max(...allInformationScannabilities.map(is => is.headingStructure.maxDepth || 0))
-      },
-      emphasisDistribution: {
-        emphasisRatio: allInformationScannabilities.reduce((sum, is) => sum + (is.emphasisDistribution.emphasisRatio || 0), 0) / allInformationScannabilities.length,
-        headingDensity: allInformationScannabilities.reduce((sum, is) => sum + (is.emphasisDistribution.headingDensity || 0), 0) / allInformationScannabilities.length
-      },
-      score: avgScore,
-      grade: avgScore >= 85 ? 'A' : avgScore >= 70 ? 'B' : avgScore >= 55 ? 'C' : 'D',
-      issues: allInformationScannabilities.flatMap(is => is.issues || []),
-      strengths: allInformationScannabilities.flatMap(is => is.strengths || []),
-      needsManualReview: allInformationScannabilities.some(is => is.needsManualReview)
-    }
-  } else {
-    aggregatedInformationScannability = mainPage.structure.visuals.informationScannability || allPages[0].visuals.informationScannability
-  }
-  
-  // Visuals 종합
+  // Visuals 종합 (평균)
   const avgVisuals = {
     imageCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.imageCount, 0) / allPages.length),
     videoCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.videoCount, 0) / allPages.length),
     iconCount: Math.round(allPages.reduce((sum, s) => sum + s.visuals.iconCount, 0) / allPages.length),
-    // 시각적 일관성 분석 결과: 모든 페이지 평균
-    visualConsistency: aggregatedVisualConsistency,
-    // 깔끔한 인터페이스 분석 결과 (N8.2): 모든 페이지 평균
-    interfaceCleanness: aggregatedInterfaceCleanness,
-    // 정보 탐색 용이성 분석 결과 (N8.3): 모든 페이지 평균
-    informationScannability: aggregatedInformationScannability
+    // 시각적 일관성 분석 결과 (메인 페이지 우선, 없으면 첫 페이지)
+    visualConsistency: mainPage.structure.visuals.visualConsistency || allPages[0].visuals.visualConsistency,
+    // 깔끔한 인터페이스 분석 결과 (N8.2) - 메인 페이지 우선
+    interfaceCleanness: mainPage.structure.visuals.interfaceCleanness || allPages[0].visuals.interfaceCleanness,
+    // 정보 탐색 용이성 분석 결과 (N8.3) - 메인 페이지 우선
+    informationScannability: mainPage.structure.visuals.informationScannability || allPages[0].visuals.informationScannability
   }
   
-  // RealWorldMatch 종합: 모든 페이지에서 가장 완성도 높은 것 선택
-  const avgRealWorldMatch = allPages
-    .map(s => s.realWorldMatch)
-    .filter(rwm => rwm && rwm.languageFriendliness && rwm.dataNaturalness)
-    .sort((a, b) => (b.languageFriendliness.score + b.dataNaturalness.score) - (a.languageFriendliness.score + a.dataNaturalness.score))[0] 
-    || mainPage.structure.realWorldMatch || allPages[0].realWorldMatch
+  // RealWorldMatch 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgRealWorldMatch = mainPage.structure.realWorldMatch || allPages[0].realWorldMatch
   
-  // UserControlFreedom 종합: 모든 페이지에서 점수가 가장 높은 것 선택
-  const avgUserControlFreedom = allPages
-    .map(s => s.userControlFreedom)
-    .filter(ucf => ucf && ucf.totalScore > 0)
-    .sort((a, b) => b.totalScore - a.totalScore)[0]
-    || mainPage.structure.userControlFreedom || allPages[0].userControlFreedom
+  // UserControlFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgUserControlFreedom = mainPage.structure.userControlFreedom || allPages[0].userControlFreedom
   
-  // NavigationFreedom 종합: 모든 페이지에서 점수가 가장 높은 것 선택
-  const avgNavigationFreedom = allPages
-    .map(s => s.navigationFreedom)
-    .filter(nf => nf && nf.totalScore > 0)
-    .sort((a, b) => b.totalScore - a.totalScore)[0]
-    || mainPage.structure.navigationFreedom || allPages[0].navigationFreedom
+  // NavigationFreedom 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgNavigationFreedom = mainPage.structure.navigationFreedom || allPages[0].navigationFreedom
   
-  // LanguageConsistency 종합: 모든 페이지에서 점수가 가장 높은 것 선택
-  const avgLanguageConsistency = allPages
-    .map(s => s.languageConsistency)
-    .filter(lc => lc && lc.score > 0)
-    .sort((a, b) => b.score - a.score)[0]
-    || mainPage.structure.languageConsistency || allPages[0].languageConsistency
+  // LanguageConsistency 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgLanguageConsistency = mainPage.structure.languageConsistency || allPages[0].languageConsistency
   
-  // WebStandardsCompliance 종합: 모든 페이지 평균
-  const allWebStandardsCompliances = allPages
-    .map(s => s.webStandardsCompliance)
-    .filter(wsc => wsc && wsc.score > 0)
-  
-  let avgWebStandardsCompliance
-  if (allWebStandardsCompliances.length > 0) {
-    const avgScore = Math.round(allWebStandardsCompliances.reduce((sum, wsc) => sum + wsc.score, 0) / allWebStandardsCompliances.length)
-    avgWebStandardsCompliance = {
-      hasDoctype: allWebStandardsCompliances.some(wsc => wsc.hasDoctype),
-      hasLangAttribute: allWebStandardsCompliances.some(wsc => wsc.hasLangAttribute),
-      hasViewport: allWebStandardsCompliances.some(wsc => wsc.hasViewport),
-      hasCharset: allWebStandardsCompliances.some(wsc => wsc.hasCharset),
-      imagesWithAlt: Math.round(allWebStandardsCompliances.reduce((sum, wsc) => sum + (wsc.imagesWithAlt || 0), 0) / allWebStandardsCompliances.length),
-      totalImages: Math.round(allWebStandardsCompliances.reduce((sum, wsc) => sum + (wsc.totalImages || 0), 0) / allWebStandardsCompliances.length),
-      altTextRatio: allWebStandardsCompliances.reduce((sum, wsc) => sum + (wsc.altTextRatio || 0), 0) / allWebStandardsCompliances.length,
-      score: avgScore,
-      details: allWebStandardsCompliances.flatMap(wsc => wsc.details || [])
-    }
-  } else {
-    avgWebStandardsCompliance = mainPage.structure.webStandardsCompliance || allPages[0].webStandardsCompliance
-  }
-  
-  // HelpDocumentation 종합: 모든 페이지에서 점수가 가장 높은 것 선택
-  const avgHelpDocumentation = allPages
-    .map(s => s.helpDocumentation)
-    .filter(hd => hd && hd.totalScore > 0)
-    .sort((a, b) => b.totalScore - a.totalScore)[0]
-    || mainPage.structure.helpDocumentation || allPages[0].helpDocumentation
+  // WebStandardsCompliance 종합 (메인 페이지 우선, 없으면 첫 페이지)
+  const avgWebStandardsCompliance = mainPage.structure.webStandardsCompliance || allPages[0].webStandardsCompliance
+  const avgHelpDocumentation = mainPage.structure.helpDocumentation || allPages[0].helpDocumentation
   
   return {
     html: mainPage.structure.html || '',  // 메인 페이지 HTML 사용 (KRDS 평가용)
