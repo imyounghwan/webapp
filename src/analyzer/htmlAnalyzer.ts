@@ -480,6 +480,35 @@ export interface ContentStructure {
   paragraphCount: number
   listCount: number
   tableCount: number
+  // ✅ N8.1 핵심 정보 분석 (선택적 필드 - 하위 호환성 유지)
+  textQuality?: {
+    score: number          // 0-100점
+    grade: 'A' | 'B' | 'C' | 'D'
+    density: {             // 정보 밀도
+      wordsPerParagraph: number
+      totalWords: number
+      rating: 'optimal' | 'sparse' | 'dense'
+    }
+    conciseness: {         // 간결성
+      avgSentenceLength: number
+      rating: 'concise' | 'moderate' | 'verbose'
+    }
+    redundancy: {          // 중복도
+      repetitivePatterns: number
+      duplicateCount: number
+      rating: 'low' | 'medium' | 'high'
+    }
+    essentialRatio: {      // 핵심 정보 비율
+      headingToContentRatio: number
+      rating: 'balanced' | 'heading-heavy' | 'content-heavy'
+    }
+    issues: Array<{
+      type: string
+      severity: 'HIGH' | 'MEDIUM' | 'LOW'
+      message: string
+    }>
+    strengths: string[]
+  }
 }
 
 /**
@@ -1098,17 +1127,225 @@ function detectInteractiveFeedback(html: string): boolean {
   return actionFeedback.hasActionFeedback
 }
 
+/**
+ * 📝 텍스트 품질 분석 (N8.1 핵심 정보)
+ * HTML 기반으로 텍스트의 간결성, 밀도, 중복도 평가
+ */
+function analyzeTextQuality(html: string, paragraphCount: number, headingCount: number): ContentStructure['textQuality'] {
+  // 텍스트 추출 (스크립트/스타일 제거)
+  const textContent = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  
+  // 단어 수 계산 (한글/영문 혼합)
+  const words = textContent.split(/\s+/).filter(w => w.length > 0)
+  const totalWords = words.length
+  
+  // 🚨 텍스트가 너무 적으면 판단 불가 (50 단어 미만)
+  if (totalWords < 50) {
+    return {
+      score: 0,  // 점수 없음
+      grade: 'N/A' as any,  // 등급 없음
+      density: {
+        wordsPerParagraph: 0,
+        totalWords,
+        rating: 'insufficient' as any
+      },
+      conciseness: { avgSentenceLength: 0, rating: 'insufficient' as any },
+      redundancy: { repetitivePatterns: 0, duplicateCount: 0, rating: 'insufficient' as any },
+      essentialRatio: { headingToContentRatio: 0, rating: 'insufficient' as any },
+      issues: [{
+        type: 'INSUFFICIENT_CONTENT',
+        severity: 'HIGH',
+        message: `텍스트가 ${totalWords}단어로 너무 적어 자동 판단 불가 (최소 50단어 필요) → UI/UX 전문가가 직접 확인 필요`
+      }],
+      strengths: []
+    }
+  }
+  
+  let score = 100
+  const issues: Array<{ type: string; severity: 'HIGH' | 'MEDIUM' | 'LOW'; message: string }> = []
+  const strengths: string[] = []
+  
+  // 문장 수 계산
+  const sentences = textContent.match(/[.!?。！？]+/g) || []
+  const sentenceCount = sentences.length || 1
+  
+  // 1. 정보 밀도 분석 (30점)
+  const wordsPerParagraph = paragraphCount > 0 ? totalWords / paragraphCount : 0
+  let densityRating: 'optimal' | 'sparse' | 'dense' = 'optimal'
+  
+  if (wordsPerParagraph >= 50 && wordsPerParagraph <= 150) {
+    densityRating = 'optimal'
+    strengths.push('적절한 정보 밀도 (50-150 단어/문단)')
+  } else if (wordsPerParagraph < 50 && wordsPerParagraph > 0) {
+    densityRating = 'sparse'
+    score -= 15
+    issues.push({
+      type: 'SPARSE_CONTENT',
+      severity: 'MEDIUM',
+      message: `평균 ${Math.round(wordsPerParagraph)}단어/문단 → 정보 부족, 50단어 이상 권장`
+    })
+  } else if (wordsPerParagraph > 150) {
+    densityRating = 'dense'
+    score -= 10
+    issues.push({
+      type: 'DENSE_CONTENT',
+      severity: 'LOW',
+      message: `평균 ${Math.round(wordsPerParagraph)}단어/문단 → 너무 빽빽, 150단어 이하 권장`
+    })
+  }
+  
+  // 2. 간결성 분석 (25점)
+  const avgSentenceLength = totalWords / sentenceCount
+  let concisenessRating: 'concise' | 'moderate' | 'verbose' = 'moderate'
+  
+  if (avgSentenceLength >= 15 && avgSentenceLength <= 25) {
+    concisenessRating = 'concise'
+    strengths.push('간결한 문장 (15-25 단어/문장)')
+  } else if (avgSentenceLength < 15) {
+    concisenessRating = 'concise'
+    strengths.push('매우 간결한 문장 (15 단어 미만)')
+  } else if (avgSentenceLength > 25) {
+    concisenessRating = 'verbose'
+    score -= 15
+    issues.push({
+      type: 'VERBOSE_SENTENCES',
+      severity: 'MEDIUM',
+      message: `평균 ${Math.round(avgSentenceLength)}단어/문장 → 장황함, 25단어 이하 권장`
+    })
+  }
+  
+  // 3. 중복도 분석 (20점)
+  // 간단한 중복 단어 감지 (3회 이상 반복되는 5글자 이상 단어)
+  const wordCounts: Record<string, number> = {}
+  words.forEach(word => {
+    const normalized = word.toLowerCase().replace(/[^a-z가-힣0-9]/g, '')
+    if (normalized.length >= 5) {
+      wordCounts[normalized] = (wordCounts[normalized] || 0) + 1
+    }
+  })
+  
+  const repetitivePatterns = Object.values(wordCounts).filter(count => count > 3).length
+  const duplicateCount = Object.values(wordCounts).reduce((sum, count) => sum + (count > 3 ? count - 3 : 0), 0)
+  let redundancyRating: 'low' | 'medium' | 'high' = 'low'
+  
+  if (repetitivePatterns === 0) {
+    redundancyRating = 'low'
+    strengths.push('중복 내용 없음 → 핵심 정보 집중')
+  } else if (repetitivePatterns <= 3) {
+    redundancyRating = 'medium'
+  } else {
+    redundancyRating = 'high'
+    score -= 20
+    issues.push({
+      type: 'HIGH_REDUNDANCY',
+      severity: 'HIGH',
+      message: `반복 단어 ${repetitivePatterns}개 발견 (총 ${duplicateCount}회 중복) → 중복 제거 필요`
+    })
+  }
+  
+  // 4. 핵심 정보 비율 분석 (25점)
+  const headingToContentRatio = headingCount > 0 ? paragraphCount / headingCount : paragraphCount
+  let essentialRating: 'balanced' | 'heading-heavy' | 'content-heavy' = 'balanced'
+  
+  if (headingToContentRatio >= 2 && headingToContentRatio <= 5) {
+    essentialRating = 'balanced'
+    strengths.push('균형잡힌 구조 (헤딩 1개당 2-5 문단)')
+  } else if (headingToContentRatio < 2 && headingCount > 0) {
+    essentialRating = 'heading-heavy'
+    score -= 10
+    issues.push({
+      type: 'HEADING_HEAVY',
+      severity: 'LOW',
+      message: `헤딩이 많고 내용 적음 (헤딩 1개당 ${headingToContentRatio.toFixed(1)} 문단)`
+    })
+  } else if (headingToContentRatio > 5 || headingCount === 0) {
+    essentialRating = 'content-heavy'
+    score -= 10
+    issues.push({
+      type: 'CONTENT_HEAVY',
+      severity: 'LOW',
+      message: `헤딩 부족, 내용 과다 (헤딩 1개당 ${headingToContentRatio.toFixed(1)} 문단) → 헤딩 추가 권장`
+    })
+  }
+  
+  // 최종 점수 및 등급
+  score = Math.max(0, Math.min(100, score))
+  
+  let grade: 'A' | 'B' | 'C' | 'D'
+  if (score >= 85) grade = 'A'
+  else if (score >= 70) grade = 'B'
+  else if (score >= 55) grade = 'C'
+  else grade = 'D'
+  
+  return {
+    score,
+    grade,
+    density: {
+      wordsPerParagraph: Math.round(wordsPerParagraph * 10) / 10,
+      totalWords,
+      rating: densityRating
+    },
+    conciseness: {
+      avgSentenceLength: Math.round(avgSentenceLength * 10) / 10,
+      rating: concisenessRating
+    },
+    redundancy: {
+      repetitivePatterns,
+      duplicateCount,
+      rating: redundancyRating
+    },
+    essentialRatio: {
+      headingToContentRatio: Math.round(headingToContentRatio * 10) / 10,
+      rating: essentialRating
+    },
+    issues,
+    strengths
+  }
+}
+
 function analyzeContent(html: string): ContentStructure {
   const headingCount = (html.match(/<h[1-6][^>]*>/gi) || []).length
   const paragraphCount = (html.match(/<p[^>]*>/gi) || []).length
   const listCount = (html.match(/<ul[^>]*>|<ol[^>]*>/gi) || []).length
   const tableCount = (html.match(/<table[^>]*>/gi) || []).length
 
+  // ✅ N8.1: 텍스트 품질 분석 (조건부 실행, 안전 장치)
+  let textQuality: ContentStructure['textQuality'] = undefined
+  
+  // 텍스트 추출하여 단어가 있으면 분석 (문단 없어도 가능)
+  const textContent = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  
+  const words = textContent.split(/\s+/).filter(w => w.length > 0)
+  
+  console.log(`[DEBUG] N8.1 텍스트 추출: ${words.length}단어, 문단 ${paragraphCount}개`)
+  
+  // ✅ 모든 경우에 textQuality 분석 시도 (함수 내부에서 50단어 미만 판단)
+  try {
+    // paragraphCount가 0이면 임의로 단어 수 / 100으로 문단 수 추정
+    const effectiveParagraphCount = paragraphCount > 0 ? paragraphCount : Math.max(1, Math.floor(words.length / 100))
+    textQuality = analyzeTextQuality(html, effectiveParagraphCount, headingCount)
+    console.log(`[DEBUG] N8.1 textQuality 분석 완료: score=${textQuality?.score}, grade=${textQuality?.grade}`)
+  } catch (error) {
+    console.error('[N8.1 TextQuality] Analysis failed:', error)
+    // Fallback: textQuality는 undefined로 남음 (기존 로직 사용)
+  }
+
   return {
     headingCount,
     paragraphCount,
     listCount,
-    tableCount
+    tableCount,
+    textQuality  // ✅ 새 필드 추가 (undefined 가능, 하위 호환성 유지)
   }
 }
 

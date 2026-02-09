@@ -48,6 +48,9 @@ export async function authMiddleware(c: Context<{ Bindings: Env }>, next: () => 
     }
   }
   
+  // ⚠️ JSON body는 여기서 확인하지 않음 (body를 소비하면 나중에 읽을 수 없음)
+  // 대신 각 엔드포인트에서 직접 처리
+  
   if (!sessionId) {
     return c.json({ success: false, error: '인증이 필요합니다.' }, 401)
   }

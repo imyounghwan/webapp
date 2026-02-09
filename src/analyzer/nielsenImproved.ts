@@ -252,10 +252,26 @@ export function calculateImprovedNielsen(structure: HTMLStructure): ImprovedNiel
     ),
     
     // N8: 미니멀 디자인
-    N8_1_essential_info: calculateScore(
-      weights.N8_1_essential_info.base_score,
-      calculateAdjustment(structure, weights.N8_1_essential_info)
-    ),
+    N8_1_essential_info: (() => {
+      // ✅ N8.1: textQuality 데이터 우선 사용 (100점 → 5점 스케일 변환)
+      if (structure.content?.textQuality) {
+        const tq = structure.content.textQuality
+        
+        // 🚨 판단 불가 케이스 (INSUFFICIENT_CONTENT)
+        if (tq.score === 0 && tq.grade === 'N/A') {
+          return null  // 점수 없음
+        }
+        
+        const convertedScore = (tq.score / 100) * 5
+        return Math.round(convertedScore * 10) / 10  // 소수점 1자리
+      }
+      
+      // ⚠️ Fallback: 기존 방식 (textQuality 없을 때)
+      return calculateScore(
+        weights.N8_1_essential_info.base_score,
+        calculateAdjustment(structure, weights.N8_1_essential_info)
+      )
+    })(),
     N8_2_clean_interface: calculateScore(
       weights.N8_2_clean_interface.base_score,
       calculateAdjustment(structure, weights.N8_2_clean_interface)
@@ -1450,12 +1466,80 @@ button:active {
     })(),
     
     N8_1_essential_info: {
-      description: content.paragraphCount >= 5 && content.paragraphCount <= 30
-        ? `문단 ${content.paragraphCount}개로 핵심 정보에 집중합니다.`
-        : `문단 수(${content.paragraphCount})가 정보 밀도에 영향을 줄 수 있습니다.`,
-      recommendation: content.paragraphCount >= 5 && content.paragraphCount <= 30
-        ? '현재 상태를 유지하세요.'
-        : '개선이 필요합니다.'
+      description: (() => {
+        const tq = structure.content?.textQuality
+        
+        // ✅ 신규: textQuality 데이터 사용
+        if (tq) {
+          // 🚨 판단 불가 케이스
+          if (tq.grade === 'N/A' || tq.score === 0) {
+            return `⚠️ 자동 판단 불가 (텍스트 ${tq.density.totalWords}단어)\n\n**이유:**\n${tq.issues.map(i => `• [${i.severity}] ${i.message}`).join('\n')}\n\n**참고:** 정적 HTML 텍스트가 너무 적어 품질 분석이 어렵습니다. JavaScript로 렌더링되는 콘텐츠가 많을 수 있으니 UI/UX 전문가가 실제 화면을 보고 판단해 주세요.`
+          }
+          
+          if (tq.grade === 'A') {
+            return `✅ 핵심 정보 집중 우수 (${tq.score}/100점)\n\n**강점:**\n${tq.strengths.map(s => `• ${s}`).join('\n')}`
+          } else if (tq.grade === 'B') {
+            return `😊 대체로 간결함 (${tq.score}/100점)\n\n**발견된 문제:**\n${tq.issues.slice(0, 2).map(i => `• [${i.severity}] ${i.message}`).join('\n')}`
+          } else if (tq.grade === 'C') {
+            return `⚠️ 개선 필요 (${tq.score}/100점)\n\n**주요 문제:**\n${tq.issues.slice(0, 3).map(i => `• [${i.severity}] ${i.message}`).join('\n')}`
+          } else {
+            return `❌ 장황하거나 정보 부실 (${tq.score}/100점)\n\n**긴급 개선 필요:**\n${tq.issues.map(i => `• [${i.severity}] ${i.message}`).join('\n')}`
+          }
+        }
+        
+        // ⚠️ Fallback: 기존 메시지
+        return content.paragraphCount >= 5 && content.paragraphCount <= 30
+          ? `문단 ${content.paragraphCount}개로 핵심 정보에 집중합니다.`
+          : `문단 수(${content.paragraphCount})가 정보 밀도에 영향을 줄 수 있습니다.`
+      })(),
+      
+      recommendation: (() => {
+        const tq = structure.content?.textQuality
+        
+        // ✅ 신규: textQuality 데이터 사용
+        if (tq) {
+          // 🚨 판단 불가 케이스
+          if (tq.grade === 'N/A' || tq.score === 0) {
+            return `⚠️ **수동 평가 필요**\n\n1. UI/UX 전문가가 실제 웹사이트를 방문하여 직접 확인\n2. 브라우저 개발자 도구로 JavaScript 렌더링 후 콘텐츠 확인\n3. 다음 항목 체크:\n   - 핵심 정보만 제공하는가?\n   - 불필요한 내용이 많지 않은가?\n   - 문단 길이가 적절한가?\n   - 중복 내용이 없는가?`
+          }
+          
+          if (tq.grade === 'A') {
+            return '✅ 현재 간결성을 유지하세요. 핵심 정보에 잘 집중하고 있습니다.'
+          } else if (tq.grade === 'B') {
+            const topIssue = tq.issues[0]
+            return `경미한 개선 권장: ${topIssue ? topIssue.message : '일부 내용 정리 필요'}`
+          } else {
+            const recommendations = []
+            
+            tq.issues.forEach(issue => {
+              if (issue.type === 'SPARSE_CONTENT') {
+                recommendations.push('1. 문단당 내용 보강 (50단어 이상 권장)')
+              } else if (issue.type === 'DENSE_CONTENT') {
+                recommendations.push('2. 긴 문단 분리 (150단어 이하 권장)')
+              } else if (issue.type === 'VERBOSE_SENTENCES') {
+                recommendations.push('3. 문장 간결화 (25단어 이하 권장)')
+              } else if (issue.type === 'HIGH_REDUNDANCY') {
+                recommendations.push('4. 중복 내용 제거 (핵심만 남기기)')
+              } else if (issue.type === 'CONTENT_HEAVY') {
+                recommendations.push('5. 헤딩 추가로 구조화 (헤딩 1개당 2-5 문단)')
+              } else if (issue.type === 'HEADING_HEAVY') {
+                recommendations.push('6. 문단 내용 보강 (헤딩별로 충분한 설명 추가)')
+              }
+            })
+            
+            if (recommendations.length === 0) {
+              recommendations.push('텍스트 품질 개선 및 핵심 정보 집중')
+            }
+            
+            return `⚠️ 개선 필요:\n\n${recommendations.join('\n')}`
+          }
+        }
+        
+        // ⚠️ Fallback: 기존 메시지
+        return content.paragraphCount >= 5 && content.paragraphCount <= 30
+          ? '현재 상태를 유지하세요.'
+          : '개선이 필요합니다.'
+      })()
     },
     
     N8_2_clean_interface: {

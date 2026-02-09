@@ -724,7 +724,9 @@ function aggregateResults(pageResults: any[]): any {
     headingCount: Math.round(allPages.reduce((sum, s) => sum + s.content.headingCount, 0) / allPages.length),
     paragraphCount: Math.round(allPages.reduce((sum, s) => sum + s.content.paragraphCount, 0) / allPages.length),
     listCount: Math.round(allPages.reduce((sum, s) => sum + s.content.listCount, 0) / allPages.length),
-    tableCount: Math.round(allPages.reduce((sum, s) => sum + s.content.tableCount, 0) / allPages.length)
+    tableCount: Math.round(allPages.reduce((sum, s) => sum + s.content.tableCount, 0) / allPages.length),
+    // ✅ textQuality: 메인 페이지 우선, 없으면 첫 페이지
+    textQuality: mainPage.structure.content.textQuality || allPages[0].content.textQuality
   }
   
   // Forms 종합 (평균)
@@ -868,15 +870,53 @@ app.post('/api/feedback', async (c) => {
 })
 
 // 실시간 URL 분석 API
-app.post('/api/analyze', authMiddleware, async (c) => {
+app.post('/api/analyze', async (c) => {
   try {
+    // JSON body 파싱
+    const body = await c.req.json()
+    const { url, urls, mode = 'mgine', usePuppeteer = false, useAI = false, session_id } = body
+    
+    // 🔐 세션 인증 (JSON body에서 session_id 확인)
+    let sessionId = c.req.header('X-Session-ID') || c.req.query('session_id') || session_id
+    
+    // 쿠키에서 세션 ID 확인
+    if (!sessionId) {
+      const cookie = c.req.header('Cookie')
+      if (cookie) {
+        const match = cookie.match(/session_id=([^;]+)/)
+        if (match) {
+          sessionId = match[1]
+        }
+      }
+    }
+    
+    if (!sessionId) {
+      return c.json({ success: false, error: '인증이 필요합니다.' }, 401)
+    }
+    
+    // 세션 검증
+    const { DB } = c.env
+    const session = await DB.prepare(
+      'SELECT s.*, u.id as user_id, u.email, u.name, u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = ? AND s.expires_at > datetime("now")'
+    ).bind(sessionId).first()
+    
+    if (!session) {
+      return c.json({ success: false, error: '유효하지 않은 세션입니다.' }, 401)
+    }
+    
+    // 세션 정보를 컨텍스트에 저장
+    c.set('user', {
+      id: session.user_id,
+      email: session.email,
+      name: session.name,
+      role: session.role
+    })
+    
     // D1에서 피드백 데이터 로드 (첫 요청 시 한 번만)
     if (!feedbackLoaded && c.env.DB) {
       await loadFeedbackFromD1(c.env.DB)
       feedbackLoaded = true
     }
-    
-    const { url, urls, mode = 'mgine', usePuppeteer = false, useAI = false } = await c.req.json()
 
     // urls 배열이 제공된 경우 (사용자 직접 선별)
     if (urls && Array.isArray(urls) && urls.length > 0) {
@@ -1158,16 +1198,21 @@ app.post('/api/analyze', authMiddleware, async (c) => {
         // 기본 점수 계산
         let baseScore = (improvedScores as any)[diagnosisKey] || 0
         
+        // 🔧 N8.1 특수 처리: null 점수도 진단 메시지는 생성
+        const diagnosisData = (improvedDiagnoses as any)[diagnosisKey]
+        const hasValidDiagnosis = diagnosisData && (diagnosisData.description || diagnosisData.recommendation)
+        
         // 피드백 데이터 적용 (AI 학습 반영)
-        const adjustedScore = applyFeedbackAdjustment(id, baseScore, validUrls[0])
+        // null 점수는 피드백 적용하지 않음
+        const adjustedScore = baseScore !== null ? applyFeedbackAdjustment(id, baseScore, validUrls[0]) : null
         
         design_items_detail.push({
           item: desc?.name || mapping.key,
           item_id: id,
           category: '디자인',
-          score: adjustedScore,  // 피드백 반영된 점수 사용
-          description: (improvedDiagnoses as any)[diagnosisKey]?.description || desc?.description || '진단 정보가 없습니다.',
-          recommendation: (improvedDiagnoses as any)[diagnosisKey]?.recommendation || '추가 권장사항이 없습니다.',
+          score: adjustedScore,  // 피드백 반영된 점수 사용 (null 가능)
+          description: hasValidDiagnosis ? diagnosisData.description : (desc?.description || '진단 정보가 없습니다.'),
+          recommendation: hasValidDiagnosis ? diagnosisData.recommendation : '추가 권장사항이 없습니다.',
           principle: desc?.principle || '',
           why_important: desc?.why_important || '',
           evaluation_criteria: desc?.evaluation_criteria || '',
