@@ -75,7 +75,7 @@ export const nielsenDescriptions: Record<string, ItemDescription> = {
     principle: 'N3: 사용자 제어와 자유',
     description: '긴 폼 작성 중 "초기화" 버튼이나, 잘못 입력한 내용을 "취소" 할 수 있는 기능 제공',
     why_important: '실수를 고칠 방법이 없으면 처음부터 다시 해야 합니다.',
-    evaluation_criteria: '폼에 "초기화" 버튼이나 뒤로가기가 잘 작동하는지 확인'
+    evaluation_criteria: '1) 모달/팝업 탈출(30%): 닫기 버튼, X 아이콘, ESC 키 지원 2) 다단계 후퇴(25%): 이전 버튼, 브레드크럼 3) 입력 취소/초기화(25%): 폼 리셋, 필터 초기화 4) 파괴적 행동 방지(20%): 삭제 시 확인 절차'
   },
   'N3_3': {
     id: 'N3_3',
