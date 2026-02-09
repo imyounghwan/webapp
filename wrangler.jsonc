@@ -9,8 +9,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "webapp-db",
-      "database_id": "local-development-db"
+      "database_name": "webapp-production",
+      "database_id": "d59067a5-3234-4874-832c-b3c4b273b31a"
     }
   ],
   // Browser Rendering API binding for Puppeteer
