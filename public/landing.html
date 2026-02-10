@@ -17,10 +17,10 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/">
+    <meta property="og:url" content="https://uiux.mgine.co.kr/">
     <meta property="og:title" content="MGINE AutoAnalyzer - AI 기반 전문 UI/UX 분석 서비스">
     <meta property="og:description" content="AI와 전문가의 시선으로 웹사이트를 디테일하게 분석합니다. Nielsen 10원칙 기반 26개 세부 항목 평가, 전문가 100% 검증.">
-    <meta property="og:image" content="https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/product-transparent.png">
+    <meta property="og:image" content="https://uiux.mgine.co.kr/logo.svg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="MGINE AutoAnalyzer">
@@ -28,13 +28,13 @@
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/">
+    <meta name="twitter:url" content="https://uiux.mgine.co.kr/">
     <meta name="twitter:title" content="MGINE AutoAnalyzer - AI 기반 전문 UI/UX 분석 서비스">
     <meta name="twitter:description" content="AI와 전문가의 시선으로 웹사이트를 디테일하게 분석합니다. Nielsen 10원칙 기반 26개 세부 항목 평가.">
-    <meta name="twitter:image" content="https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/product-transparent.png">
+    <meta name="twitter:image" content="https://uiux.mgine.co.kr/logo.svg">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/">
+    <link rel="canonical" href="https://uiux.mgine.co.kr/">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -57,7 +57,7 @@
       "@type": "WebApplication",
       "name": "MGINE AutoAnalyzer",
       "description": "AI 기반 전문 UI/UX 분석 서비스. Nielsen 10원칙 기반 26개 세부 항목 평가, 전문가 100% 검증.",
-      "url": "https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/",
+      "url": "https://uiux.mgine.co.kr/",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web Browser",
       "offers": {
@@ -96,8 +96,8 @@
       "@type": "Organization",
       "name": "MGINE Interactive",
       "legalName": "MGINE Interactive",
-      "url": "https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/",
-      "logo": "https://3000-i5ymwam9wcrmlh39bwo6s-a402f90a.sandbox.novita.ai/product-transparent.png",
+      "url": "https://uiux.mgine.co.kr/",
+      "logo": "https://uiux.mgine.co.kr/product-transparent.png",
       "foundingDate": "2020",
       "founders": [
         {
@@ -1356,9 +1356,12 @@
                     this.reset();
                     
                     // 체크박스 스타일 리셋
-                    document.querySelectorAll('label:has(input[type="checkbox"])').forEach(label => {
-                        label.style.background = 'rgba(255, 255, 255, 0.02)';
-                        label.style.borderColor = 'var(--border)';
+                    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        const label = checkbox.closest('label');
+                        if (label) {
+                            label.style.background = 'rgba(255, 255, 255, 0.02)';
+                            label.style.borderColor = 'var(--border)';
+                        }
                     });
                     
                     // 추가로 CEO에게 메일 발송 (옵션)
@@ -1388,10 +1391,7 @@ ${contactData.message}
                     
                     const body = encodeURIComponent(emailBody);
                     
-                    // 자동으로 메일 클라이언트 열기 (백업)
-                    setTimeout(() => {
-                        window.open(`mailto:ceo@mgine.co.kr?subject=${subject}&body=${body}`, '_blank');
-                    }, 1000);
+                    // 메일 링크는 사용자가 직접 클릭하도록 유도 (자동 열기 제거)
                     
                 } else {
                     throw new Error(result.error || '전송 실패');
@@ -1408,9 +1408,11 @@ ${contactData.message}
         });
         
         // 체크박스 스타일 효과
-        document.querySelectorAll('label:has(input[type="checkbox"])').forEach(label => {
-            const checkbox = label.querySelector('input[type="checkbox"]');
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
+                const label = this.closest('label');
+                if (!label) return;
+                
                 if (this.checked) {
                     label.style.background = 'rgba(0, 102, 255, 0.1)';
                     label.style.borderColor = 'var(--primary)';

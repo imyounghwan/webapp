@@ -2568,6 +2568,62 @@ app.post('/api/contact', async (c) => {
       privacy_agreed ? 1 : 0
     ).run()
     
+    // 이메일 알림 전송 (MailChannels)
+    try {
+      const emailBody = `
+=== MGINE AutoAnalyzer 프로젝트 문의 ===
+
+[의뢰인 정보]
+회사명: ${company}
+직위: ${position || '-'}
+이름: ${name}
+연락처: ${phone}
+이메일: ${email}
+웹사이트: ${url || '-'}
+
+[프로젝트 정보]
+희망 프로젝트 형태: ${projectTypeStr || '-'}
+프로젝트 예산: ${budget || '-'}
+희망 일정: ${schedule || '-'}
+
+[문의 내용]
+${message}
+
+---
+접수 시간: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
+관리 페이지: https://uiux.mgine.co.kr/admin.html
+      `.trim()
+      
+      await fetch('https://api.mailchannels.net/tx/v1/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalizations: [
+            {
+              to: [{ email: 'ceo@mgine.co.kr', name: 'MGINE CEO' }],
+              reply_to: { email: email, name: name }
+            }
+          ],
+          from: {
+            email: 'noreply@uiux.mgine.co.kr',
+            name: 'MGINE AutoAnalyzer'
+          },
+          subject: `[AutoAnalyzer] ${company} - 프로젝트 문의`,
+          content: [
+            {
+              type: 'text/plain',
+              value: emailBody
+            }
+          ]
+        })
+      })
+    } catch (emailError) {
+      console.error('Email notification failed:', emailError)
+      // 이메일 실패해도 문의는 성공 처리
+    }
+    
     return c.json({ 
       success: true, 
       message: '문의가 성공적으로 접수되었습니다.' 
